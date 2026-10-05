@@ -10,6 +10,7 @@ import { useAuthStore } from '@/features/auth/store';
 import { useLogoutMutation } from '@/features/auth/hooks';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows } from '@/constants/tokens';
+import { LEGAL_URLS } from '@/constants/legal';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import Colors from '@/constants/colors';
@@ -330,10 +331,10 @@ export default function ProfileTabScreen() {
 
         <View style={{ gap: spacing.xs }}>
           {[
-            { label: 'Help & Support Desk', icon: 'help-circle-outline', url: 'https://app.iaquila.com.ng/support.html' },
-            { label: 'Privacy Policy', icon: 'shield-checkmark-outline', url: 'https://app.iaquila.com.ng/privacy.html' },
-            { label: 'Terms & Conditions', icon: 'document-text-outline', url: 'https://app.iaquila.com.ng/terms.html' },
-            { label: 'Account & Data Deletion', icon: 'trash-outline', url: 'https://app.iaquila.com.ng/deletion.html' },
+            { label: 'Help & Support Desk', icon: 'help-circle-outline', url: LEGAL_URLS.SUPPORT },
+            { label: 'Privacy Policy', icon: 'shield-checkmark-outline', url: LEGAL_URLS.PRIVACY },
+            { label: 'Terms & Conditions', icon: 'document-text-outline', url: LEGAL_URLS.TERMS },
+            { label: 'Account & Data Deletion', icon: 'trash-outline', url: LEGAL_URLS.DELETION },
           ].map((item) => (
             <Card
               key={item.label}
