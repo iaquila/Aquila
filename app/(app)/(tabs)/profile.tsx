@@ -310,20 +310,11 @@ export default function ProfileTabScreen() {
             Official election schedules, registered parties, polling units, and declared results are published by INEC:
           </ThemedText>
           <Pressable
-            onPress={() => WebBrowser.openBrowserAsync('https://inecnigeria.org').catch(() => {})}
+            onPress={() => WebBrowser.openBrowserAsync(LEGAL_URLS.INEC_WEBSITE).catch(() => {})}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}
           >
             <ThemedText variant="label" color="primary" fontFamily="bold">
               • Official Website: inecnigeria.org
-            </ThemedText>
-            <Ionicons name="open-outline" size={12} color={colors.primary} />
-          </Pressable>
-          <Pressable
-            onPress={() => WebBrowser.openBrowserAsync('https://inecelectionresults.ng').catch(() => {})}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-          >
-            <ThemedText variant="label" color="primary" fontFamily="bold">
-              • Official Results Portal (IReV): inecelectionresults.ng
             </ThemedText>
             <Ionicons name="open-outline" size={12} color={colors.primary} />
           </Pressable>
