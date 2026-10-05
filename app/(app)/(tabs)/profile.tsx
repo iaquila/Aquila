@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Alert, Switch } from 'react-native';
+import { StyleSheet, View, Alert, Switch, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -283,6 +283,50 @@ export default function ProfileTabScreen() {
         <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.sm }}>
           Independent observer accreditations, NDPA privacy, and platform policies
         </ThemedText>
+
+        {/* Prominent Government Non-Affiliation & Official Source Notice */}
+        <View
+          style={{
+            backgroundColor: colors.surfaceElevated,
+            padding: spacing.sm,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: colors.border,
+            marginBottom: spacing.xs,
+            gap: 4,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
+            <ThemedText variant="caption" color="text" fontFamily="bold">
+              Government Non-Affiliation Notice
+            </ThemedText>
+          </View>
+          <ThemedText variant="label" color="textSecondary" style={{ lineHeight: 15 }}>
+            iAquila is an independent election monitoring, academic collation, and research tool developed by Alabian Solutions Limited. iAquila does NOT represent, and is NOT affiliated with, authorized by, or endorsed by any government entity or statutory electoral body, including Nigeria's Independent National Electoral Commission (INEC).
+          </ThemedText>
+          <ThemedText variant="label" color="textSecondary" style={{ lineHeight: 15, marginTop: 4 }}>
+            Official election schedules, registered parties, polling units, and declared results are published by INEC:
+          </ThemedText>
+          <Pressable
+            onPress={() => WebBrowser.openBrowserAsync('https://inecnigeria.org').catch(() => {})}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}
+          >
+            <ThemedText variant="label" color="primary" fontFamily="bold">
+              • Official Website: inecnigeria.org
+            </ThemedText>
+            <Ionicons name="open-outline" size={12} color={colors.primary} />
+          </Pressable>
+          <Pressable
+            onPress={() => WebBrowser.openBrowserAsync('https://inec.gov.ng').catch(() => {})}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          >
+            <ThemedText variant="label" color="primary" fontFamily="bold">
+              • Official Portal: inec.gov.ng
+            </ThemedText>
+            <Ionicons name="open-outline" size={12} color={colors.primary} />
+          </Pressable>
+        </View>
 
         <View style={{ gap: spacing.xs }}>
           {[

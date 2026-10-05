@@ -16,7 +16,7 @@ const ORG_PRESETS = [
   { id: 'org-iaquila', code: 'IAQ-HQ', name: 'iAQUILA Situation Room', tag: 'HQ' },
   { id: 'org-cdd', code: 'CDD-WA', name: 'CDD West Africa', tag: 'CSO' },
   { id: 'org-yiaga', code: 'YIAGA-WTV', name: 'YIAGA Africa Watching The Vote', tag: 'CSO' },
-  { id: 'org-inec', code: 'INEC-OBS', name: 'INEC Observer Mission', tag: 'OBSERVER' },
+  { id: 'org-ind-obs', code: 'IND-OBS', name: 'Accredited Observer Mission', tag: 'CSO' },
 ];
 
 export default function LoginScreen() {
@@ -347,10 +347,18 @@ export default function LoginScreen() {
               </View>
             </Card>
 
+            {/* Government Non-Affiliation Disclaimer */}
+            <View style={styles.disclaimerBox}>
+              <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" style={{ marginTop: 1 }} />
+              <ThemedText variant="label" color="#A3B8AC" style={{ flex: 1, fontSize: 10, lineHeight: 14 }}>
+                iAquila is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
+              </ThemedText>
+            </View>
+
             <ThemedText
               variant="caption"
               color="#A3B8AC"
-              style={{ textAlign: 'center', marginTop: spacing.lg }}
+              style={{ textAlign: 'center', marginTop: spacing.md }}
             >
               Independent Observer Intelligence System · End-to-End Encrypted
             </ThemedText>
@@ -447,5 +455,17 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+  disclaimerBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(163, 184, 172, 0.25)',
   },
 });
