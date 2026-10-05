@@ -318,11 +318,11 @@ export default function ProfileTabScreen() {
             <Ionicons name="open-outline" size={12} color={colors.primary} />
           </Pressable>
           <Pressable
-            onPress={() => WebBrowser.openBrowserAsync('https://inec.gov.ng').catch(() => {})}
+            onPress={() => WebBrowser.openBrowserAsync('https://inecelectionresults.ng').catch(() => {})}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
           >
             <ThemedText variant="label" color="primary" fontFamily="bold">
-              • Official Portal: inec.gov.ng
+              • Official Results Portal (IReV): inecelectionresults.ng
             </ThemedText>
             <Ionicons name="open-outline" size={12} color={colors.primary} />
           </Pressable>
