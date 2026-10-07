@@ -139,9 +139,8 @@ export function useAIProjectionQuery(params?: {
 
 export function useLocationSearchQuery(query: string) {
   return useQuery({
-    queryKey: ['locations', 'search', query],
+    queryKey: ['locations', 'search', query.trim().toLowerCase()],
     queryFn: () => mockApi.searchLocations(query),
-    enabled: query.trim().length >= 2,
     staleTime: 30 * 1000,
   });
 }

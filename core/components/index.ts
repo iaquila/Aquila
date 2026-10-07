@@ -14,3 +14,4 @@ export { SectionHeader } from './SectionHeader';
 export { VoteShareBar } from './VoteShareBar';
 export { CoverageHero } from './CoverageHero';
 export { ExpandableText } from './ExpandableText';
+export { Badge } from './Badge';

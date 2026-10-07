@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, Shimmer, SkeletonCard } from '@/core/components';
+import { ThemedText, Card, Shimmer, SkeletonCard, Badge } from '@/core/components';
 import { useResultsQuery, useCandidatesQuery } from '@/features/elections/hooks';
 import { spacing, radius, shadows } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import Colors from '@/constants/colors';
+import { PARTY_COLORS } from '@/constants/parties';
 import { useResultsStore } from '@/features/auth/store';
 import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '@/constants/routes';
@@ -160,13 +160,7 @@ export default function ResultCollationScreen() {
         <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
           {candidateScores.map((c, idx) => {
             const isWinner = idx === 0;
-            const partyColors: Record<string, string> = {
-              CPA: '#0D6338',
-              DPP: '#DC2626',
-              PL: '#16A34A',
-              PPNF: '#2563EB',
-            };
-            const partyColor = partyColors[c.partyAcronym] ?? colors.primary;
+            const partyColor = PARTY_COLORS[c.partyAcronym] ?? colors.primary;
 
             return (
               <View
@@ -192,11 +186,7 @@ export default function ResultCollationScreen() {
                         {c.fullName}
                       </ThemedText>
                       <View style={styles.partyBadgeRow}>
-                        <View style={[styles.partyPill, { backgroundColor: partyColor + '18' }]}>
-                          <ThemedText variant="label" style={{ color: partyColor }} fontFamily="bold">
-                            {c.partyAcronym}
-                          </ThemedText>
-                        </View>
+                        <Badge label={c.partyAcronym} color={partyColor} size="sm" />
                       </View>
                     </View>
                   </View>
@@ -241,8 +231,9 @@ export default function ResultCollationScreen() {
 
         <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
           {allCollated.slice(0, 10).map((r) => (
-            <DebouncedPressable
+            <Card
               key={r.id}
+              pressable
               onPress={() => {
                 impact(Haptics.ImpactFeedbackStyle.Light);
                 router.push({ pathname: ROUTES.RESULT_DETAIL, params: { id: r.id } });
@@ -258,15 +249,15 @@ export default function ResultCollationScreen() {
                 </ThemedText>
               </View>
               <View style={[styles.puRight, { flexShrink: 0 }]}>
-                <View style={[styles.verifiedPill, { backgroundColor: colors.successSubtle }]}>
-                  <Ionicons name="checkmark-circle" size={12} color={colors.success} />
-                  <ThemedText variant="label" color="success" fontFamily="bold" style={{ marginLeft: 4 }}>
-                    VERIFIED
-                  </ThemedText>
-                </View>
+                <Badge
+                  label="VERIFIED"
+                  variant="success"
+                  size="sm"
+                  icon={<Ionicons name="checkmark-circle" size={12} color={colors.success} />}
+                />
                 <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </View>
-            </DebouncedPressable>
+            </Card>
           ))}
         </View>
       </Card>

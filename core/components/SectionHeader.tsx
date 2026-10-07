@@ -32,7 +32,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
+    flexWrap: 'wrap',
   },
-  indicator: { width: 4, height: 16, borderRadius: radius.full },
-  title: { flex: 1 },
+  indicator: { width: 4, height: 16, borderRadius: radius.full, flexShrink: 0 },
+  title: { flex: 1, minWidth: 120 },
 });

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, LayoutAnimation, Pressable, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, View, LayoutAnimation, Pressable, ScrollView } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, EmptyState, SkeletonCard, Card } from '@/core/components';
+import { ThemedText, EmptyState, SkeletonCard, Card, Input, Badge } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
@@ -224,23 +224,15 @@ export default function ElectionsScreen() {
       )}
 
       {/* Search Input Bar */}
-      <View style={[styles.searchBar, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-        <Ionicons name="search" size={16} color={colors.textMuted} style={{ marginRight: spacing.xs }} />
-        <TextInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search contest, state, or jurisdiction..."
-          placeholderTextColor={colors.textMuted}
-          style={[styles.searchInput, { color: colors.text }]}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-        {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color={colors.textMuted} />
-          </Pressable>
-        )}
-      </View>
+      <Input
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Search contest, state, or jurisdiction..."
+        leftIcon="search-outline"
+        rightIcon={searchQuery ? 'close-circle' : undefined}
+        onRightIconPress={() => setSearchQuery('')}
+        containerStyle={{ marginBottom: spacing.xs }}
+      />
 
       {/* Position Filter Chips (Horizontal Scroll) */}
       <View style={styles.filterScrollContainer}>
@@ -363,38 +355,22 @@ export default function ElectionsScreen() {
                     {election.electoralArea} · {election.electoralAreaType}
                   </ThemedText>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs }}>
-                    <ThemedText variant="caption" color="textMuted" numberOfLines={1}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs, flexWrap: 'wrap' }}>
+                    <ThemedText variant="caption" color="textMuted">
                       {election.electionDate}
                     </ThemedText>
-                    <View style={[styles.statusBadge, { backgroundColor: statusColor + '18', flexShrink: 0 }]}>
-                      <ThemedText
-                        variant="caption"
-                        style={{
-                          color: statusColor,
-                          fontWeight: '700',
-                          textTransform: 'uppercase',
-                          letterSpacing: 0.4,
-                        }}
-                      >
-                        {statusLabel}
-                      </ThemedText>
-                    </View>
+                    <Badge label={statusLabel} color={statusColor} size="sm" />
                   </View>
                 </View>
               </View>
 
               {/* Major Competing Parties Badges */}
               <View style={[styles.cardFooter, { borderTopColor: colors.border + '50' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0, flexWrap: 'wrap' }}>
                   {MAJOR_PARTIES.slice(0, election.candidateCount >= 4 ? 4 : 3).map((p) => (
-                    <View key={p.acronym} style={[styles.partyPill, { backgroundColor: p.bg + '20', borderColor: p.bg }]}>
-                      <ThemedText variant="caption" style={{ color: p.bg, fontWeight: '700', fontSize: 10 }}>
-                        {p.acronym}
-                      </ThemedText>
-                    </View>
+                    <Badge key={p.acronym} label={p.acronym} color={p.bg} size="sm" />
                   ))}
-                  <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ marginLeft: 4, fontSize: 11, flexShrink: 1 }}>
+                  <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 4, fontSize: 11, flexShrink: 1 }}>
                     {election.candidateCount} {election.candidateCount === 1 ? 'Candidate' : 'Candidates'}
                   </ThemedText>
                 </View>

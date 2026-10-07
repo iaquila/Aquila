@@ -67,7 +67,24 @@
   * Large Text Scale & Container Overflow Safeguards (Dynamic Type & Display Zoom):
     - Resolved button container escapes in Assigned Polling Units (`app/(app)/(tabs)/index.tsx`): Wrapped vote tally text in `<View style={{ flex: 1, minWidth: 140, paddingRight: spacing.xs }}>`, pinned `puActionBtn` with `flexShrink: 0`, and added `gap: spacing.xs, flexWrap: 'wrap'` to `puBottomRow` and `puTopRow`. Added `overflow: 'hidden'` to `puCard`.
     - Audited & fortified action rows across screens: Added `overflow: 'hidden'`, `flexWrap: 'wrap'`, and `gap: spacing.xs` across `sectionHeaderRow`, `candHeader`, `consoleTopRow` (`index.tsx`), `topControlBar` (`results.tsx`), `puLogItem` (`result-collation.tsx`), `lgaItem` (`locations.tsx`), `historyRow` (`parties.tsx`), and `Button.tsx` (`styles.button` with `overflow: 'hidden'`).
-  * Shared Component Alignment (`Button` & `Card`):
-    - Converted handmade HUD map action Pressables ("Drill LGAs", "Inspect PUs" in `results.tsx`) to standard `<Button size="sm">`, unifying debounce, haptic press scale, and accessibility contracts.
-    - Fortified `<Card.tsx>`: Enforced `alignSelf: 'stretch'` and `minWidth: 0` on `styles.card`, and `width: '100%'` on `AnimatedCard`, preventing nested pressable cards from contracting or misaligning under parent flex flows.
-    - Fortified `<result-detail.tsx>` hero card: Added `minWidth: 0, paddingRight: spacing.xs` to polling unit title flex container, eliminating header status pill pushout.
+  * Shared Component Alignment (`Button`, `Card`, `Input`, `Badge`):
+    - Created and exported shared `<Badge>` component (`core/components/Badge.tsx`): Unified repeated status badges and party pills across `index.tsx`, `elections.tsx`, `result-collation.tsx`, `result-detail.tsx`, and `incident-detail.tsx` with responsive text autoscaling, semantic palettes, and uniform padding.
+    - Standardized `<Input>` adoption: Converted hand-rolled search and directive inputs in `elections.tsx`, `index.tsx`, and `incident-detail.tsx` to `<Input>`.
+    - Fortified `<Card>` adoption: Standardized `puCard` in `index.tsx` to `<Card pressable>`.
+    - Dynamic Polling Unit Simulation & Instant Search Autocomplete:
+      - Added realistic prominent polling units (Alausa Secretariat, Ikeja High School, Allen Avenue, Garki Area 1, Sabon Gari Kano, Victoria Island) and LGAs to `service.ts`.
+      - Enabled instant suggestions on focus/tap without requiring 2+ characters, with an isolated active scope banner so the input text is never polluted with long qualification strings.
+      - Made the "Tie to Specific Polling Unit" demo dynamic: selecting any PU or LGA calculates localized turnout variance (+6% to +14%), precinct margins (+180 to +260 votes), and neural precinct telemetry insights.
+  * SSOT Architecture & Gold-Standard Mobile Parity:
+    - Extracted Political Parties SSOT (`constants/parties.ts`): Unified `PARTY_COLORS` and `MAJOR_PARTIES` across `index.tsx`, `results.tsx`, `result-collation.tsx`, `parties.tsx`, `elections.tsx`, and `election-detail.tsx`, eliminating color drift and duplicated inline dictionaries.
+    - Extracted Incident Classifications SSOT (`constants/incidents.ts`): Unified `SEVERITY_COLORS`, `INCIDENT_CATEGORIES`, and `INCIDENT_SEVERITIES` across `incidents.tsx`, `incident-detail.tsx`, and `incident-report.tsx`.
+    - Extracted ICU Number & Percentage Formatters (`core/utils/formatters.ts`): Added `formatVotes`, `formatPercent`, and `formatRatio`.
+    - Gold-Standard Field Incident Marquee Ticker (`core/components/IncidentMarquee.tsx`):
+      - Eliminated initial blank-delay bug: Starts immediately at position 0 so incident items are visible and readable on mount.
+      - Implemented true infinite seamless looping: Uses dual cloned sequence tracking so the animation loops back imperceptibly with zero jerky jumps and zero empty blank gaps.
+      - Added Touch-and-Hold Pause: Touching down pauses the ticker stream so users can read or tap without items sliding out from under their fingers.
+      - Added System Reduce Motion Support: Respects `AccessibilityInfo.isReduceMotionEnabled()`, falling back to an accessible non-auto-scrolling feed.
+    - Standardized `result-collation.tsx` and `result-detail.tsx`:
+      - Converted `puLogItem` to `<Card pressable>`.
+      - Converted `verifiedPill`, `statusPill`, and `matchPill` to `<Badge>`.
+      - Removed unused `DebouncedPressable` import.

@@ -2,8 +2,9 @@ import React, { useState, useMemo, useCallback, memo } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, EmptyState, Button, Card, SkeletonCard } from '@/core/components';
+import { ThemedText, EmptyState, Button, Card, SkeletonCard, Badge } from '@/core/components';
 import { useIncidentsStore, useAuthStore, IncidentReport } from '@/features/auth/store';
+import { SEVERITY_COLORS } from '@/constants/incidents';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
@@ -40,13 +41,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOffice
   const isResolved = item.status === 'RESOLVED';
   const isReviewing = item.status === 'UNDER_REVIEW' || item.status === 'SUBMITTED';
 
-  const sevColors: Record<string, string> = {
-    CRITICAL: colors.critical,
-    HIGH: colors.error,
-    MEDIUM: colors.warning,
-    LOW: colors.success,
-  };
-  const sevColor = sevColors[item.severity] ?? colors.warning;
+  const sevColor = SEVERITY_COLORS[item.severity] ?? colors.warning;
 
   return (
     <Card
@@ -59,26 +54,24 @@ const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOffice
     >
       {/* Severity & Status Header */}
       <View style={styles.cardHeader}>
-        <View style={[styles.sevBadge, { backgroundColor: sevColor + '18', borderColor: sevColor }]}>
-          <Ionicons
-            name={isCritical || isHigh ? 'warning' : 'alert-circle-outline'}
-            size={14}
-            color={sevColor}
-          />
-          <ThemedText variant="label" style={{ color: sevColor, marginLeft: 4 }} fontFamily="bold">
-            {item.severity} SEVERITY
-          </ThemedText>
-        </View>
+        <Badge
+          label={`${item.severity} SEVERITY`}
+          color={sevColor}
+          size="sm"
+          icon={
+            <Ionicons
+              name={isCritical || isHigh ? 'warning' : 'alert-circle-outline'}
+              size={13}
+              color={sevColor}
+            />
+          }
+        />
 
-        <View style={[styles.statusBadge, { backgroundColor: isResolved ? colors.successSubtle : colors.warningSubtle }]}>
-          <ThemedText
-            variant="label"
-            color={isResolved ? 'success' : 'warning'}
-            fontFamily="bold"
-          >
-            {isResolved ? 'RESOLVED' : isReviewing ? 'REVIEWING' : item.status}
-          </ThemedText>
-        </View>
+        <Badge
+          label={isResolved ? 'RESOLVED' : isReviewing ? 'REVIEWING' : item.status}
+          variant={isResolved ? 'success' : isReviewing ? 'warning' : 'neutral'}
+          size="sm"
+        />
       </View>
 
       {/* Category & Description */}

@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, TextInput, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Animated, Platform } from 'react-native';
 import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableText } from '@/core/components';
+import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge } from '@/core/components';
 import { EntranceView } from '@/core/components/EntranceView';
 import { useAuthStore, useResultsStore } from '@/features/auth/store';
 import { ROUTES } from '@/constants/routes';
@@ -12,6 +12,7 @@ import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useElectionsQuery, useIncidentsQuery, useCandidatesQuery, useResultsQuery, useAIProjectionQuery, useLocationSearchQuery } from '@/features/elections/hooks';
 import { useRefreshControl, useHaptics, useForegroundRefresh } from '@/core/hooks';
 import Colors from '@/constants/colors';
+import { PARTY_COLORS } from '@/constants/parties';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -59,13 +60,6 @@ const ASSIGNED_DEMO_PUS: Array<{
   },
 ];
 
-const PARTY_COLORS: Record<string, string> = {
-  CPA: '#059669',
-  DPP: '#DC2626',
-  PL: '#D97706',
-  PPNF: '#2563EB',
-  ADP: '#7C3AED',
-};
 
 export default function DashboardScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -380,11 +374,7 @@ export default function DashboardScreen() {
                         </View>
                       </View>
                       <View style={styles.partyBadgeRow}>
-                        <View style={[styles.partyPill, { backgroundColor: (PARTY_COLORS[myCandidate.partyAcronym] ?? colors.primary) + '18' }]}>
-                          <ThemedText variant="label" style={{ color: PARTY_COLORS[myCandidate.partyAcronym] ?? colors.primary }} fontFamily="bold">
-                            {myCandidate.partyAcronym}
-                          </ThemedText>
-                        </View>
+                        <Badge label={myCandidate.partyAcronym} color={PARTY_COLORS[myCandidate.partyAcronym] ?? colors.primary} size="sm" />
                       </View>
                     </View>
                   </View>
@@ -444,11 +434,7 @@ export default function DashboardScreen() {
                           )}
                         </View>
                         <View style={styles.partyBadgeRow}>
-                          <View style={[styles.partyPill, { backgroundColor: partyCol + '18' }]}>
-                            <ThemedText variant="label" style={{ color: partyCol }} fontFamily="bold">
-                              {cand.partyAcronym}
-                            </ThemedText>
-                          </View>
+                          <Badge label={cand.partyAcronym} color={partyCol} size="sm" />
                         </View>
                       </View>
                     </View>
@@ -577,7 +563,7 @@ export default function DashboardScreen() {
 
           {/* Location Scope Search & Dropdown Autocomplete (Audio Part 8) */}
           <View style={{ marginTop: spacing.sm, zIndex: 10 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <ThemedText variant="label" color="textSecondary" fontFamily="bold">
                 GEOGRAPHIC PROJECTION SCOPE
               </ThemedText>
@@ -597,32 +583,26 @@ export default function DashboardScreen() {
               )}
             </View>
 
-            {/* Search Input Box */}
-            <View
-              style={[
-                styles.locSearchInputBox,
-                {
-                  backgroundColor: colors.surfaceElevated,
-                  borderColor: showLocationDropdown ? colors.primary : colors.border,
-                },
-              ]}
-            >
-              <Ionicons name="search-outline" size={16} color={colors.textSecondary} />
-              <TextInput
-                value={selectedLocation ? `${selectedLocation.name} (${selectedLocation.qualification})` : locationSearchQuery}
-                onChangeText={(text) => {
-                  setSelectedLocation(null);
-                  setLocationSearchQuery(text);
-                  setShowLocationDropdown(text.trim().length >= 2);
-                }}
-                onFocus={() => {
-                  if (locationSearchQuery.trim().length >= 2) setShowLocationDropdown(true);
-                }}
-                placeholder="Search State, LGA, Ward, or PU to simulate..."
-                placeholderTextColor={colors.textMuted}
-                style={[styles.locTextInput, { color: colors.text }]}
-              />
-              {(locationSearchQuery || selectedLocation) && (
+            {/* Active Selected Location Scope Banner */}
+            {selectedLocation && (
+              <View
+                style={[
+                  styles.activeScopeBox,
+                  {
+                    backgroundColor: colors.primarySubtle + '40',
+                    borderColor: colors.primary,
+                  },
+                ]}
+              >
+                <Ionicons name="location" size={16} color={colors.primary} />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <ThemedText variant="caption" color="text" fontFamily="bold">
+                    {selectedLocation.name}
+                  </ThemedText>
+                  <ThemedText variant="label" color="textSecondary">
+                    {selectedLocation.qualification}
+                  </ThemedText>
+                </View>
                 <Pressable
                   onPress={() => {
                     impact(Haptics.ImpactFeedbackStyle.Light);
@@ -631,15 +611,41 @@ export default function DashboardScreen() {
                     setShowLocationDropdown(false);
                   }}
                   hitSlop={8}
+                  style={{ padding: 4 }}
                 >
-                  <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
                 </Pressable>
-              )}
-            </View>
+              </View>
+            )}
+
+            {/* Search Input Box using shared Input */}
+            <Input
+              value={locationSearchQuery}
+              onChangeText={(text) => {
+                setLocationSearchQuery(text);
+                setShowLocationDropdown(true);
+              }}
+              onFocus={() => setShowLocationDropdown(true)}
+              placeholder="Search State, LGA, Ward, or PU to simulate..."
+              leftIcon="search-outline"
+              rightIcon={locationSearchQuery ? 'close-circle' : undefined}
+              onRightIconPress={() => {
+                setLocationSearchQuery('');
+                setShowLocationDropdown(false);
+              }}
+              containerStyle={{ marginBottom: 4 }}
+            />
 
             {/* Dropdown Results Box */}
             {showLocationDropdown && (
               <View style={[styles.locDropdown, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
+                {!locationSearchQuery.trim() && (
+                  <View style={{ paddingHorizontal: spacing.sm, paddingVertical: 6, backgroundColor: colors.borderSubtle }}>
+                    <ThemedText variant="label" color="textSecondary" fontFamily="bold">
+                      FEATURED / POPULAR SCOPES
+                    </ThemedText>
+                  </View>
+                )}
                 {searchingLocations ? (
                   <View style={{ padding: spacing.sm, gap: spacing.xs }}>
                     <Shimmer width="70%" height={12} borderRadius={radius.sm} />
@@ -652,12 +658,13 @@ export default function DashboardScreen() {
                     </ThemedText>
                   </View>
                 ) : (
-                  searchResults.slice(0, 5).map((item) => (
+                  searchResults.slice(0, 6).map((item) => (
                     <Pressable
                       key={item.id}
                       onPress={() => {
                         impact(Haptics.ImpactFeedbackStyle.Medium);
                         setSelectedLocation({ id: item.id, name: item.name, qualification: item.qualification });
+                        setLocationSearchQuery('');
                         setShowLocationDropdown(false);
                       }}
                       style={[styles.locDropdownItem, { borderBottomColor: colors.borderSubtle }]}
@@ -798,35 +805,18 @@ export default function DashboardScreen() {
                       </ThemedText>
                     </View>
 
-                    <View
-                      style={[
-                        styles.puStatusBadge,
-                        {
-                          backgroundColor: isPub
-                            ? colors.successSubtle
-                            : isDraft
-                              ? colors.warningSubtle
-                              : colors.borderSubtle,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        name={isPub ? 'checkmark-circle' : isDraft ? 'time' : 'radio-button-off'}
-                        size={12}
-                        color={isPub ? colors.success : isDraft ? colors.warning : colors.textMuted}
-                      />
-                      <ThemedText
-                        variant="label"
-                        fontFamily="bold"
-                        numberOfLines={1}
-                        style={{
-                          marginLeft: 4,
-                          color: isPub ? colors.success : isDraft ? colors.warning : colors.textMuted,
-                        }}
-                      >
-                        {pu.status}
-                      </ThemedText>
-                    </View>
+                    <Badge
+                      label={isPub ? 'PUBLISHED' : isDraft ? 'DRAFT' : 'PENDING'}
+                      variant={isPub ? 'success' : isDraft ? 'warning' : 'neutral'}
+                      size="sm"
+                      icon={
+                        <Ionicons
+                          name={isPub ? 'checkmark-circle' : isDraft ? 'time' : 'radio-button-off'}
+                          size={12}
+                          color={isPub ? colors.success : isDraft ? colors.warning : colors.textMuted}
+                        />
+                      }
+                    />
                   </View>
 
                   <View style={styles.puBottomRow}>
@@ -1333,6 +1323,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  activeScopeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
     marginBottom: spacing.xs,
   },
   locSearchInputBox: {

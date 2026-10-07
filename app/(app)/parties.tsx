@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, ScrollView, FlatList } from 'react-native';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, EmptyState, SkeletonCard } from '@/core/components';
+import { ThemedText, Card, EmptyState, SkeletonCard, Badge } from '@/core/components';
 import { Ionicons } from '@expo/vector-icons';
 import { usePartiesQuery, useCandidatesQuery } from '@/features/elections/hooks';
 import { spacing, radius, shadows } from '@/constants/tokens';
@@ -10,6 +10,7 @@ import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import Colors from '@/constants/colors';
+import { PARTY_COLORS } from '@/constants/parties';
 import * as Haptics from 'expo-haptics';
 
 export default function PartiesScreen() {
@@ -24,13 +25,6 @@ export default function PartiesScreen() {
   useForegroundRefresh([['parties', 'list'], ['elections', 'candidates', 'e1']], 10 * 60 * 1000);
   const { impact } = useHaptics();
 
-  const partyColors: Record<string, string> = {
-    CPA: '#0D6338',
-    DPP: '#DC2626',
-    PL: '#16A34A',
-    PPNF: '#2563EB',
-    ADP: '#CA8A04',
-  };
 
   return (
     <ScreenView scrollable={false} noScrollPadding>
@@ -96,7 +90,7 @@ export default function PartiesScreen() {
           ) : (
             <ScrollView contentContainerStyle={styles.scrollList}>
               {candidates.map((cand) => {
-              const pColor = partyColors[cand.partyAcronym] ?? colors.primary;
+              const pColor = PARTY_COLORS[cand.partyAcronym] ?? colors.primary;
 
               return (
                 <Card key={cand.id} style={styles.itemCard}>
@@ -116,11 +110,7 @@ export default function PartiesScreen() {
                       </ThemedText>
                     </View>
 
-                    <View style={[styles.partyTag, { backgroundColor: pColor + '20' }]}>
-                      <ThemedText variant="label" style={{ color: pColor }} fontFamily="bold">
-                        {cand.partyAcronym}
-                      </ThemedText>
-                    </View>
+                    <Badge label={cand.partyAcronym} color={pColor} size="sm" />
                   </View>
 
                   {/* Historical Party Transition Timeline (Audio Part 2) */}
@@ -156,7 +146,7 @@ export default function PartiesScreen() {
             contentContainerStyle={styles.listContent}
             ItemSeparatorComponent={() => <View style={{ height: spacing.xs }} />}
             renderItem={({ item: party }) => {
-              const pColor = partyColors[party.acronym] ?? colors.primary;
+              const pColor = PARTY_COLORS[party.acronym] ?? colors.primary;
 
               return (
                 <Card style={styles.itemCard}>

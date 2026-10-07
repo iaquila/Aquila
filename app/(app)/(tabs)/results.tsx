@@ -11,6 +11,7 @@ import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useResultsQuery, useCandidatesQuery } from '@/features/elections/hooks';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import Colors from '@/constants/colors';
+import { PARTY_COLORS } from '@/constants/parties';
 import { useResultsStore, useAuthStore, ResultSubmission, Candidate } from '@/features/auth/store';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -372,12 +373,6 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
   );
 });
 
-const PARTY_COLORS: Record<string, string> = {
-  CPA: '#0D6338',
-  DPP: '#DC2626',
-  PL: '#16A34A',
-  PPNF: '#2563EB',
-};
 
 type CollationLeaderboardRowProps = {
   rank: number;

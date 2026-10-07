@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard } from '@/core/components';
+import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Badge } from '@/core/components';
 import { useResultsQuery, useCandidatesQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
 import { spacing, radius, shadows } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
@@ -126,21 +126,18 @@ export default function ResultDetailScreen() {
             </ThemedText>
           </View>
 
-          <View style={[styles.statusPill, { backgroundColor: isVerified ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)' }]}>
-            <Ionicons
-              name={isVerified ? 'shield-checkmark' : 'time-outline'}
-              size={14}
-              color={isVerified ? '#34D399' : '#FBBF24'}
-            />
-            <ThemedText
-              variant="label"
-              color={isVerified ? '#34D399' : '#FBBF24'}
-              fontFamily="bold"
-              style={{ marginLeft: 4 }}
-            >
-              {result.status}
-            </ThemedText>
-          </View>
+          <Badge
+            label={result.status}
+            variant={isVerified ? 'success' : 'warning'}
+            size="sm"
+            icon={
+              <Ionicons
+                name={isVerified ? 'shield-checkmark' : 'time-outline'}
+                size={13}
+                color={isVerified ? '#34D399' : '#FBBF24'}
+              />
+            }
+          />
         </View>
 
         {/* Audit Metadata Strip */}
@@ -216,11 +213,7 @@ export default function ResultDetailScreen() {
                         {c.name}
                       </ThemedText>
                       <View style={styles.partyRow}>
-                        <View style={[styles.partyPill, { backgroundColor: partyColor + '18' }]}>
-                          <ThemedText variant="label" style={{ color: partyColor }} fontFamily="bold">
-                            {c.partyAcronym}
-                          </ThemedText>
-                        </View>
+                        <Badge label={c.partyAcronym} color={partyColor} size="sm" />
                       </View>
                     </View>
                   </View>
@@ -251,22 +244,18 @@ export default function ResultDetailScreen() {
                     <ThemedText variant="label" color="textMuted">
                       INEC Official: {c.inecVotes.toLocaleString()} votes
                     </ThemedText>
-                    <View style={styles.matchPill}>
-                      <Ionicons
-                        name={c.inecVotes === c.votes ? 'checkmark-circle' : 'alert-circle'}
-                        size={12}
-                        color={c.inecVotes === c.votes ? colors.success : colors.warning}
-                      />
-                      <ThemedText
-                        variant="label"
-                        style={{
-                          marginLeft: 4,
-                          color: c.inecVotes === c.votes ? colors.success : colors.warning,
-                        }}
-                      >
-                        {c.inecVotes === c.votes ? 'Matched' : 'Discrepancy'}
-                      </ThemedText>
-                    </View>
+                    <Badge
+                      label={c.inecVotes === c.votes ? 'Matched' : 'Discrepancy'}
+                      variant={c.inecVotes === c.votes ? 'success' : 'warning'}
+                      size="sm"
+                      icon={
+                        <Ionicons
+                          name={c.inecVotes === c.votes ? 'checkmark-circle' : 'alert-circle'}
+                          size={12}
+                          color={c.inecVotes === c.votes ? colors.success : colors.warning}
+                        />
+                      }
+                    />
                   </View>
                 )}
               </View>

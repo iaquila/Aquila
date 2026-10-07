@@ -40,7 +40,21 @@ const NIGERIA_STATES = [
   { id: 's37', name: 'Zamfara', code: 'ZA' },
 ];
 
+const PROMINENT_LGAS: Array<{ id: string; name: string; stateId: string }> = [
+  { id: 'lga-ikeja', name: 'Ikeja', stateId: 's25' },
+  { id: 'lga-eti-osa', name: 'Eti-Osa', stateId: 's25' },
+  { id: 'lga-alimosho', name: 'Alimosho', stateId: 's25' },
+  { id: 'lga-amac', name: 'Abuja Municipal (AMAC)', stateId: 's15' },
+  { id: 'lga-kano-mun', name: 'Kano Municipal', stateId: 's20' },
+  { id: 'lga-fagge', name: 'Fagge', stateId: 's20' },
+  { id: 'lga-phc', name: 'Port Harcourt', stateId: 's33' },
+  { id: 'lga-ibadan-north', name: 'Ibadan North', stateId: 's31' },
+  { id: 'lga-enugu-north', name: 'Enugu North', stateId: 's14' },
+  { id: 'lga-kaduna-south', name: 'Kaduna South', stateId: 's19' },
+];
+
 const LGAS: Array<{ id: string; name: string; stateId: string }> = [
+  ...PROMINENT_LGAS,
   ...NIGERIA_STATES.slice(0, 37).flatMap((s) =>
     Array.from({ length: 5 }, (_, i) => ({
       id: `${s.id}-lga-${i + 1}`,
@@ -68,22 +82,112 @@ const POSITIONS = [
   { id: 'pos7', name: 'Councillor', electoralAreaType: 'Ward' },
 ];
 
-const POLLING_UNITS: PollingUnit[] = LGAS.slice(0, 50).flatMap((lga) =>
-  Array.from({ length: 3 }, (_, i) => ({
-    id: `pu-${lga.id}-${i + 1}`,
-    name: `PU ${lga.name} ${i + 1}`,
-    code: `PU/${lga.id.slice(-3).toUpperCase()}/${i + 1}`,
-    wardId: `ward-${lga.id}`,
-    wardName: `${lga.name} Ward`,
-    lgaId: lga.id,
-    lgaName: lga.name,
-    stateId: lga.stateId,
-    stateName: NIGERIA_STATES.find((s) => s.id === lga.stateId)?.name ?? '',
-    latitude: 6.5 + Math.random() * 6,
-    longitude: 3 + Math.random() * 7,
-    status: 'ACTIVE' as const,
-  }))
-);
+const PROMINENT_PUS: PollingUnit[] = [
+  {
+    id: 'pu-s25-lga-1-1',
+    name: 'PU 001 · Alausa Secretariat',
+    code: 'PU 24/08/01/001',
+    wardId: 'ward-alausa',
+    wardName: 'Alausa Ward 01',
+    lgaId: 'lga-ikeja',
+    lgaName: 'Ikeja',
+    stateId: 's25',
+    stateName: 'Lagos',
+    latitude: 6.618,
+    longitude: 3.358,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pu-s25-lga-1-2',
+    name: 'PU 002 · Ikeja High School',
+    code: 'PU 24/08/01/002',
+    wardId: 'ward-ikeja-gra',
+    wardName: 'Ikeja GRA Ward 02',
+    lgaId: 'lga-ikeja',
+    lgaName: 'Ikeja',
+    stateId: 's25',
+    stateName: 'Lagos',
+    latitude: 6.592,
+    longitude: 3.342,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pu-s25-lga-1-3',
+    name: 'PU 003 · Allen Avenue Junction',
+    code: 'PU 24/08/01/003',
+    wardId: 'ward-allen',
+    wardName: 'Allen Ward 03',
+    lgaId: 'lga-ikeja',
+    lgaName: 'Ikeja',
+    stateId: 's25',
+    stateName: 'Lagos',
+    latitude: 6.602,
+    longitude: 3.351,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pu-fct-amac-4',
+    name: 'PU 004 · Garki Area 1 Post Office',
+    code: 'PU 37/01/01/004',
+    wardId: 'ward-garki',
+    wardName: 'Garki Ward 01',
+    lgaId: 'lga-amac',
+    lgaName: 'Abuja Municipal (AMAC)',
+    stateId: 's15',
+    stateName: 'FCT',
+    latitude: 9.025,
+    longitude: 7.489,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pu-kano-fagge-15',
+    name: 'PU 015 · Sabon Gari Central',
+    code: 'PU 19/20/01/015',
+    wardId: 'ward-fagge',
+    wardName: 'Fagge Ward 01',
+    lgaId: 'lga-fagge',
+    lgaName: 'Fagge',
+    stateId: 's20',
+    stateName: 'Kano',
+    latitude: 12.002,
+    longitude: 8.516,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'pu-eti-osa-12',
+    name: 'PU 012 · Victoria Island Primary School',
+    code: 'PU 24/11/02/012',
+    wardId: 'ward-vi',
+    wardName: 'Victoria Island Ward 02',
+    lgaId: 'lga-eti-osa',
+    lgaName: 'Eti-Osa',
+    stateId: 's25',
+    stateName: 'Lagos',
+    latitude: 6.428,
+    longitude: 3.421,
+    status: 'ACTIVE',
+  },
+];
+
+const POLLING_UNITS: PollingUnit[] = [
+  ...PROMINENT_PUS,
+  ...LGAS.slice(0, 50).flatMap((lga) =>
+    Array.from({ length: 3 }, (_, i) => ({
+      id: `pu-${lga.id}-${i + 1}`,
+      name: `PU ${lga.name} ${i + 1}`,
+      code: `PU/${lga.id.slice(-3).toUpperCase()}/${i + 1}`,
+      wardId: `ward-${lga.id}`,
+      wardName: `${lga.name} Ward`,
+      lgaId: lga.id,
+      lgaName: lga.name,
+      stateId: lga.stateId,
+      stateName: NIGERIA_STATES.find((s) => s.id === lga.stateId)?.name ?? '',
+      latitude: 6.5 + Math.random() * 6,
+      longitude: 3 + Math.random() * 7,
+      status: 'ACTIVE' as const,
+    }))
+  ),
+];
 
 const WARDS = LGAS.slice(0, 20).flatMap((lga) =>
   Array.from({ length: 2 }, (_, i) => ({
@@ -839,22 +943,71 @@ export const mockApi = {
 
     const target = profiles[candidateId] ?? profiles.cand1!;
 
+    // Dynamic Localized Variance Calculation for Specific Polling Units & LGAs
+    const isLocalScope = !!params?.locationId || (!!params?.locationText && !params.locationText.includes('National'));
+    const locLower = locationName.toLowerCase();
+    const isPU = locLower.includes('pu') || locLower.includes('polling unit');
+
+    let localVoteShare = target.baseVoteShare;
+    let localWinProb = target.baseWinProb;
+    let localMargin = target.margin;
+    let localSwing = target.swing;
+    let localizedInsight = target.insight;
+
+    if (isLocalScope) {
+      if (candidateId === 'cand1') {
+        // CPA: Strong in Lagos, South-West, Alausa
+        const boost = locLower.includes('lagos') || locLower.includes('alausa') || locLower.includes('ikeja') ? 7.4 : -2.1;
+        localVoteShare = Math.min(Math.round((localVoteShare + boost) * 10) / 10, 89.0);
+        localWinProb = Math.min(Math.round((localWinProb + (boost > 0 ? 12.0 : -6.0)) * 10) / 10, 96.0);
+        localMargin = isPU ? `+${Math.round(180 + boost * 15)} votes in unit` : `+${boost > 0 ? '12.4%' : '2.1%'} regional margin`;
+        localSwing = boost > 0 ? `+${(3.8 + boost * 0.5).toFixed(1)}% local corridor` : `-1.8% variance`;
+      } else if (candidateId === 'cand3') {
+        // PL: Strong urban youth momentum in Lagos, FCT, South-East
+        const boost = locLower.includes('lagos') || locLower.includes('fct') || locLower.includes('abuja') || locLower.includes('alausa') || locLower.includes('enugu') ? 12.8 : -4.0;
+        localVoteShare = Math.min(Math.round((localVoteShare + boost) * 10) / 10, 92.0);
+        localWinProb = Math.min(Math.round((localWinProb + (boost > 0 ? 24.0 : -8.0)) * 10) / 10, 94.0);
+        localMargin = isPU ? `+${Math.round(210 + boost * 12)} votes in unit` : `+${boost > 0 ? '18.2%' : '4.0%'} urban surge`;
+        localSwing = boost > 0 ? `+${(12.4 + boost * 0.6).toFixed(1)}% precinct surge` : `-3.2% rural lag`;
+      } else if (candidateId === 'cand4') {
+        // PPNF: Regional fortress in Kano
+        const boost = locLower.includes('kano') || locLower.includes('fagge') ? 34.0 : -4.5;
+        localVoteShare = Math.min(Math.round((localVoteShare + boost) * 10) / 10, 88.0);
+        localWinProb = Math.min(Math.round((localWinProb + (boost > 0 ? 45.0 : -8.0)) * 10) / 10, 91.0);
+        localMargin = isPU ? `+${Math.round(260 + boost * 8)} votes in unit` : `+${boost > 0 ? '38.0%' : '1.5%'} local fortress`;
+        localSwing = boost > 0 ? `+${(8.5 + boost * 0.4).toFixed(1)}% northern density` : `-2.0% cross-zonal`;
+      } else {
+        // DPP: North-Central & North-East
+        const boost = locLower.includes('north') || locLower.includes('kaduna') || locLower.includes('borno') ? 8.2 : -3.5;
+        localVoteShare = Math.min(Math.round((localVoteShare + boost) * 10) / 10, 85.0);
+        localWinProb = Math.min(Math.round((localWinProb + (boost > 0 ? 15.0 : -5.0)) * 10) / 10, 90.0);
+        localMargin = isPU ? `+${Math.round(140 + boost * 10)} votes in unit` : `+${boost > 0 ? '9.4%' : '3.0%'} baseline lead`;
+        localSwing = boost > 0 ? `+${(4.2 + boost * 0.5).toFixed(1)}% corridor lead` : `-2.5% southern deficit`;
+      }
+
+      if (isPU) {
+        localizedInsight = `Precinct Simulation for ${locationName}: Collation model projects ${localVoteShare}% localized vote share (${localMargin}). Telemetry indicates 76.8% voter accreditation turnout with 99.2% ballot audit integrity.`;
+      } else {
+        localizedInsight = `Sub-National Projection for ${locationName}: Collation model forecasts ${localVoteShare}% share (${localMargin}) with an estimated ${localSwing} swing cross-referenced against ${pastDataLabel}.`;
+      }
+    }
+
     return {
       candidateId,
       candidateName: target.name,
       partyAcronym: target.party,
-      projectedVoteShare: target.baseVoteShare,
-      projectedVotes: target.totalVotes,
-      winProbability: target.baseWinProb,
-      confidenceScore: 91.4,
-      leadingMargin: target.margin,
-      swingDelta: target.swing,
+      projectedVoteShare: localVoteShare,
+      projectedVotes: isLocalScope ? Math.round(target.totalVotes * (localVoteShare / target.baseVoteShare)) : target.totalVotes,
+      winProbability: localWinProb,
+      confidenceScore: isPU ? 98.6 : isLocalScope ? 95.2 : 91.4,
+      leadingMargin: localMargin,
+      swingDelta: localSwing,
       historicalBaselineYear: pastData === 0 ? '2023' : pastData === 1 ? '2019' : 'Combined',
       historicalParty: target.histParty,
       locationScope: locationName,
       keyInsights: [
-        target.insight,
-        `Collation rate weighting applied across ${locationName} with 99.4% precinct integrity threshold.`,
+        localizedInsight,
+        `Neural weighting applied across ${locationName} with ${isPU ? '99.8% precinct' : '99.4% jurisdictional'} integrity threshold.`,
       ],
       disclaimer: 'This projection is based on available data and AI simulation. It may not be 100% accurate.',
     };
@@ -867,8 +1020,49 @@ export const mockApi = {
     qualification: string;
   }>> => {
     const q = query.trim().toLowerCase();
-    if (!q) return [];
-    await delay(150);
+    await delay(120);
+
+    // Return instant featured suggestions when empty/focused
+    if (!q) {
+      return [
+        {
+          id: 'pu-s25-lga-1-1',
+          name: 'PU 001 · Alausa Secretariat (PU 24/08/01/001)',
+          type: 'PU',
+          qualification: 'Ikeja, Lagos State',
+        },
+        {
+          id: 'lga-ikeja',
+          name: 'Ikeja LGA',
+          type: 'LGA',
+          qualification: 'Lagos State',
+        },
+        {
+          id: 's25',
+          name: 'Lagos State',
+          type: 'STATE',
+          qualification: 'South-West Zone',
+        },
+        {
+          id: 'lga-amac',
+          name: 'Abuja Municipal (AMAC)',
+          type: 'LGA',
+          qualification: 'FCT',
+        },
+        {
+          id: 'pu-fct-amac-4',
+          name: 'PU 004 · Garki Area 1 Post Office (PU 37/01/01/004)',
+          type: 'PU',
+          qualification: 'Abuja Municipal, FCT',
+        },
+        {
+          id: 's20',
+          name: 'Kano State',
+          type: 'STATE',
+          qualification: 'North-West Zone',
+        },
+      ];
+    }
 
     const results: Array<{
       id: string;
@@ -879,7 +1073,7 @@ export const mockApi = {
 
     // Search Polling Units
     POLLING_UNITS.forEach((pu) => {
-      if (pu.name.toLowerCase().includes(q) || pu.code.toLowerCase().includes(q) || pu.lgaName.toLowerCase().includes(q)) {
+      if (pu.name.toLowerCase().includes(q) || pu.code.toLowerCase().includes(q) || pu.lgaName.toLowerCase().includes(q) || pu.stateName.toLowerCase().includes(q)) {
         results.push({
           id: pu.id,
           name: `${pu.name} (${pu.code})`,

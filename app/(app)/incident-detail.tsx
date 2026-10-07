@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, View, Pressable, Alert, TextInput, Modal, Linking } from 'react-native';
+import { StyleSheet, View, Pressable, Alert, Modal, Linking } from 'react-native';
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -7,7 +7,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard } from '@/core/components';
+import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Input, Badge } from '@/core/components';
 import { useIncidentsQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
 import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
@@ -19,12 +19,7 @@ import { IncidentStatus, IncidentSeverity } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-const SEVERITY_COLORS: Record<string, string> = {
-  CRITICAL: '#DC2626',
-  HIGH: '#EA580C',
-  MEDIUM: '#D97706',
-  LOW: '#16A34A',
-};
+import { SEVERITY_COLORS } from '@/constants/incidents';
 
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   VOTE_BUYING: 'cash-outline',
@@ -169,15 +164,10 @@ export default function IncidentDetailScreen() {
             </ThemedText>
           </View>
 
-          <View style={[styles.statusBadge, { backgroundColor: isResolved ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)' }]}>
-            <ThemedText
-              variant="label"
-              color={isResolved ? '#6EE7B7' : '#FDE68A'}
-              fontFamily="bold"
-            >
-              {isResolved ? 'RESOLVED' : isUnderReview ? 'UNDER REVIEW' : 'LOGGED'}
-            </ThemedText>
-          </View>
+          <Badge
+            label={isResolved ? 'RESOLVED' : isUnderReview ? 'UNDER REVIEW' : 'LOGGED'}
+            variant={isResolved ? 'success' : isUnderReview ? 'warning' : 'neutral'}
+          />
         </View>
 
         <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing.sm }}>
@@ -554,21 +544,13 @@ export default function IncidentDetailScreen() {
           <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: 6 }}>
             SITUATION ROOM DIRECTIVES & NOTES
           </ThemedText>
-          <TextInput
+          <Input
             value={officerNotes}
             onChangeText={setOfficerNotes}
             placeholder="Log dispatch orders, security team mobilization, or audit notes..."
-            placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={3}
-            style={[
-              styles.notesInput,
-              {
-                color: colors.text,
-                backgroundColor: colors.surfaceElevated,
-                borderColor: colors.border,
-              },
-            ]}
+            containerStyle={{ marginTop: spacing.md, marginBottom: spacing.md }}
           />
 
           <Button

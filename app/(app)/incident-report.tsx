@@ -16,13 +16,7 @@ import { ROUTES } from '@/constants/routes';
 import Colors from '@/constants/colors';
 import { FEATURES } from '@/constants/features';
 import { Ionicons } from '@expo/vector-icons';
-
-const CATEGORIES = [
-  'VIOLENCE', 'BALLOT_SNATCHING', 'VOTE_BUYING', 'VOTER_INTIMIDATION',
-  'BVAS_FAILURE', 'SECURITY_INCIDENT', 'PROTEST', 'OTHER',
-] as IncidentCategory[];
-
-const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as IncidentSeverity[];
+import { INCIDENT_CATEGORIES as CATEGORIES, INCIDENT_SEVERITIES as SEVERITIES } from '@/constants/incidents';
 
 export default function ReportIncidentScreen() {
   const { electionId, pollingUnitId: preselectedPuId, pollingUnitName: preselectedPuName } = useLocalSearchParams<{ electionId?: string; pollingUnitId?: string; pollingUnitName?: string }>();

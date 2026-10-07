@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard } from '@/core/components';
+import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Badge } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
 import { spacing, shadows, radius } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
@@ -12,13 +12,7 @@ import { useElectionDetailQuery, useCandidatesQuery } from '@/features/elections
 import Colors from '@/constants/colors';
 import { useForegroundRefresh, useRefreshControl } from '@/core/hooks';
 
-const PARTY_COLORS: Record<string, { bg: string; text: string }> = {
-  CPA: { bg: '#0D9488', text: '#FFFFFF' },
-  DPP: { bg: '#DC2626', text: '#FFFFFF' },
-  PL: { bg: '#16A34A', text: '#FFFFFF' },
-  PPNF: { bg: '#2563EB', text: '#FFFFFF' },
-  ADP: { bg: '#D97706', text: '#FFFFFF' },
-};
+import { PARTY_COLORS } from '@/constants/parties';
 
 export default function ElectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -111,7 +105,7 @@ export default function ElectionDetailScreen() {
       {/* 3. Candidates List */}
       <View style={{ gap: spacing.xs }}>
         {candidates.map((c, index) => {
-          const partyColor = PARTY_COLORS[c.partyAcronym]?.bg ?? colors.primary;
+          const partyColor = PARTY_COLORS[c.partyAcronym] ?? colors.primary;
           return (
             <Card key={c.id} style={styles.candCard}>
               <View style={styles.candRow}>
@@ -125,11 +119,7 @@ export default function ElectionDetailScreen() {
                     <ThemedText variant="body" color="text" fontFamily="bold">
                       {c.fullName}
                     </ThemedText>
-                    <View style={[styles.partyPill, { backgroundColor: partyColor + '20', borderColor: partyColor }]}>
-                      <ThemedText variant="caption" style={{ color: partyColor, fontWeight: '700', fontSize: 10 }}>
-                        {c.partyAcronym}
-                      </ThemedText>
-                    </View>
+                    <Badge label={c.partyAcronym} color={partyColor} size="sm" />
                   </View>
                   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
                     {c.partyName}
@@ -140,11 +130,7 @@ export default function ElectionDetailScreen() {
                     </ThemedText>
                   ) : null}
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: colors.successSubtle, flexShrink: 0 }]}>
-                  <ThemedText variant="label" color="success" fontFamily="bold">
-                    {c.status}
-                  </ThemedText>
-                </View>
+                <Badge label={c.status} variant="success" size="sm" />
               </View>
             </Card>
           );
