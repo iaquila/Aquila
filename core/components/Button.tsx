@@ -104,6 +104,7 @@ export function Button({
       onPressOut={onScaleOut}
       disabled={disabled || loading}
       style={[
+        { maxWidth: '100%' },
         fullWidth ? { alignSelf: 'stretch' as FlexAlignType } : undefined,
         containerFlexStyle,
       ]}

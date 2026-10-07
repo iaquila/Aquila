@@ -93,4 +93,13 @@
       - Converted `puLogItem` to `<Card pressable>`.
       - Converted `verifiedPill`, `statusPill`, and `matchPill` to `<Badge>`.
       - Removed unused `DebouncedPressable` import.
+  * Container Containment & Card De-Nesting Restructure (Apple HIG & Material 3):
+    - Eliminated Nested Card Anti-Pattern (Zero nested Cards in the entire app):
+      * `index.tsx`: Replaced outer `Card` wrapping Assigned Polling Units with clean unboxed `sectionContainer`, giving PU cards the full viewport width and removing 32dp of double card padding.
+      * `result-collation.tsx`: Replaced outer `Card` wrapping Recent Polling Unit Returns with `sectionContainer` and standalone cards.
+      * `profile.tsx`: Replaced nested `Card` items inside Operational Modules and Legal & Compliance with standard iOS Grouped List rows (`DebouncedPressable` + `moduleRow` with subtle dividers).
+    - Enforced Structural Containment in Core Components:
+      * `Card.tsx`: Injected `overflow: 'hidden'` onto `styles.card`, `AnimatedCard`, and the content container, guaranteeing children can never bleed past card boundaries or rounded corners.
+      * `Button.tsx`: Added `maxWidth: '100%'` onto `DebouncedPressable` to guarantee buttons never exceed parent container widths.
+      * Unconstrained Rigid minWidth Clamps: Replaced rigid `minWidth: 160`, `minWidth: 140`, and `minWidth: 120` clamps with responsive `minWidth: 0, flex: 1, flexShrink: 1` across `index.tsx` (`puBottomRow`, `sectionHeaderLeft`, `candLeft`), `result-submit.tsx` (`candidate tally header`), `results.tsx` (lead subtitle), and `SectionHeader.tsx`.
 

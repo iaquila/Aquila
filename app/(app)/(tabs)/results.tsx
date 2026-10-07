@@ -455,7 +455,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
               {leadingParty}
             </ThemedText>
           </View>
-          <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, minWidth: 120 }}>
+          <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
             {leadingCandidate} · {subTitle}
           </ThemedText>
         </View>

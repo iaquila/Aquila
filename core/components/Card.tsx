@@ -151,12 +151,12 @@ function AnimatedCard({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       testID={testID}
-      style={[{ borderRadius: radius.md, alignSelf: 'stretch' }, containerStyle]}
+      style={[{ borderRadius: radius.md, alignSelf: 'stretch', overflow: 'hidden' }, containerStyle]}
       accessible
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Animated.View style={[{ transform: [{ scale }], width: '100%' }, hasFlex ? { flex: 1 } : null]}>
+      <Animated.View style={[{ transform: [{ scale }], width: '100%', overflow: 'hidden' }, hasFlex ? { flex: 1 } : null]}>
         {children}
       </Animated.View>
     </DebouncedPressable>
@@ -169,5 +169,6 @@ const styles = StyleSheet.create({
     padding: spacing.screen.cardPadding,
     alignSelf: 'stretch',
     minWidth: 0,
+    overflow: 'hidden',
   },
 });

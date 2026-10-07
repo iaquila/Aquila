@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
 import { spacing, radius, border } from '@/constants/tokens';
+import { ThemedText } from './ThemedText';
 
 type ToastMessage = {
   id: string;
@@ -75,7 +76,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               toast.type === 'success' && { borderColor: colors.success },
             ]}
           >
-            <Text style={[styles.text, { color: colors.text }]}>{toast.text}</Text>
+            <ThemedText variant="body" style={[styles.text, { color: colors.text }]}>
+              {toast.text}
+            </ThemedText>
           </View>
         ))}
       </View>

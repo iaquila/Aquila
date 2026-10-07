@@ -740,7 +740,7 @@ export default function DashboardScreen() {
 
       {/* 5. Assigned Polling Units (PRD: PU Agent = 1 PU, Field Agent = 3 PUs, Officer = Supervisory) */}
       <EntranceView delay={250}>
-        <Card style={styles.sectionCard}>
+        <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionHeaderLeft}>
               <ThemedText variant="title" color="text" fontFamily="bold">
@@ -820,7 +820,7 @@ export default function DashboardScreen() {
                   </View>
 
                   <View style={styles.puBottomRow}>
-                    <View style={{ flex: 1, minWidth: 140, paddingRight: spacing.xs }}>
+                    <View style={{ flex: 1, minWidth: 0, flexShrink: 1, paddingRight: spacing.xs }}>
                       <ThemedText variant="caption" color="textSecondary">
                         {isPub
                           ? `${pu.votes} Votes tallied (${pu.accredited} accredited)`
@@ -854,7 +854,7 @@ export default function DashboardScreen() {
               );
             })}
           </View>
-        </Card>
+        </View>
       </EntranceView>
 
       {/* 6. Quick Actions Grid */}
@@ -1091,6 +1091,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     gap: 4,
   },
+  sectionContainer: {
+    marginBottom: spacing.xs,
+  },
   sectionCard: {
     padding: spacing.md,
     borderRadius: radius.lg,
@@ -1106,7 +1109,8 @@ const styles = StyleSheet.create({
   },
   sectionHeaderLeft: {
     flex: 1,
-    minWidth: 160,
+    minWidth: 0,
+    flexShrink: 1,
     marginRight: spacing.sm,
   },
   viewAllBtn: {
@@ -1137,7 +1141,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    minWidth: 160,
+    minWidth: 0,
+    flexShrink: 1,
   },
   rankTag: {
     width: 28,

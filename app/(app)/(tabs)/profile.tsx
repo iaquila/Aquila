@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import * as ScreenCapture from 'expo-screen-capture';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, Button } from '@/core/components';
+import { ThemedText, Card, Button, DebouncedPressable } from '@/core/components';
 import { useAuthStore } from '@/features/auth/store';
 import { useLogoutMutation } from '@/features/auth/hooks';
 import { ROUTES } from '@/constants/routes';
@@ -211,7 +211,7 @@ export default function ProfileTabScreen() {
           Operational Modules
         </ThemedText>
 
-        <View style={{ gap: spacing.xs, marginTop: spacing.xs }}>
+        <View style={{ marginTop: spacing.xs }}>
           {[
             { label: 'Electoral Geography & Autocomplete', icon: 'map-outline', route: ROUTES.LOCATIONS },
             { label: 'Political Parties & Candidate Directory', icon: 'people-outline', route: ROUTES.PARTIES },
@@ -219,25 +219,28 @@ export default function ProfileTabScreen() {
             ...(user?.role === 'ELECTION_OFFICER'
               ? [{ label: 'Audit & Search Results', icon: 'search-outline', route: ROUTES.RESULT_SEARCH }]
               : [{ label: 'Draft Results Queue', icon: 'save-outline', route: ROUTES.RESULT_DRAFTS }]),
-          ].map((item) => (
-            <Card
+          ].map((item, idx, arr) => (
+            <DebouncedPressable
               key={item.label}
-              pressable
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                 router.push(item.route as any);
               }}
-              style={[styles.moduleLink, { borderColor: colors.border }]}
+              style={[
+                styles.moduleRow,
+                idx < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={[styles.moduleIconWrap, { backgroundColor: colors.primary + '14' }]}>
-                  <Ionicons name={item.icon as any} size={18} color={colors.primary} />
-                </View>
-                <ThemedText variant="body" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: spacing.xs }}>
-                  {item.label}
-                </ThemedText>
-                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+              <View style={[styles.moduleIconWrap, { backgroundColor: colors.primary + '14' }]}>
+                <Ionicons name={item.icon as any} size={18} color={colors.primary} />
               </View>
-            </Card>
+              <ThemedText variant="body" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: spacing.xs }}>
+                {item.label}
+              </ThemedText>
+              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            </DebouncedPressable>
           ))}
         </View>
       </Card>
@@ -320,32 +323,34 @@ export default function ProfileTabScreen() {
           </Pressable>
         </View>
 
-        <View style={{ gap: spacing.xs }}>
+        <View style={{ marginTop: spacing.xs }}>
           {[
             { label: 'Help & Support Desk', icon: 'help-circle-outline', url: LEGAL_URLS.SUPPORT },
             { label: 'Privacy Policy', icon: 'shield-checkmark-outline', url: LEGAL_URLS.PRIVACY },
             { label: 'Terms & Conditions', icon: 'document-text-outline', url: LEGAL_URLS.TERMS },
             { label: 'Account & Data Deletion', icon: 'trash-outline', url: LEGAL_URLS.DELETION },
-          ].map((item) => (
-            <Card
+          ].map((item, idx, arr) => (
+            <DebouncedPressable
               key={item.label}
-              pressable
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 WebBrowser.openBrowserAsync(item.url).catch(() => {});
               }}
-              style={[styles.moduleLink, { borderColor: colors.border }]}
+              style={[
+                styles.moduleRow,
+                idx < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={[styles.moduleIconWrap, { backgroundColor: colors.primary + '14' }]}>
-                  <Ionicons name={item.icon as any} size={18} color={colors.primary} />
-                </View>
-                <ThemedText variant="body" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: spacing.xs }}>
-                  {item.label}
-                </ThemedText>
-                <Ionicons name="open-outline" size={16} color={colors.textMuted} />
+              <View style={[styles.moduleIconWrap, { backgroundColor: colors.primary + '14' }]}>
+                <Ionicons name={item.icon as any} size={18} color={colors.primary} />
               </View>
-            </Card>
+              <ThemedText variant="body" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: spacing.xs }}>
+                {item.label}
+              </ThemedText>
+              <Ionicons name="open-outline" size={16} color={colors.textMuted} />
+            </DebouncedPressable>
           ))}
         </View>
       </Card>
@@ -420,12 +425,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xs,
   },
-  moduleLink: {
+  moduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
   moduleIconWrap: {
     width: 32,

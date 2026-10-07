@@ -217,7 +217,7 @@ export default function ResultCollationScreen() {
       </Card>
 
       {/* 3. Reporting Polling Units Breakdown Log */}
-      <Card style={styles.sectionCard}>
+      <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <View>
             <ThemedText variant="title" color="text" fontFamily="bold">
@@ -260,7 +260,7 @@ export default function ResultCollationScreen() {
             </Card>
           ))}
         </View>
-      </Card>
+      </View>
     </ScreenView>
   );
 }
@@ -308,6 +308,9 @@ const styles = StyleSheet.create({
     height: 24,
     backgroundColor: 'rgba(255,255,255,0.15)',
     marginHorizontal: spacing.xs,
+  },
+  sectionContainer: {
+    marginBottom: spacing.xs,
   },
   sectionCard: {
     padding: spacing.md,
