@@ -47,8 +47,16 @@ export function IncidentMarquee({ incidents, style }: Props) {
   const translateX = useRef(new Animated.Value(0)).current;
   const currentOffsetRef = useRef(0);
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
+  const isMountedRef = useRef(true);
 
   const activeIncidents = incidents.slice(0, 8);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Check accessibility reduced-motion preference
   useEffect(() => {
@@ -67,7 +75,7 @@ export function IncidentMarquee({ incidents, style }: Props) {
 
   const startAnimation = useCallback(
     (fromVal: number) => {
-      if (cycleWidth <= 0 || reduceMotion) return;
+      if (cycleWidth <= 0 || reduceMotion || !isMountedRef.current) return;
 
       let startVal = fromVal;
       if (startVal <= -cycleWidth || startVal >= 0) {
@@ -80,15 +88,16 @@ export function IncidentMarquee({ incidents, style }: Props) {
       const duration = Math.max(1000, (remainingDistance / 40) * 1000);
 
       animRef.current?.stop();
-      animRef.current = Animated.timing(translateX, {
+      const anim = Animated.timing(translateX, {
         toValue: -cycleWidth,
         duration,
         easing: Easing.linear,
         useNativeDriver: true,
       });
+      animRef.current = anim;
 
-      animRef.current.start(({ finished }) => {
-        if (finished) {
+      anim.start(({ finished }) => {
+        if (finished && isMountedRef.current) {
           translateX.setValue(0);
           currentOffsetRef.current = 0;
           startAnimation(0);
@@ -136,14 +145,33 @@ export function IncidentMarquee({ incidents, style }: Props) {
       accessibilityRole="button"
       accessibilityLabel={`Incident: ${i.category.replace(/_/g, ' ')} at ${i.electoralArea}`}
     >
-      <ThemedText variant="caption" style={{ color: colors.critical, fontWeight: '700' }}>
+      <ThemedText
+        variant="caption"
+        numberOfLines={1}
+        style={{ color: colors.critical, fontWeight: '700', flexShrink: 0 }}
+      >
         {i.category.replace(/_/g, ' ')}
       </ThemedText>
-      <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 4 }}>
+      <ThemedText
+        variant="caption"
+        numberOfLines={1}
+        color="textSecondary"
+        style={{ marginLeft: 4, flexShrink: 0 }}
+      >
         @{i.electoralArea}: {i.description.slice(0, 48)}
       </ThemedText>
-      <Ionicons name="chevron-forward" size={11} color={colors.critical} style={{ opacity: 0.8, marginLeft: 2 }} />
-      <ThemedText variant="caption" color="textMuted" style={{ marginHorizontal: spacing.sm }}>
+      <Ionicons
+        name="chevron-forward"
+        size={11}
+        color={colors.critical}
+        style={{ opacity: 0.8, marginLeft: 2, flexShrink: 0 }}
+      />
+      <ThemedText
+        variant="caption"
+        numberOfLines={1}
+        color="textMuted"
+        style={{ marginHorizontal: spacing.sm, flexShrink: 0 }}
+      >
         •
       </ThemedText>
     </Pressable>
@@ -159,7 +187,7 @@ export function IncidentMarquee({ incidents, style }: Props) {
       accessibilityRole="none"
     >
       <View style={[styles.label, { backgroundColor: colors.critical }]}>
-        <ThemedText variant="caption" style={{ color: '#fff', fontWeight: '800', letterSpacing: 0.5 }}>
+        <ThemedText variant="caption" numberOfLines={1} style={{ color: '#fff', fontWeight: '800', letterSpacing: 0.5 }}>
           LIVE
         </ThemedText>
       </View>
@@ -169,7 +197,7 @@ export function IncidentMarquee({ incidents, style }: Props) {
           style={[styles.tickerRow, { transform: [{ translateX }] }]}
           pointerEvents="box-none"
         >
-          {/* Primary Sequence (measured to get cycle width) */}
+          {/* Primary Sequence (measured unconstrained to get true cycle width) */}
           <View
             style={styles.sequenceGroup}
             onLayout={(e) => {
@@ -209,7 +237,7 @@ export function IncidentMarqueeScrollable({ incidents, style }: Props) {
       ]}
     >
       <View style={[styles.label, { backgroundColor: colors.critical }]}>
-        <ThemedText variant="caption" style={{ color: '#fff', fontWeight: '800' }}>
+        <ThemedText variant="caption" numberOfLines={1} style={{ color: '#fff', fontWeight: '800' }}>
           LIVE
         </ThemedText>
       </View>
@@ -228,10 +256,19 @@ export function IncidentMarqueeScrollable({ incidents, style }: Props) {
             }}
             style={styles.incidentPill}
           >
-            <ThemedText variant="caption" style={{ color: colors.critical, fontWeight: '700' }}>
+            <ThemedText
+              variant="caption"
+              numberOfLines={1}
+              style={{ color: colors.critical, fontWeight: '700', flexShrink: 0 }}
+            >
               {i.category.replace(/_/g, ' ')}
             </ThemedText>
-            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 4 }}>
+            <ThemedText
+              variant="caption"
+              numberOfLines={1}
+              color="textSecondary"
+              style={{ marginLeft: 4, flexShrink: 0 }}
+            >
               @{i.electoralArea} •
             </ThemedText>
           </Pressable>
@@ -262,19 +299,24 @@ const styles = StyleSheet.create({
   },
   track: {
     flex: 1,
+    height: '100%',
     overflow: 'hidden',
     justifyContent: 'center',
   },
   tickerRow: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     flexWrap: 'nowrap',
   },
   sequenceGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'nowrap',
+    flexShrink: 0,
   },
   incidentPill: {
     flexDirection: 'row',

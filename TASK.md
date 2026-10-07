@@ -82,9 +82,15 @@
     - Gold-Standard Field Incident Marquee Ticker (`core/components/IncidentMarquee.tsx`):
       - Eliminated initial blank-delay bug: Starts immediately at position 0 so incident items are visible and readable on mount.
       - Implemented true infinite seamless looping: Uses dual cloned sequence tracking so the animation loops back imperceptibly with zero jerky jumps and zero empty blank gaps.
+      - Fixed Loop 2 Text Overlap & Compression Trap:
+        * Decoupled `tickerRow` with `position: 'absolute', left: 0, top: 0, bottom: 0` so it is never compressed by `track`'s flexbox parent constraints.
+        * Injected `flexShrink: 0` onto `sequenceGroup` and all pill containers so Yoga never clamps the sequence width to the screen boundary (~310px).
+        * Enforced `numberOfLines={1}` and `flexShrink: 0` across all `<ThemedText>` children inside pills, eliminating multi-line vertical wrapping and collisions.
+        * Stabilized animation loop with `isMountedRef` lifecycle safety and unconstrained sequence layout measurement.
       - Added Touch-and-Hold Pause: Touching down pauses the ticker stream so users can read or tap without items sliding out from under their fingers.
       - Added System Reduce Motion Support: Respects `AccessibilityInfo.isReduceMotionEnabled()`, falling back to an accessible non-auto-scrolling feed.
     - Standardized `result-collation.tsx` and `result-detail.tsx`:
       - Converted `puLogItem` to `<Card pressable>`.
       - Converted `verifiedPill`, `statusPill`, and `matchPill` to `<Badge>`.
       - Removed unused `DebouncedPressable` import.
+
