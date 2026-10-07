@@ -185,10 +185,10 @@ export default function ResultDetailScreen() {
           {candidateRows.map((c, idx) => {
             const isWinner = idx === 0;
             const partyColors: Record<string, string> = {
-              APC: '#0D6338',
-              PDP: '#DC2626',
-              LP: '#16A34A',
-              NNPP: '#2563EB',
+              CPA: '#0D6338',
+              DPP: '#DC2626',
+              PL: '#16A34A',
+              PPNF: '#2563EB',
             };
             const partyColor = partyColors[c.partyAcronym] ?? colors.primary;
 

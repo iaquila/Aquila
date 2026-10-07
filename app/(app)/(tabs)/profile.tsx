@@ -114,10 +114,10 @@ export default function ProfileTabScreen() {
         </View>
       </LinearGradient>
 
-      {/* 2. Organization Multi-Tenant Card (Audio Part 1) */}
+      {/* 2. Organization Console Card (Audio Part 1) */}
       <Card style={styles.sectionCard}>
         <ThemedText variant="label" color="textMuted" fontFamily="bold">
-          ORGANIZATION & TENANT CONSOLE
+          ORGANIZATION CONSOLE
         </ThemedText>
 
         <View style={styles.orgRow}>

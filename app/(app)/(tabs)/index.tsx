@@ -60,11 +60,11 @@ const ASSIGNED_DEMO_PUS: Array<{
 ];
 
 const PARTY_COLORS: Record<string, string> = {
-  APC: '#059669',
-  PDP: '#DC2626',
-  LP: '#D97706',
-  NNPP: '#2563EB',
-  APGA: '#7C3AED',
+  CPA: '#059669',
+  DPP: '#DC2626',
+  PL: '#D97706',
+  PPNF: '#2563EB',
+  ADP: '#7C3AED',
 };
 
 export default function DashboardScreen() {
@@ -105,10 +105,10 @@ export default function DashboardScreen() {
 
   // Simulated Live Pulse (Audio Part 6: simulated live incoming data pulsing every 12s across all values)
   const [pulseBonusVotes, setPulseBonusVotes] = useState<Record<string, number>>({
-    cand1: 0, // APC
-    cand2: 0, // PDP
-    cand3: 0, // LP
-    cand4: 0, // NNPP
+    cand1: 0, // CPA
+    cand2: 0, // DPP
+    cand3: 0, // PL
+    cand4: 0, // PPNF
   });
   const [livePulsePUs, setLivePulsePUs] = useState(725);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -124,16 +124,16 @@ export default function DashboardScreen() {
       const incPUs = Math.random() > 0.45 ? 1 : 0;
 
       // Proportional vote increment matching field returns
-      const apcAdd = Math.round(incVotes * 0.38);
-      const lpAdd = Math.round(incVotes * 0.34);
-      const pdpAdd = Math.round(incVotes * 0.22);
-      const nnppAdd = Math.max(0, incVotes - apcAdd - lpAdd - pdpAdd);
+      const cpaAdd = Math.round(incVotes * 0.38);
+      const plAdd = Math.round(incVotes * 0.34);
+      const dppAdd = Math.round(incVotes * 0.22);
+      const ppnfAdd = Math.max(0, incVotes - cpaAdd - plAdd - dppAdd);
 
       setPulseBonusVotes((prev) => ({
-        cand1: (prev.cand1 ?? 0) + apcAdd,
-        cand2: (prev.cand2 ?? 0) + pdpAdd,
-        cand3: (prev.cand3 ?? 0) + lpAdd,
-        cand4: (prev.cand4 ?? 0) + nnppAdd,
+        cand1: (prev.cand1 ?? 0) + cpaAdd,
+        cand2: (prev.cand2 ?? 0) + dppAdd,
+        cand3: (prev.cand3 ?? 0) + plAdd,
+        cand4: (prev.cand4 ?? 0) + ppnfAdd,
       }));
 
       setLivePulsePUs((prev) => prev + incPUs);
@@ -148,6 +148,7 @@ export default function DashboardScreen() {
   useForegroundRefresh([['elections', 'list'], ['incidents', 'list'], ['results', 'list']], 5 * 60 * 1000);
 
   const isElectionOfficer = user?.role === 'ELECTION_OFFICER';
+  const isPollingAgent = user?.role === 'POLLING_AGENT';
 
   // Combine remote published results with persistent local submissions (live link)
   const liveResults = useMemo(() => {
@@ -168,10 +169,10 @@ export default function DashboardScreen() {
     });
 
     const baseMap: Record<string, number> = {
-      cand1: 6420, // APC
-      cand3: 5890, // LP
-      cand2: 3980, // PDP
-      cand4: 1210, // NNPP
+      cand1: 6420, // CPA
+      cand3: 5890, // PL
+      cand2: 3980, // DPP
+      cand4: 1210, // PPNF
     };
 
     const list = candidates.map((c) => {
@@ -195,7 +196,7 @@ export default function DashboardScreen() {
     return candidateScores.reduce((acc, c) => acc + c.votes, 0);
   }, [candidateScores]);
 
-  // Audio Part 2: Show candidate agent is tied to first (default Peter Obi / LP if unspecified)
+  // Audio Part 2: Show candidate agent is tied to first (default Nassiru Bawa / PL if unspecified)
   const myCandidateId = user?.watchCandidateId ?? 'cand3';
   const winningCandidate = candidateScores[0];
   const myCandidate = candidateScores.find((c) => c.id === myCandidateId) ?? candidateScores[0];
@@ -249,21 +250,23 @@ export default function DashboardScreen() {
                 </ThemedText>
               </View>
 
-              {/* Live Pulse Indicator Badge */}
-              <View style={[styles.pulseBadge, { backgroundColor: colors.primarySubtle, borderColor: colors.primary + '33' }]}>
-                <Animated.View
-                  style={[
-                    styles.pulseDot,
-                    {
-                      backgroundColor: colors.primary,
-                      transform: [{ scale: pulseAnim }],
-                    },
-                  ]}
-                />
-                <ThemedText variant="label" color="primary" fontFamily="bold">
-                  LIVE PULSE
-                </ThemedText>
-              </View>
+              {/* Live Pulse Indicator Badge (Hidden for Election Officer) */}
+              {!isElectionOfficer && (
+                <View style={[styles.pulseBadge, { backgroundColor: colors.primarySubtle, borderColor: colors.primary + '33' }]}>
+                  <Animated.View
+                    style={[
+                      styles.pulseDot,
+                      {
+                        backgroundColor: colors.primary,
+                        transform: [{ scale: pulseAnim }],
+                      },
+                    ]}
+                  />
+                  <ThemedText variant="label" color="primary" fontFamily="bold">
+                    LIVE PULSE
+                  </ThemedText>
+                </View>
+              )}
             </View>
           </View>
 
@@ -282,13 +285,17 @@ export default function DashboardScreen() {
                 {grandTotalVotes.toLocaleString()}
               </ThemedText>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.tickerStatItem}>
-              <ThemedText variant="caption" color="textMuted">STATUS</ThemedText>
-              <ThemedText variant="h3" color="warning" fontFamily="bold">
-                ACTIVE
-              </ThemedText>
-            </View>
+            {!isElectionOfficer && (
+              <>
+                <View style={styles.statDivider} />
+                <View style={styles.tickerStatItem}>
+                  <ThemedText variant="caption" color="textMuted">STATUS</ThemedText>
+                  <ThemedText variant="h3" color="warning" fontFamily="bold">
+                    ACTIVE
+                  </ThemedText>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </EntranceView>
@@ -327,9 +334,10 @@ export default function DashboardScreen() {
         </EntranceView>
       )}
 
-      {/* 3. Candidate Snapshot Performance (Audio Part 2) */}
-      <EntranceView delay={150}>
-        <Card style={styles.sectionCard}>
+      {/* 3. Candidate Snapshot Performance (Audio Part 2 - Hidden for Polling Agent per spec) */}
+      {!isPollingAgent && (
+        <EntranceView delay={150}>
+          <Card style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionHeaderLeft}>
               <ThemedText variant="title" color="text" fontFamily="bold">
@@ -465,10 +473,12 @@ export default function DashboardScreen() {
           </View>
         </Card>
       </EntranceView>
+      )}
 
-      {/* 4. AI Election Projection Engine (Audio Parts 6, 7, 8, 9) */}
-      <EntranceView delay={200}>
-        <Card style={[styles.aiCard, { borderColor: colors.primary }]}>
+      {/* 4. AI Election Projection Engine (Audio Parts 6, 7, 8, 9 - Hidden for Polling Agent per spec) */}
+      {!isPollingAgent && (
+        <EntranceView delay={200}>
+          <Card style={[styles.aiCard, { borderColor: colors.primary }]}>
           <View style={styles.aiHeaderRow}>
             <View style={styles.aiTitleBlock}>
               <View style={[styles.aiIconBadge, { backgroundColor: colors.primary }]}>
@@ -719,6 +729,7 @@ export default function DashboardScreen() {
           )}
         </Card>
       </EntranceView>
+      )}
 
       {/* 5. Assigned Polling Units (PRD: PU Agent = 1 PU, Field Agent = 3 PUs, Officer = Supervisory) */}
       <EntranceView delay={250}>

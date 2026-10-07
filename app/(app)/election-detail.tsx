@@ -13,11 +13,11 @@ import Colors from '@/constants/colors';
 import { useForegroundRefresh, useRefreshControl } from '@/core/hooks';
 
 const PARTY_COLORS: Record<string, { bg: string; text: string }> = {
-  APC: { bg: '#0D9488', text: '#FFFFFF' },
-  PDP: { bg: '#DC2626', text: '#FFFFFF' },
-  LP: { bg: '#16A34A', text: '#FFFFFF' },
-  NNPP: { bg: '#2563EB', text: '#FFFFFF' },
-  APGA: { bg: '#D97706', text: '#FFFFFF' },
+  CPA: { bg: '#0D9488', text: '#FFFFFF' },
+  DPP: { bg: '#DC2626', text: '#FFFFFF' },
+  PL: { bg: '#16A34A', text: '#FFFFFF' },
+  PPNF: { bg: '#2563EB', text: '#FFFFFF' },
+  ADP: { bg: '#D97706', text: '#FFFFFF' },
 };
 
 export default function ElectionDetailScreen() {

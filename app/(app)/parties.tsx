@@ -25,11 +25,11 @@ export default function PartiesScreen() {
   const { impact } = useHaptics();
 
   const partyColors: Record<string, string> = {
-    APC: '#0D6338',
-    PDP: '#DC2626',
-    LP: '#16A34A',
-    NNPP: '#2563EB',
-    APGA: '#CA8A04',
+    CPA: '#0D6338',
+    DPP: '#DC2626',
+    PL: '#16A34A',
+    PPNF: '#2563EB',
+    ADP: '#CA8A04',
   };
 
   return (

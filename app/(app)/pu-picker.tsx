@@ -100,7 +100,7 @@ export default function PUPickerScreen() {
         {/* Header Search Section */}
         <View style={styles.headerBlock}>
           <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.sm }}>
-            {mode === 'incident' ? 'Link incident evidence to a specific polling unit' : 'Select polling unit to record EC8A ballots'}
+            {mode === 'incident' ? 'Link incident evidence to a specific polling unit' : 'Select polling unit to record uploaded ballots'}
           </ThemedText>
 
           <Input

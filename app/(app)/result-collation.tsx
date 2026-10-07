@@ -107,7 +107,7 @@ export default function ResultCollationScreen() {
             <View style={styles.badgeRow}>
               <View style={styles.liveDot} />
               <ThemedText variant="label" color="#A3E6C2" fontFamily="bold">
-                NATIONAL COLLATION ROOM · CERTIFIED
+                NATIONAL COLLATION ROOM · UPLOADED BY OBSERVER
               </ThemedText>
             </View>
             <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: 4 }}>
@@ -138,7 +138,7 @@ export default function ResultCollationScreen() {
           <View style={styles.statItem}>
             <ThemedText variant="label" color="#A3E6C2">PROJECTED WINNER</ThemedText>
             <ThemedText variant="body" color="#FDE047" fontFamily="bold" numberOfLines={1}>
-              {leadingCand?.partyAcronym ?? 'APC'} ({leadingCand?.pct.toFixed(1) ?? '38.5'}%)
+              {leadingCand?.partyAcronym ?? 'CPA'} ({leadingCand?.pct.toFixed(1) ?? '38.5'}%)
             </ThemedText>
           </View>
         </View>
@@ -161,10 +161,10 @@ export default function ResultCollationScreen() {
           {candidateScores.map((c, idx) => {
             const isWinner = idx === 0;
             const partyColors: Record<string, string> = {
-              APC: '#0D6338',
-              PDP: '#DC2626',
-              LP: '#16A34A',
-              NNPP: '#2563EB',
+              CPA: '#0D6338',
+              DPP: '#DC2626',
+              PL: '#16A34A',
+              PPNF: '#2563EB',
             };
             const partyColor = partyColors[c.partyAcronym] ?? colors.primary;
 
@@ -234,7 +234,7 @@ export default function ResultCollationScreen() {
               Recent Polling Unit Returns ({allCollated.length})
             </ThemedText>
             <ThemedText variant="caption" color="textSecondary">
-              Tap any returning station to inspect full candidate EC8A breakdown
+              Tap any returning station to inspect full candidate uploaded record breakdown
             </ThemedText>
           </View>
         </View>

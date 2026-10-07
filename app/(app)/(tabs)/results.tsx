@@ -236,11 +236,11 @@ export type LgaCollation = {
   baseCollated: number;
   totalVotes: number;
   reportingPct: number;
-  leadingParty: 'APC' | 'PDP' | 'LP' | 'NNPP';
+  leadingParty: 'CPA' | 'DPP' | 'PL' | 'PPNF';
   leadingCandidate: string;
   leadingPct: string;
   margin: string;
-  shares: Array<{ party: 'APC' | 'PDP' | 'LP' | 'NNPP'; votes: number; pct: number }>;
+  shares: Array<{ party: 'CPA' | 'DPP' | 'PL' | 'PPNF'; votes: number; pct: number }>;
 };
 
 export type StateCollation = {
@@ -253,11 +253,11 @@ export type StateCollation = {
   baseCollated: number;
   totalVotes: number;
   reportingPct: number;
-  leadingParty: 'APC' | 'PDP' | 'LP' | 'NNPP';
+  leadingParty: 'CPA' | 'DPP' | 'PL' | 'PPNF';
   leadingCandidate: string;
   leadingPct: string;
   margin: string;
-  shares: Array<{ party: 'APC' | 'PDP' | 'LP' | 'NNPP'; votes: number; pct: number }>;
+  shares: Array<{ party: 'CPA' | 'DPP' | 'PL' | 'PPNF'; votes: number; pct: number }>;
 };
 
 type ReturnCardProps = {
@@ -306,7 +306,7 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
             {item.pollingUnitName}
           </ThemedText>
           <ThemedText variant="caption" color="textSecondary" numberOfLines={2}>
-            {isPublished ? 'Official Return' : 'Draft Return'} · {new Date(item.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {isPublished ? 'Uploaded by observer' : 'Draft Return'} · {new Date(item.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </ThemedText>
         </View>
 
@@ -334,7 +334,7 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
               color: isPublished ? colors.success : colors.warning,
             }}
           >
-            {item.status}
+            {item.status === 'PUBLISHED' ? 'Uploaded by observer' : item.status}
           </ThemedText>
         </View>
       </View>
@@ -374,10 +374,10 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
 });
 
 const PARTY_COLORS: Record<string, string> = {
-  APC: '#0D6338',
-  PDP: '#DC2626',
-  LP: '#16A34A',
-  NNPP: '#2563EB',
+  CPA: '#0D6338',
+  DPP: '#DC2626',
+  PL: '#16A34A',
+  PPNF: '#2563EB',
 };
 
 type CollationLeaderboardRowProps = {
@@ -386,10 +386,10 @@ type CollationLeaderboardRowProps = {
   subTitle: string;
   zoneOrState?: string;
   reportingPct: number;
-  leadingParty: 'APC' | 'PDP' | 'LP' | 'NNPP';
+  leadingParty: 'CPA' | 'DPP' | 'PL' | 'PPNF';
   leadingCandidate: string;
   margin: string;
-  shares: Array<{ party: 'APC' | 'PDP' | 'LP' | 'NNPP'; votes: number; pct: number }>;
+  shares: Array<{ party: 'CPA' | 'DPP' | 'PL' | 'PPNF'; votes: number; pct: number }>;
   isSelected: boolean;
   colors: (typeof Colors)['light'];
   onPress: () => void;
@@ -531,6 +531,7 @@ export default function ResultsScreen() {
   }, [submissions]);
 
   const isOfficer = user?.role === 'ELECTION_OFFICER';
+  const isFieldAgent = user?.role === 'FIELD_AGENT';
   const activeList = isOfficer || activeTab === 'published' ? publishedResults : draftResults;
 
   const totalVotes = publishedResults.reduce((sum, r) => sum + (r.totalVotesCast || 0), 0);
@@ -547,13 +548,14 @@ export default function ResultsScreen() {
 
   // View Mode: 'returns' vs 'heatmap'
   const [viewMode, setViewMode] = useState<'returns' | 'heatmap'>('returns');
+  const effectiveViewMode = isFieldAgent ? 'returns' : viewMode;
   // Geography Level: 'state' aggregates LGAs by state, 'lga' shows LGA detail.
   // LGA rows are the source of truth (inline collation bases + live submissions);
   // state rows are derived by summing their LGAs, so the two levels always agree.
   const [geoLevel, setGeoLevel] = useState<'state' | 'lga'>('lga');
   const [filterLga, setFilterLga] = useState<string | null>(null);
   const [filterState, setFilterState] = useState<string | null>(null);
-  const [partyFilter, setPartyFilter] = useState<'ALL' | 'APC' | 'PDP' | 'LP' | 'NNPP'>('ALL');
+  const [partyFilter, setPartyFilter] = useState<'ALL' | 'CPA' | 'DPP' | 'PL' | 'PPNF'>('ALL');
 
   // Filtered active list for PU returns
   const displayedReturns = useMemo(() => {
@@ -575,7 +577,7 @@ export default function ResultsScreen() {
       state: string;
       totalPus: number;
       baseCollated: number;
-      baseVotes: { APC: number; PDP: number; LP: number; NNPP: number };
+      baseVotes: { CPA: number; DPP: number; PL: number; PPNF: number };
     }> = [
       {
         id: 'lga-ikeja',
@@ -583,7 +585,7 @@ export default function ResultsScreen() {
         state: 'Lagos',
         totalPus: 450,
         baseCollated: 412,
-        baseVotes: { APC: 42350, PDP: 28140, LP: 21980, NNPP: 3200 },
+        baseVotes: { CPA: 42350, DPP: 28140, PL: 21980, PPNF: 3200 },
       },
       {
         id: 'lga-mainland',
@@ -591,7 +593,7 @@ export default function ResultsScreen() {
         state: 'Lagos',
         totalPus: 380,
         baseCollated: 345,
-        baseVotes: { APC: 27800, PDP: 35900, LP: 18450, NNPP: 2800 },
+        baseVotes: { CPA: 27800, DPP: 35900, PL: 18450, PPNF: 2800 },
       },
       {
         id: 'lga-alimosho',
@@ -599,7 +601,7 @@ export default function ResultsScreen() {
         state: 'Lagos',
         totalPus: 620,
         baseCollated: 540,
-        baseVotes: { APC: 41200, PDP: 22400, LP: 53100, NNPP: 4600 },
+        baseVotes: { CPA: 41200, DPP: 22400, PL: 53100, PPNF: 4600 },
       },
       {
         id: 'lga-etiosa',
@@ -607,7 +609,7 @@ export default function ResultsScreen() {
         state: 'Lagos',
         totalPus: 340,
         baseCollated: 298,
-        baseVotes: { APC: 24600, PDP: 14200, LP: 39800, NNPP: 2100 },
+        baseVotes: { CPA: 24600, DPP: 14200, PL: 39800, PPNF: 2100 },
       },
       {
         id: 'lga-surulere',
@@ -615,7 +617,7 @@ export default function ResultsScreen() {
         state: 'Lagos',
         totalPus: 395,
         baseCollated: 360,
-        baseVotes: { APC: 36400, PDP: 19800, LP: 31200, NNPP: 3100 },
+        baseVotes: { CPA: 36400, DPP: 19800, PL: 31200, PPNF: 3100 },
       },
       {
         id: 'lga-kosofe',
@@ -623,7 +625,7 @@ export default function ResultsScreen() {
         state: 'Lagos',
         totalPus: 310,
         baseCollated: 275,
-        baseVotes: { APC: 30100, PDP: 24500, LP: 19400, NNPP: 2950 },
+        baseVotes: { CPA: 30100, DPP: 24500, PL: 19400, PPNF: 2950 },
       },
       // ---- Mock expansion states: illustrative demo figures only, not real results ----
       {
@@ -632,7 +634,7 @@ export default function ResultsScreen() {
         state: 'Kano',
         totalPus: 320,
         baseCollated: 292,
-        baseVotes: { APC: 18400, PDP: 9600, LP: 3100, NNPP: 58700 },
+        baseVotes: { CPA: 18400, DPP: 9600, PL: 3100, PPNF: 58700 },
       },
       {
         id: 'lga-tarauni',
@@ -640,7 +642,7 @@ export default function ResultsScreen() {
         state: 'Kano',
         totalPus: 280,
         baseCollated: 241,
-        baseVotes: { APC: 15200, PDP: 8100, LP: 2600, NNPP: 46300 },
+        baseVotes: { CPA: 15200, DPP: 8100, PL: 2600, PPNF: 46300 },
       },
       {
         id: 'lga-nassarawa-kn',
@@ -648,7 +650,7 @@ export default function ResultsScreen() {
         state: 'Kano',
         totalPus: 350,
         baseCollated: 305,
-        baseVotes: { APC: 22100, PDP: 11400, LP: 3900, NNPP: 54200 },
+        baseVotes: { CPA: 22100, DPP: 11400, PL: 3900, PPNF: 54200 },
       },
       {
         id: 'lga-obio-akpor',
@@ -656,7 +658,7 @@ export default function ResultsScreen() {
         state: 'Rivers',
         totalPus: 420,
         baseCollated: 381,
-        baseVotes: { APC: 19800, PDP: 47200, LP: 24600, NNPP: 1800 },
+        baseVotes: { CPA: 19800, DPP: 47200, PL: 24600, PPNF: 1800 },
       },
       {
         id: 'lga-phalga',
@@ -664,7 +666,7 @@ export default function ResultsScreen() {
         state: 'Rivers',
         totalPus: 300,
         baseCollated: 256,
-        baseVotes: { APC: 16400, PDP: 28900, LP: 24700, NNPP: 1400 },
+        baseVotes: { CPA: 16400, DPP: 28900, PL: 24700, PPNF: 1400 },
       },
       {
         id: 'lga-amac',
@@ -672,7 +674,7 @@ export default function ResultsScreen() {
         state: 'FCT',
         totalPus: 380,
         baseCollated: 342,
-        baseVotes: { APC: 18900, PDP: 21700, LP: 51400, NNPP: 2300 },
+        baseVotes: { CPA: 18900, DPP: 21700, PL: 51400, PPNF: 2300 },
       },
       {
         id: 'lga-bwari',
@@ -680,7 +682,7 @@ export default function ResultsScreen() {
         state: 'FCT',
         totalPus: 220,
         baseCollated: 186,
-        baseVotes: { APC: 9800, PDP: 11200, LP: 28600, NNPP: 1100 },
+        baseVotes: { CPA: 9800, DPP: 11200, PL: 28600, PPNF: 1100 },
       },
       {
         id: 'lga-kaduna-north',
@@ -688,7 +690,7 @@ export default function ResultsScreen() {
         state: 'Kaduna',
         totalPus: 340,
         baseCollated: 295,
-        baseVotes: { APC: 38200, PDP: 29400, LP: 12100, NNPP: 11200 },
+        baseVotes: { CPA: 38200, DPP: 29400, PL: 12100, PPNF: 11200 },
       },
       {
         id: 'lga-kaduna-south',
@@ -696,7 +698,7 @@ export default function ResultsScreen() {
         state: 'Kaduna',
         totalPus: 310,
         baseCollated: 260,
-        baseVotes: { APC: 31500, PDP: 33800, LP: 15400, NNPP: 8900 },
+        baseVotes: { CPA: 31500, DPP: 33800, PL: 15400, PPNF: 8900 },
       },
       {
         id: 'lga-ibadan-north',
@@ -704,7 +706,7 @@ export default function ResultsScreen() {
         state: 'Oyo',
         totalPus: 410,
         baseCollated: 375,
-        baseVotes: { APC: 39100, PDP: 36200, LP: 18700, NNPP: 2400 },
+        baseVotes: { CPA: 39100, DPP: 36200, PL: 18700, PPNF: 2400 },
       },
       {
         id: 'lga-ibadan-sw',
@@ -712,7 +714,7 @@ export default function ResultsScreen() {
         state: 'Oyo',
         totalPus: 360,
         baseCollated: 318,
-        baseVotes: { APC: 34800, PDP: 31200, LP: 16900, NNPP: 1900 },
+        baseVotes: { CPA: 34800, DPP: 31200, PL: 16900, PPNF: 1900 },
       },
       {
         id: 'lga-enugu-north',
@@ -720,7 +722,7 @@ export default function ResultsScreen() {
         state: 'Enugu',
         totalPus: 290,
         baseCollated: 270,
-        baseVotes: { APC: 4200, PDP: 12800, LP: 58400, NNPP: 800 },
+        baseVotes: { CPA: 4200, DPP: 12800, PL: 58400, PPNF: 800 },
       },
       {
         id: 'lga-nsukka',
@@ -728,7 +730,7 @@ export default function ResultsScreen() {
         state: 'Enugu',
         totalPus: 320,
         baseCollated: 285,
-        baseVotes: { APC: 5100, PDP: 14200, LP: 61200, NNPP: 950 },
+        baseVotes: { CPA: 5100, DPP: 14200, PL: 61200, PPNF: 950 },
       },
       {
         id: 'lga-maiduguri',
@@ -736,7 +738,7 @@ export default function ResultsScreen() {
         state: 'Borno',
         totalPus: 380,
         baseCollated: 340,
-        baseVotes: { APC: 54200, PDP: 19800, LP: 4100, NNPP: 8300 },
+        baseVotes: { CPA: 54200, DPP: 19800, PL: 4100, PPNF: 8300 },
       },
       {
         id: 'lga-jere',
@@ -744,7 +746,7 @@ export default function ResultsScreen() {
         state: 'Borno',
         totalPus: 290,
         baseCollated: 245,
-        baseVotes: { APC: 41800, PDP: 16200, LP: 3200, NNPP: 6400 },
+        baseVotes: { CPA: 41800, DPP: 16200, PL: 3200, PPNF: 6400 },
       },
     ];
 
@@ -755,20 +757,20 @@ export default function ResultsScreen() {
       );
       if (match && sub.candidateVotes) {
         match.baseCollated += 1;
-        match.baseVotes.APC += sub.candidateVotes['cand1'] || 0;
-        match.baseVotes.PDP += sub.candidateVotes['cand2'] || 0;
-        match.baseVotes.LP += sub.candidateVotes['cand3'] || 0;
-        match.baseVotes.NNPP += sub.candidateVotes['cand4'] || 0;
+        match.baseVotes.CPA += sub.candidateVotes['cand1'] || 0;
+        match.baseVotes.DPP += sub.candidateVotes['cand2'] || 0;
+        match.baseVotes.PL += sub.candidateVotes['cand3'] || 0;
+        match.baseVotes.PPNF += sub.candidateVotes['cand4'] || 0;
       }
     });
 
     return lgaBases.map((lga) => {
-      const totalVotes = lga.baseVotes.APC + lga.baseVotes.PDP + lga.baseVotes.LP + lga.baseVotes.NNPP;
-      const shares: Array<{ party: 'APC' | 'PDP' | 'LP' | 'NNPP'; votes: number; pct: number }> = [
-        { party: 'APC' as const, votes: lga.baseVotes.APC, pct: (lga.baseVotes.APC / totalVotes) * 100 },
-        { party: 'PDP' as const, votes: lga.baseVotes.PDP, pct: (lga.baseVotes.PDP / totalVotes) * 100 },
-        { party: 'LP' as const, votes: lga.baseVotes.LP, pct: (lga.baseVotes.LP / totalVotes) * 100 },
-        { party: 'NNPP' as const, votes: lga.baseVotes.NNPP, pct: (lga.baseVotes.NNPP / totalVotes) * 100 },
+      const totalVotes = lga.baseVotes.CPA + lga.baseVotes.DPP + lga.baseVotes.PL + lga.baseVotes.PPNF;
+      const shares: Array<{ party: 'CPA' | 'DPP' | 'PL' | 'PPNF'; votes: number; pct: number }> = [
+        { party: 'CPA' as const, votes: lga.baseVotes.CPA, pct: (lga.baseVotes.CPA / totalVotes) * 100 },
+        { party: 'DPP' as const, votes: lga.baseVotes.DPP, pct: (lga.baseVotes.DPP / totalVotes) * 100 },
+        { party: 'PL' as const, votes: lga.baseVotes.PL, pct: (lga.baseVotes.PL / totalVotes) * 100 },
+        { party: 'PPNF' as const, votes: lga.baseVotes.PPNF, pct: (lga.baseVotes.PPNF / totalVotes) * 100 },
       ].sort((a, b) => b.votes - a.votes);
 
       const leader = shares[0]!;
@@ -777,10 +779,10 @@ export default function ResultsScreen() {
       const reportingPct = Math.min(100, (lga.baseCollated / lga.totalPus) * 100).toFixed(0);
 
       const candidateNames: Record<string, string> = {
-        APC: 'Bola Ahmed Tinubu',
-        PDP: 'Atiku Abubakar',
-        LP: 'Peter Obi',
-        NNPP: 'Rabiu Kwankwaso',
+        CPA: 'Bawa Nassiru',
+        DPP: 'Farouk Haruna',
+        PL: 'Nassiru Bawa',
+        PPNF: 'Ibrahim Shehu',
       };
 
       return {
@@ -821,18 +823,18 @@ export default function ResultsScreen() {
     };
 
     const candidateNames: Record<string, string> = {
-      APC: 'Bola Ahmed Tinubu',
-      PDP: 'Atiku Abubakar',
-      LP: 'Peter Obi',
-      NNPP: 'Rabiu Kwankwaso',
+      CPA: 'Bawa Nassiru',
+      DPP: 'Farouk Haruna',
+      PL: 'Nassiru Bawa',
+      PPNF: 'Ibrahim Shehu',
     };
 
-    const byState = new Map<string, { totalPus: number; baseCollated: number; votes: Record<'APC' | 'PDP' | 'LP' | 'NNPP', number>; lgaCount: number }>();
+    const byState = new Map<string, { totalPus: number; baseCollated: number; votes: Record<'CPA' | 'DPP' | 'PL' | 'PPNF', number>; lgaCount: number }>();
     lgaHeatmapData.forEach((lga) => {
-      const entry = byState.get(lga.state) ?? { totalPus: 0, baseCollated: 0, votes: { APC: 0, PDP: 0, LP: 0, NNPP: 0 }, lgaCount: 0 };
+      const entry = byState.get(lga.state) ?? { totalPus: 0, baseCollated: 0, votes: { CPA: 0, DPP: 0, PL: 0, PPNF: 0 }, lgaCount: 0 };
       entry.totalPus += lga.totalPus;
       entry.baseCollated += lga.baseCollated;
-      (Object.keys(entry.votes) as Array<'APC' | 'PDP' | 'LP' | 'NNPP'>).forEach((p) => {
+      (Object.keys(entry.votes) as Array<'CPA' | 'DPP' | 'PL' | 'PPNF'>).forEach((p) => {
         const share = lga.shares.find((s) => s.party === p);
         entry.votes[p] += share?.votes ?? 0;
       });
@@ -841,7 +843,7 @@ export default function ResultsScreen() {
     });
 
     return [...byState.entries()].map(([state, entry]) => {
-      const totalVotes = entry.votes.APC + entry.votes.PDP + entry.votes.LP + entry.votes.NNPP;
+      const totalVotes = entry.votes.CPA + entry.votes.DPP + entry.votes.PL + entry.votes.PPNF;
       const shares = (Object.entries(entry.votes) as Array<[StateCollation['leadingParty'], number]>)
         .map(([party, votes]) => ({ party, votes, pct: totalVotes > 0 ? (votes / totalVotes) * 100 : 0 }))
         .sort((a, b) => b.votes - a.votes);
@@ -1012,7 +1014,7 @@ export default function ResultsScreen() {
               Election Results
             </ThemedText>
             <ThemedText variant="caption" color="textSecondary" numberOfLines={1}>
-              {viewMode === 'returns'
+              {effectiveViewMode === 'returns'
                 ? `Total ${totalVotes.toLocaleString()} votes across ${publishedResults.length} PUs`
                 : `${overallReportingPct}% of collation centers reporting`}
             </ThemedText>
@@ -1042,64 +1044,66 @@ export default function ResultsScreen() {
           )}
         </View>
 
-        {/* Primary View Switcher: [ 📋 PU Returns | 🗺️ Collation Heat Map ] */}
-        <View style={[styles.mainViewSwitcher, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-          <Pressable
-            onPress={() => {
-              impact(Haptics.ImpactFeedbackStyle.Light);
-              setViewMode('returns');
-            }}
-            style={[
-              styles.mainViewBtn,
-              viewMode === 'returns' && [styles.activeTabBtn, { backgroundColor: colors.primary }],
-            ]}
-          >
-            <View style={styles.tabBtnContent}>
-              <Ionicons
-                name="list-outline"
-                size={14}
-                color={viewMode === 'returns' ? '#FFFFFF' : colors.textSecondary}
-              />
-              <ThemedText
-                variant="caption"
-                color={viewMode === 'returns' ? '#FFFFFF' : 'textSecondary'}
-                fontFamily={viewMode === 'returns' ? 'bold' : 'medium'}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                PU Returns ({publishedResults.length})
-              </ThemedText>
-            </View>
-          </Pressable>
+        {/* Primary View Switcher: [ 📋 PU Returns | 🗺️ Collation Heat Map ] (Hidden for Field Agent per spec) */}
+        {!isFieldAgent && (
+          <View style={[styles.mainViewSwitcher, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+            <Pressable
+              onPress={() => {
+                impact(Haptics.ImpactFeedbackStyle.Light);
+                setViewMode('returns');
+              }}
+              style={[
+                styles.mainViewBtn,
+                effectiveViewMode === 'returns' && [styles.activeTabBtn, { backgroundColor: colors.primary }],
+              ]}
+            >
+              <View style={styles.tabBtnContent}>
+                <Ionicons
+                  name="list-outline"
+                  size={14}
+                  color={effectiveViewMode === 'returns' ? '#FFFFFF' : colors.textSecondary}
+                />
+                <ThemedText
+                  variant="caption"
+                  color={effectiveViewMode === 'returns' ? '#FFFFFF' : 'textSecondary'}
+                  fontFamily={effectiveViewMode === 'returns' ? 'bold' : 'medium'}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  PU Returns ({publishedResults.length})
+                </ThemedText>
+              </View>
+            </Pressable>
 
-          <Pressable
-            onPress={() => {
-              impact(Haptics.ImpactFeedbackStyle.Light);
-              setViewMode('heatmap');
-            }}
-            style={[
-              styles.mainViewBtn,
-              viewMode === 'heatmap' && [styles.activeTabBtn, { backgroundColor: colors.primary }],
-            ]}
-          >
-            <View style={styles.tabBtnContent}>
-              <Ionicons
-                name="map-outline"
-                size={14}
-                color={viewMode === 'heatmap' ? '#FFFFFF' : colors.textSecondary}
-              />
-              <ThemedText
-                variant="caption"
-                color={viewMode === 'heatmap' ? '#FFFFFF' : 'textSecondary'}
-                fontFamily={viewMode === 'heatmap' ? 'bold' : 'medium'}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                Heat Map ({geoLevel === 'state' ? `${stateHeatmapData.length} States` : `${lgaHeatmapData.length} LGAs`})
-              </ThemedText>
-            </View>
-          </Pressable>
-        </View>
+            <Pressable
+              onPress={() => {
+                impact(Haptics.ImpactFeedbackStyle.Light);
+                setViewMode('heatmap');
+              }}
+              style={[
+                styles.mainViewBtn,
+                effectiveViewMode === 'heatmap' && [styles.activeTabBtn, { backgroundColor: colors.primary }],
+              ]}
+            >
+              <View style={styles.tabBtnContent}>
+                <Ionicons
+                  name="map-outline"
+                  size={14}
+                  color={effectiveViewMode === 'heatmap' ? '#FFFFFF' : colors.textSecondary}
+                />
+                <ThemedText
+                  variant="caption"
+                  color={effectiveViewMode === 'heatmap' ? '#FFFFFF' : 'textSecondary'}
+                  fontFamily={effectiveViewMode === 'heatmap' ? 'bold' : 'medium'}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  Heat Map ({geoLevel === 'state' ? `${stateHeatmapData.length} States` : `${lgaHeatmapData.length} LGAs`})
+                </ThemedText>
+              </View>
+            </Pressable>
+          </View>
+        )}
 
         {/* Active Filter Pill if filtered by LGA */}
         {filterLga && (
@@ -1122,7 +1126,7 @@ export default function ResultsScreen() {
         )}
 
         {/* --- VIEW MODE 1: PU RETURNS --- */}
-        {viewMode === 'returns' ? (
+        {effectiveViewMode === 'returns' ? (
           <>
             {/* Tab Switcher: Published Results vs Drafts (Polling Agents only) */}
             {!isOfficer && (
@@ -1627,7 +1631,7 @@ export default function ResultsScreen() {
 
                           {/* Border Labels */}
                           <SvgText x={210} y={14} fill="#34D39944" fontSize="8" fontWeight="bold" textAnchor="middle" letterSpacing="2">
-                            NIGER REPUBLIC
+                            NIGERIA REPUBLIC
                           </SvgText>
                           <SvgText x={16} y={115} fill="#34D39944" fontSize="7" fontWeight="bold" textAnchor="middle">
                             BENIN
@@ -1716,19 +1720,19 @@ export default function ResultsScreen() {
                       <>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: '#0D6338' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">APC</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">CPA</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PDP</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">DPP</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: '#16A34A' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">LP</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PL</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: '#2563EB' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">NNPP</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PPNF</ThemedText>
                         </View>
                       </>
                     ) : (
@@ -1859,13 +1863,13 @@ export default function ResultsScreen() {
 
                   {/* Compact Party Filter Chips */}
                   <View style={styles.compactPartyFilterRow}>
-                    {(['ALL', 'APC', 'PDP', 'LP', 'NNPP'] as const).map((party) => {
+                    {(['ALL', 'CPA', 'DPP', 'PL', 'PPNF'] as const).map((party) => {
                       const isSelected = partyFilter === party;
                       const pColors: Record<string, string> = {
-                        APC: '#0D6338',
-                        PDP: '#DC2626',
-                        LP: '#16A34A',
-                        NNPP: '#2563EB',
+                        CPA: '#0D6338',
+                        DPP: '#DC2626',
+                        PL: '#16A34A',
+                        PPNF: '#2563EB',
                         ALL: colors.text,
                       };
                       const color = pColors[party] ?? colors.text;

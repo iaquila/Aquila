@@ -13,10 +13,15 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 const ORG_PRESETS = [
-  { id: 'org-iaquila', code: 'IAQ-HQ', name: 'iAQUILA Situation Room', tag: 'HQ' },
-  { id: 'org-cdd', code: 'CDD-WA', name: 'CDD West Africa', tag: 'CSO' },
-  { id: 'org-yiaga', code: 'YIAGA-WTV', name: 'YIAGA Africa Watching The Vote', tag: 'CSO' },
-  { id: 'org-ind-obs', code: 'IND-OBS', name: 'Accredited Observer Mission', tag: 'CSO' },
+  { id: 'org-iaquila', name: 'iAQUILA Situation Room' },
+  { id: 'org-cpa', name: 'CPA Situation Room' },
+  { id: 'org-dpp', name: 'DPP Situation Room' },
+  { id: 'org-pl', name: 'PL Situation Room' },
+  { id: 'org-ppnf', name: 'PPNF Situation Room' },
+  { id: 'org-adp', name: 'ADP Situation Room' },
+  { id: 'org-cdd', name: 'CDD West Africa' },
+  { id: 'org-yiaga', name: 'YIAGA Africa Watching The Vote' },
+  { id: 'org-ind-obs', name: 'Accredited Observer Mission' },
 ];
 
 export default function LoginScreen() {
@@ -28,10 +33,8 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedOrg, setSelectedOrg] = useState(ORG_PRESETS[0]!);
-  const [customOrg, setCustomOrg] = useState('');
-  const [isCustomOrg, setIsCustomOrg] = useState(false);
-  const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
-  const [orgSearch, setOrgSearch] = useState('');
+  const [orgSearch, setOrgSearch] = useState(ORG_PRESETS[0]!.name);
+  const [showOrgSuggestions, setShowOrgSuggestions] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const loginMutation = useLoginMutation();
@@ -39,24 +42,15 @@ export default function LoginScreen() {
   const filteredOrgs = useMemo(() => {
     const q = orgSearch.trim().toLowerCase();
     if (!q) return ORG_PRESETS;
-    return ORG_PRESETS.filter(
-      (org) =>
-        org.code.toLowerCase().includes(q) ||
-        org.name.toLowerCase().includes(q) ||
-        org.tag.toLowerCase().includes(q)
-    );
+    return ORG_PRESETS.filter((org) => org.name.toLowerCase().includes(q));
   }, [orgSearch]);
 
   const handleLogin = async () => {
-    const orgId = isCustomOrg ? `org-${customOrg.toLowerCase().replace(/\s+/g, '-')}` : selectedOrg.id;
-    const orgName = isCustomOrg ? customOrg.trim() : selectedOrg.name;
+    const orgId = selectedOrg?.id ?? 'org-iaquila';
+    const orgName = orgSearch.trim() || selectedOrg.name;
 
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password');
-      return;
-    }
-    if (isCustomOrg && !customOrg.trim()) {
-      setError('Please specify your organization name');
       return;
     }
     setError('');
@@ -81,7 +75,7 @@ export default function LoginScreen() {
       let org = ORG_PRESETS.find((o) => o.id === 'org-iaquila') ?? ORG_PRESETS[0]!;
       if (role === 'polling') {
         demoEmail = 'polling@iaquila.com.ng';
-        org = ORG_PRESETS.find((o) => o.id === 'org-yiaga') ?? ORG_PRESETS[2]!;
+        org = ORG_PRESETS.find((o) => o.id === 'org-yiaga') ?? ORG_PRESETS[7]!;
       } else if (role === 'officer') {
         demoEmail = 'officer@iaquila.com.ng';
         org = ORG_PRESETS.find((o) => o.id === 'org-iaquila') ?? ORG_PRESETS[0]!;
@@ -138,79 +132,51 @@ export default function LoginScreen() {
                 iAQUILA
               </ThemedText>
               <ThemedText variant="label" color="#10B981" fontFamily="medium" style={styles.brandSub}>
-                REAL-TIME ELECTION INTELLIGENCE · MULTI-TENANT CONSOLE
+                REAL-TIME ELECTION INTELLIGENCE · ELECTION CONSOLE
               </ThemedText>
             </View>
 
             {/* Auth Form Card */}
             <Card style={[styles.formCard, { backgroundColor: colors.surface }]}>
               <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginBottom: spacing.xs }}>
-                Sign In to Station
+                Sign In
               </ThemedText>
               <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.md }}>
                 Enter credentials to connect to your assigned situation room.
               </ThemedText>
 
-              {/* Organization Tenant Selector (Audio Part 1) */}
+              {/* Organization Selector */}
               <View style={{ marginBottom: spacing.md }}>
                 <View style={styles.labelRow}>
                   <Ionicons name="business-outline" size={14} color={colors.primary} />
                   <ThemedText variant="label" color="textSecondary" fontFamily="medium" style={{ marginLeft: 4 }}>
-                    ORGANIZATION / TENANT
+                    ORGANIZATION
                   </ThemedText>
                 </View>
-                {/* Searchable org-code dropdown */}
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setOrgDropdownOpen((prev) => !prev);
+                <Input
+                  placeholder="Search organization (e.g. iAQUILA Situation Room)"
+                  value={orgSearch}
+                  onChangeText={(text) => {
+                    setOrgSearch(text);
+                    setShowOrgSuggestions(true);
                   }}
-                  style={[
-                    styles.orgSelector,
-                    {
-                      backgroundColor: colors.surfaceElevated,
-                      borderColor: orgDropdownOpen ? colors.primary : colors.border,
-                    },
-                  ]}
-                  accessibilityLabel={`Selected organization ${selectedOrg.code} ${selectedOrg.name}`}
-                  accessibilityRole="button"
-                >
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={1}>
-                      {isCustomOrg ? 'Custom organization' : selectedOrg.code}
-                    </ThemedText>
-                    <ThemedText variant="caption" color="textSecondary" numberOfLines={1}>
-                      {isCustomOrg ? customOrg.trim() || 'Enter name below' : selectedOrg.name}
-                    </ThemedText>
-                  </View>
-                  <Ionicons
-                    name={orgDropdownOpen ? 'chevron-up' : 'chevron-down'}
-                    size={18}
-                    color={colors.textSecondary}
-                  />
-                </Pressable>
+                  onFocus={() => setShowOrgSuggestions(true)}
+                  leftIcon="search-outline"
+                  containerStyle={{ marginBottom: showOrgSuggestions && filteredOrgs.length > 0 ? spacing.xs : 0 }}
+                />
 
-                {orgDropdownOpen && (
+                {showOrgSuggestions && filteredOrgs.length > 0 && (
                   <View style={[styles.orgDropdown, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                    <Input
-                      placeholder="Search code or name (e.g. IAQ-HQ)"
-                      value={orgSearch}
-                      onChangeText={setOrgSearch}
-                      autoCapitalize="characters"
-                      leftIcon="search-outline"
-                      containerStyle={{ marginBottom: spacing.xs }}
-                    />
                     {filteredOrgs.map((org) => {
-                      const active = !isCustomOrg && selectedOrg.id === org.id;
+                      const active = selectedOrg.id === org.id && orgSearch.trim().toLowerCase() === org.name.toLowerCase();
                       return (
                         <Pressable
                           key={org.id}
                           onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setIsCustomOrg(false);
                             setSelectedOrg(org);
-                            setOrgDropdownOpen(false);
-                            setOrgSearch('');
+                            setOrgSearch(org.name);
+                            setShowOrgSuggestions(false);
                           }}
                           style={[
                             styles.orgOption,
@@ -219,54 +185,22 @@ export default function LoginScreen() {
                               borderColor: active ? colors.primary : 'transparent',
                             },
                           ]}
-                          accessibilityLabel={`${org.code} ${org.name}`}
+                          accessibilityLabel={org.name}
                         >
-                          <View style={[styles.orgCodePill, { backgroundColor: colors.primary + '22' }]}>
-                            <ThemedText variant="label" color="primary" fontFamily="bold">
-                              {org.code}
-                            </ThemedText>
-                          </View>
-                          <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.xs }}>
-                            <ThemedText variant="caption" color="text" fontFamily={active ? 'bold' : 'regular'} numberOfLines={1}>
-                              {org.name}
-                            </ThemedText>
-                            <ThemedText variant="label" color="textMuted" numberOfLines={1}>
-                              {org.tag}
-                            </ThemedText>
-                          </View>
+                          <ThemedText
+                            variant="body"
+                            color="text"
+                            fontFamily={active ? 'bold' : 'regular'}
+                            numberOfLines={1}
+                            style={{ flex: 1 }}
+                          >
+                            {org.name}
+                          </ThemedText>
                           {active && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
                         </Pressable>
                       );
                     })}
-                    {filteredOrgs.length === 0 && (
-                      <ThemedText variant="caption" color="textMuted" style={{ textAlign: 'center', paddingVertical: spacing.sm }}>
-                        No organization matches “{orgSearch.trim()}”.
-                      </ThemedText>
-                    )}
                   </View>
-                )}
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setIsCustomOrg(true);
-                    setOrgDropdownOpen(false);
-                  }}
-                  style={{ marginTop: spacing.xs, alignSelf: 'flex-start' }}
-                >
-                  <ThemedText variant="caption" color={isCustomOrg ? 'primary' : 'textSecondary'} fontFamily="medium">
-                    {isCustomOrg ? '✓ Using custom org' : '+ Use custom org code'}
-                  </ThemedText>
-                </Pressable>
-
-                {isCustomOrg && (
-                  <Input
-                    placeholder="Enter custom organization name"
-                    value={customOrg}
-                    onChangeText={setCustomOrg}
-                    autoCapitalize="words"
-                    leftIcon="business-outline"
-                    containerStyle={{ marginTop: spacing.xs }}
-                  />
                 )}
               </View>
 
@@ -304,7 +238,7 @@ export default function LoginScreen() {
               ) : null}
 
               <Button
-                label="Access Console"
+                label="Access Situation Room"
                 onPress={handleLogin}
                 loading={loginMutation.isPending}
                 fullWidth
@@ -360,7 +294,7 @@ export default function LoginScreen() {
               color="#A3B8AC"
               style={{ textAlign: 'center', marginTop: spacing.md }}
             >
-              Independent Observer Intelligence System · End-to-End Encrypted
+              Independent Observer Intelligence System · Secured & Real-time
             </ThemedText>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -412,15 +346,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  orgSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
   orgDropdown: {
     marginTop: 6,
     padding: spacing.xs,
@@ -431,16 +356,10 @@ const styles = StyleSheet.create({
   orgOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radius.sm,
     borderWidth: 1,
-  },
-  orgCodePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radius.full,
-    flexShrink: 0,
   },
   errorBanner: {
     flexDirection: 'row',

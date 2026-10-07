@@ -40,10 +40,10 @@ const POSITION_FILTERS = [
 
 // Key parties participating across Nigerian elections
 const MAJOR_PARTIES = [
-  { acronym: 'APC', bg: '#0D9488', text: '#FFFFFF' },
-  { acronym: 'PDP', bg: '#DC2626', text: '#FFFFFF' },
-  { acronym: 'LP', bg: '#16A34A', text: '#FFFFFF' },
-  { acronym: 'NNPP', bg: '#2563EB', text: '#FFFFFF' },
+  { acronym: 'CPA', bg: '#0D9488', text: '#FFFFFF' },
+  { acronym: 'DPP', bg: '#DC2626', text: '#FFFFFF' },
+  { acronym: 'PL', bg: '#16A34A', text: '#FFFFFF' },
+  { acronym: 'PPNF', bg: '#2563EB', text: '#FFFFFF' },
 ];
 
 export default function ElectionsScreen() {

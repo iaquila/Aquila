@@ -318,7 +318,7 @@ export default function SubmitResultScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Input
-              label="Rejected (INEC EC8A)"
+              label="Rejected (Uploaded Record)"
               placeholder="0"
               value={rejectedInec}
               onChangeText={setRejectedInec}
@@ -337,7 +337,7 @@ export default function SubmitResultScreen() {
               Candidate Ballots Tally
             </ThemedText>
             <ThemedText variant="caption" color="textSecondary">
-              Enter count for each candidate per announced polling unit EC8A form
+              Enter count for each candidate per announced polling unit uploaded record
             </ThemedText>
           </View>
           <Button
@@ -380,7 +380,7 @@ export default function SubmitResultScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Input
-                      label="INEC EC8A Count"
+                      label="Uploaded Record Count"
                       placeholder="0"
                       value={inecVal}
                       onChangeText={(val) => handleVoteChange(cand.id, 'inec', val)}
