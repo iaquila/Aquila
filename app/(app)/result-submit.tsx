@@ -331,8 +331,8 @@ export default function SubmitResultScreen() {
 
       {/* Candidate Votes Breakdown */}
       <Card style={styles.sectionCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
-          <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs, gap: spacing.xs, flexWrap: 'wrap' }}>
+          <View style={{ flex: 1, minWidth: 160, paddingRight: spacing.xs }}>
             <ThemedText variant="title" color="text" fontFamily="bold">
               Candidate Ballots Tally
             </ThemedText>
@@ -540,6 +540,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.xs,
+    flexWrap: 'wrap',
   },
   validationBanner: {
     flexDirection: 'row',

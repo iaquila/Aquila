@@ -114,7 +114,7 @@ export default function ResultDetailScreen() {
         style={[styles.heroCard, shadows.md]}
       >
         <View style={styles.heroTopRow}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
             <ThemedText variant="label" color="#A3E6C2" fontFamily="bold">
               OFFICIAL POLLING UNIT RETURN
             </ThemedText>
@@ -212,7 +212,7 @@ export default function ResultDetailScreen() {
                       </ThemedText>
                     </View>
                     <View style={{ marginLeft: spacing.xs, flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                      <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2} accessibilityLabel={c.name}>
+                      <ThemedText variant="body" color="text" fontFamily="bold" accessibilityLabel={c.name}>
                         {c.name}
                       </ThemedText>
                       <View style={styles.partyRow}>
@@ -226,10 +226,10 @@ export default function ResultDetailScreen() {
                   </View>
 
                   <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                    <ThemedText variant="title" color="text" fontFamily="bold" numberOfLines={1}>
+                    <ThemedText variant="title" color="text" fontFamily="bold">
                       {c.votes.toLocaleString()}
                     </ThemedText>
-                    <ThemedText variant="caption" color="primary" fontFamily="bold" numberOfLines={1}>
+                    <ThemedText variant="caption" color="primary" fontFamily="bold">
                       {c.pct.toFixed(1)}% of total
                     </ThemedText>
                   </View>
@@ -344,6 +344,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   statusPill: {
     flexDirection: 'row',
@@ -351,6 +353,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.full,
+    flexShrink: 0,
   },
   auditStrip: {
     flexDirection: 'row',
@@ -387,6 +390,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   candMeta: {
     flexDirection: 'row',

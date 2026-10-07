@@ -238,7 +238,7 @@ export default function DashboardScreen() {
           <View>
             <View style={[styles.orgTagRow, { flex: 1, minWidth: 0, marginBottom: 2, marginRight: 0 }]}>
               <View style={[styles.orgDot, { backgroundColor: colors.primary, flexShrink: 0 }]} />
-              <ThemedText variant="label" color="primary" fontFamily="bold" numberOfLines={2} style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={user?.organizationName ?? 'iAquila Situation Room'}>
+              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={user?.organizationName ?? 'iAquila Situation Room'}>
                 {user?.organizationName ?? 'iAQUILA SITUATION ROOM'}
               </ThemedText>
             </View>
@@ -668,10 +668,10 @@ export default function DashboardScreen() {
                         </ThemedText>
                       </View>
                       <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.xs }}>
-                        <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2}>
+                        <ThemedText variant="body" color="text" fontFamily="bold">
                           {item.name}
                         </ThemedText>
-                        <ThemedText variant="caption" color="textSecondary" numberOfLines={2}>
+                        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
                           {item.qualification}
                         </ThemedText>
                       </View>
@@ -689,7 +689,7 @@ export default function DashboardScreen() {
               {/* Location Scope Banner */}
               <View style={[styles.scopeBanner, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}>
                 <Ionicons name="location" size={14} color={colors.primary} />
-                <ThemedText variant="caption" color="textSecondary" numberOfLines={2} style={{ flex: 1, marginLeft: 4 }}>
+                <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, marginLeft: 4 }}>
                   Scope: <ThemedText variant="caption" color="text" fontFamily="bold">{projection.locationScope}</ThemedText>
                 </ThemedText>
               </View>
@@ -790,10 +790,10 @@ export default function DashboardScreen() {
                 >
                   <View style={styles.puTopRow}>
                     <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                      <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2}>
+                      <ThemedText variant="body" color="text" fontFamily="bold">
                         {pu.name}
                       </ThemedText>
-                      <ThemedText variant="caption" color="textSecondary" numberOfLines={2}>
+                      <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
                         {pu.code} · {pu.lga}, {pu.state}
                       </ThemedText>
                     </View>
@@ -830,13 +830,15 @@ export default function DashboardScreen() {
                   </View>
 
                   <View style={styles.puBottomRow}>
-                    <ThemedText variant="caption" color="textSecondary">
-                      {isPub
-                        ? `${pu.votes} Votes tallied (${pu.accredited} accredited)`
-                        : isDraft
-                          ? 'Draft saved in local store'
-                          : 'Awaiting accredited ballot entry'}
-                    </ThemedText>
+                    <View style={{ flex: 1, minWidth: 140, paddingRight: spacing.xs }}>
+                      <ThemedText variant="caption" color="textSecondary">
+                        {isPub
+                          ? `${pu.votes} Votes tallied (${pu.accredited} accredited)`
+                          : isDraft
+                            ? 'Draft saved in local store'
+                            : 'Awaiting accredited ballot entry'}
+                      </ThemedText>
+                    </View>
 
                     <View
                       style={[
@@ -1027,6 +1029,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   orgTagRow: {
     flexDirection: 'row',
@@ -1107,9 +1111,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.xs,
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   sectionHeaderLeft: {
     flex: 1,
+    minWidth: 160,
     marginRight: spacing.sm,
   },
   viewAllBtn: {
@@ -1133,11 +1140,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   candLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    minWidth: 160,
   },
   rankTag: {
     width: 28,
@@ -1266,11 +1276,14 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   puTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   puStatusBadge: {
     flexDirection: 'row',
@@ -1288,6 +1301,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.05)',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   puActionBtn: {
     flexDirection: 'row',
@@ -1296,6 +1311,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radius.full,
     gap: 2,
+    flexShrink: 0,
   },
   quickGrid: {
     gap: spacing.sm,

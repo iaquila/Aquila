@@ -201,7 +201,7 @@ export default function LocationsScreen() {
               {stateLgas.slice(0, 4).map((lga) => (
                 <View key={lga.id} style={[styles.lgaItem, { borderColor: colors.border }]}>
                   <Ionicons name="location" size={14} color={colors.primary} />
-                  <ThemedText variant="caption" color="text" fontFamily="medium" numberOfLines={2} style={{ marginLeft: 6, flex: 1, minWidth: 0, paddingRight: spacing.xs }} accessibilityLabel={`${lga.name} Council Area, ${selectedState.name} State`}>
+                  <ThemedText variant="caption" color="text" fontFamily="medium" style={{ marginLeft: 6, flex: 1, minWidth: 0, paddingRight: spacing.xs }} accessibilityLabel={`${lga.name} Council Area, ${selectedState.name} State`}>
                     {lga.name} Council Area · {selectedState.name} State
                   </ThemedText>
                   <ThemedText variant="label" color="primary" style={{ flexShrink: 0 }}>Active</ThemedText>
@@ -282,5 +282,8 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderRadius: radius.sm,
     borderWidth: 1,
+    overflow: 'hidden',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
 });

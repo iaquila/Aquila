@@ -137,7 +137,7 @@ export default function ResultCollationScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <ThemedText variant="label" color="#A3E6C2">PROJECTED WINNER</ThemedText>
-            <ThemedText variant="body" color="#FDE047" fontFamily="bold" numberOfLines={1}>
+            <ThemedText variant="body" color="#FDE047" fontFamily="bold">
               {leadingCand?.partyAcronym ?? 'CPA'} ({leadingCand?.pct.toFixed(1) ?? '38.5'}%)
             </ThemedText>
           </View>
@@ -188,7 +188,7 @@ export default function ResultCollationScreen() {
                       </ThemedText>
                     </View>
                     <View style={{ marginLeft: spacing.xs, flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                      <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2} accessibilityLabel={c.fullName}>
+                      <ThemedText variant="body" color="text" fontFamily="bold" accessibilityLabel={c.fullName}>
                         {c.fullName}
                       </ThemedText>
                       <View style={styles.partyBadgeRow}>
@@ -202,10 +202,10 @@ export default function ResultCollationScreen() {
                   </View>
 
                   <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                    <ThemedText variant="title" color="text" fontFamily="bold" numberOfLines={1}>
+                    <ThemedText variant="title" color="text" fontFamily="bold">
                       {c.votes.toLocaleString()}
                     </ThemedText>
-                    <ThemedText variant="caption" color="primary" fontFamily="bold" numberOfLines={1}>
+                    <ThemedText variant="caption" color="primary" fontFamily="bold">
                       {c.pct.toFixed(1)}% of total
                     </ThemedText>
                   </View>
@@ -250,10 +250,10 @@ export default function ResultCollationScreen() {
               style={[styles.puLogItem, { borderColor: colors.border }]}
             >
               <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2}>
+                <ThemedText variant="body" color="text" fontFamily="bold">
                   {r.pollingUnitName}
                 </ThemedText>
-                <ThemedText variant="caption" color="textSecondary" numberOfLines={2}>
+                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
                   {r.totalVotesCast.toLocaleString()} votes cast · Accredited: {r.totalAccreditedVoters.toLocaleString()}
                 </ThemedText>
               </View>
@@ -377,6 +377,9 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: 'hidden',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
   puRight: {
     flexDirection: 'row',

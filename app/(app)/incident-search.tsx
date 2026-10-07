@@ -101,7 +101,7 @@ export default function IncidentSearchScreen() {
                 <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: 4 }}>
                   {item.category.replace(/_/g, ' ')}
                 </ThemedText>
-                <ThemedText variant="caption" color="textSecondary" numberOfLines={2} style={{ marginTop: 2 }}>
+                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
                   {item.description}
                 </ThemedText>
 

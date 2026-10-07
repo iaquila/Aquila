@@ -302,10 +302,10 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
     >
       <View style={styles.itemHeader}>
         <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-          <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2}>
+          <ThemedText variant="body" color="text" fontFamily="bold">
             {item.pollingUnitName}
           </ThemedText>
-          <ThemedText variant="caption" color="textSecondary" numberOfLines={2}>
+          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
             {isPublished ? 'Uploaded by observer' : 'Draft Return'} · {new Date(item.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </ThemedText>
         </View>
@@ -328,7 +328,6 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
           <ThemedText
             variant="label"
             fontFamily="bold"
-            numberOfLines={1}
             style={{
               marginLeft: 4,
               color: isPublished ? colors.success : colors.warning,
@@ -343,15 +342,15 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
       <View style={[styles.leadStrip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
         <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
           <ThemedText variant="label" color="textMuted">LEADING CANDIDATE</ThemedText>
-          <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2}>
+          <ThemedText variant="body" color="text" fontFamily="bold">
             {leadCand?.fullName ?? (topCandId ? `Candidate ${topCandId}` : 'Awaiting breakdown')}
           </ThemedText>
         </View>
         <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-          <ThemedText variant="title" color="primary" fontFamily="bold" numberOfLines={1}>
+          <ThemedText variant="title" color="primary" fontFamily="bold">
             {topCandVotes.toLocaleString()}
           </ThemedText>
-          <ThemedText variant="label" color="textSecondary" numberOfLines={1}>
+          <ThemedText variant="label" color="textSecondary">
             {leadPct}% of cast ballots
           </ThemedText>
         </View>
@@ -437,7 +436,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
       <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
         {/* Row 1: Name + Zone/State tag + Margin */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={1}>
+          <ThemedText variant="body" color="text" fontFamily="bold">
             {name}
           </ThemedText>
           {zoneOrState && (
@@ -455,13 +454,13 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
         </View>
 
         {/* Row 2: Candidate + Party pill + Subtitle */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <View style={[styles.partyPill, { backgroundColor: leadColor, paddingVertical: 1, paddingHorizontal: 6 }]}>
             <ThemedText variant="label" color="#FFFFFF" fontFamily="bold">
               {leadingParty}
             </ThemedText>
           </View>
-          <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ flex: 1 }}>
+          <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, minWidth: 120 }}>
             {leadingCandidate} · {subTitle}
           </ThemedText>
         </View>
@@ -1010,10 +1009,10 @@ export default function ResultsScreen() {
         {/* Top Control Bar */}
         <View style={styles.topControlBar}>
           <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-            <ThemedText variant="title" color="text" fontFamily="bold" numberOfLines={1}>
+            <ThemedText variant="title" color="text" fontFamily="bold">
               Election Results
             </ThemedText>
-            <ThemedText variant="caption" color="textSecondary" numberOfLines={1}>
+            <ThemedText variant="caption" color="textSecondary">
               {effectiveViewMode === 'returns'
                 ? `Total ${totalVotes.toLocaleString()} votes across ${publishedResults.length} PUs`
                 : `${overallReportingPct}% of collation centers reporting`}
@@ -1067,8 +1066,6 @@ export default function ResultsScreen() {
                   variant="caption"
                   color={effectiveViewMode === 'returns' ? '#FFFFFF' : 'textSecondary'}
                   fontFamily={effectiveViewMode === 'returns' ? 'bold' : 'medium'}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   PU Returns ({publishedResults.length})
                 </ThemedText>
@@ -1095,8 +1092,6 @@ export default function ResultsScreen() {
                   variant="caption"
                   color={effectiveViewMode === 'heatmap' ? '#FFFFFF' : 'textSecondary'}
                   fontFamily={effectiveViewMode === 'heatmap' ? 'bold' : 'medium'}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   Heat Map ({geoLevel === 'state' ? `${stateHeatmapData.length} States` : `${lgaHeatmapData.length} LGAs`})
                 </ThemedText>
@@ -1391,12 +1386,12 @@ export default function ResultsScreen() {
                           {geoLevel === 'state' ? 'FEDERAL PRESIDENTIAL COLLATION' : `${effectiveLgaState.toUpperCase()} DISTRICT COLLATION`}
                         </ThemedText>
                       </View>
-                      <ThemedText variant="body" color="#FFFFFF" fontFamily="bold" numberOfLines={1}>
+                      <ThemedText variant="body" color="#FFFFFF" fontFamily="bold">
                         {geoLevel === 'state'
                           ? 'National Federation Tactical Map'
                           : `${effectiveLgaState} State LGA Collation Map`}
                       </ThemedText>
-                      <ThemedText variant="label" color="#FFFFFF99" numberOfLines={1}>
+                      <ThemedText variant="label" color="#FFFFFF99">
                         {geoLevel === 'state'
                           ? `${stateHeatmapData.length} of 37 States · ${totalCollatedAcrossLgas.toLocaleString()} / ${totalPusAcrossLgas.toLocaleString()} PUs`
                           : `${mapLgas.length} Monitored LGAs · ${mapLgas.reduce((a, b) => a + b.baseCollated, 0)} of ${mapLgas.reduce((a, b) => a + b.totalPus, 0)} PUs collated`}
@@ -1783,23 +1778,20 @@ export default function ResultsScreen() {
                             +{selectedMapState.margin}%
                           </ThemedText>
                         </View>
-                        <ThemedText variant="label" color="#A3E6C2" numberOfLines={1}>
+                        <ThemedText variant="label" color="#A3E6C2">
                           {selectedMapState.leadingCandidate} · {selectedMapState.baseCollated.toLocaleString()} of {selectedMapState.totalPus.toLocaleString()} PUs ({selectedMapState.reportingPct}%)
                         </ThemedText>
                       </View>
-                      <Pressable
+                      <Button
+                        label="Drill LGAs"
+                        size="sm"
+                        rightIcon="chevron-forward"
                         onPress={() => {
                           impact(Haptics.ImpactFeedbackStyle.Medium);
                           handleDrillToState(selectedMapState.name);
                         }}
-                        style={[styles.hudActionBtn, { backgroundColor: colors.primary }]}
                         accessibilityLabel={`Drill down to LGAs for ${selectedMapState.name}`}
-                      >
-                        <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
-                          Drill LGAs
-                        </ThemedText>
-                        <Ionicons name="chevron-forward" size={13} color="#FFFFFF" />
-                      </Pressable>
+                      />
                     </View>
                   )}
 
@@ -1829,23 +1821,20 @@ export default function ResultsScreen() {
                             +{selectedMapLga.margin}%
                           </ThemedText>
                         </View>
-                        <ThemedText variant="label" color="#A3E6C2" numberOfLines={1}>
+                        <ThemedText variant="label" color="#A3E6C2">
                           {selectedMapLga.leadingCandidate} · {selectedMapLga.baseCollated} of {selectedMapLga.totalPus} PUs ({selectedMapLga.reportingPct}%)
                         </ThemedText>
                       </View>
-                      <Pressable
+                      <Button
+                        label="Inspect PUs"
+                        size="sm"
+                        rightIcon="arrow-forward"
                         onPress={() => {
                           impact(Haptics.ImpactFeedbackStyle.Medium);
                           handleInspectLga(selectedMapLga.name);
                         }}
-                        style={[styles.hudActionBtn, { backgroundColor: colors.primary }]}
                         accessibilityLabel={`Inspect PUs for ${selectedMapLga.name}`}
-                      >
-                        <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
-                          Inspect PUs
-                        </ThemedText>
-                        <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
-                      </Pressable>
+                      />
                     </View>
                   )}
                 </Card>
@@ -1922,6 +1911,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   tabBar: {
     flexDirection: 'row',

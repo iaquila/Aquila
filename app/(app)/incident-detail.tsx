@@ -362,11 +362,11 @@ export default function IncidentDetailScreen() {
                     </Pressable>
 
                     <View style={styles.evidenceMediaMeta}>
-                      <View style={{ flex: 1 }}>
-                        <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={1}>
+                      <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
+                        <ThemedText variant="body" color="text" fontFamily="bold">
                           Geotagged Photo #{idx + 1}
                         </ThemedText>
-                        <ThemedText variant="caption" color="textSecondary" numberOfLines={1} accessibilityLabel={`${fileName}, field camera photo`}>
+                        <ThemedText variant="caption" color="textSecondary" accessibilityLabel={`${fileName}, field camera photo`}>
                           {fileName} · Field Camera
                         </ThemedText>
                       </View>
@@ -730,11 +730,11 @@ function VideoEvidencePlayer({ uri, index, fileName }: { uri: string; index: num
       )}
 
       <View style={styles.evidenceMediaMeta}>
-        <View style={{ flex: 1 }}>
-          <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={1}>
+        <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
+          <ThemedText variant="body" color="text" fontFamily="bold">
             Live Video Recording #{index + 1}
           </ThemedText>
-          <ThemedText variant="caption" color="textSecondary" numberOfLines={1} accessibilityLabel={`${fileName || `video-${index + 1}`}, field recording video`}>
+          <ThemedText variant="caption" color="textSecondary" accessibilityLabel={`${fileName || `video-${index + 1}`}, field recording video`}>
             {fileName || `video-${index + 1}`} · Field Recording
           </ThemedText>
         </View>

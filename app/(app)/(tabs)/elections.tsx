@@ -356,10 +356,10 @@ export default function ElectionsScreen() {
                   </ThemedText>
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <ThemedText variant="body" style={{ fontWeight: '700', fontSize: 15 }} numberOfLines={2}>
+                  <ThemedText variant="body" style={{ fontWeight: '700', fontSize: 15 }}>
                     {election.position}
                   </ThemedText>
-                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['2xs'] }} numberOfLines={2}>
+                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['2xs'] }}>
                     {election.electoralArea} · {election.electoralAreaType}
                   </ThemedText>
 
@@ -524,6 +524,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: border.thin,
     marginTop: spacing.xs,
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   partyPill: {
     paddingHorizontal: 6,

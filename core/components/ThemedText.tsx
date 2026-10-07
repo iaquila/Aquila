@@ -21,6 +21,8 @@ type ThemedTextProps = {
   accessibilityRole?: React.ComponentProps<typeof RNText>['accessibilityRole'];
   numberOfLines?: number;
   ellipsizeMode?: 'tail' | 'head' | 'middle' | 'clip';
+  adjustsFontSizeToFit?: boolean;
+  minimumFontScale?: number;
   onPress?: () => void;
   uppercase?: boolean;
   tracking?: number;
@@ -68,7 +70,7 @@ export function ThemedText({
   accessibilityLabel,
   accessibilityRole,
   numberOfLines,
-  ellipsizeMode,
+  ellipsizeMode = 'clip',
   onPress,
   uppercase,
   tracking,
@@ -76,6 +78,8 @@ export function ThemedText({
   fontFamily = 'regular',
   minFontSize,
   maxFontSize,
+  adjustsFontSizeToFit,
+  minimumFontScale,
 }: ThemedTextProps) {
   const scheme = useScheme();
   const colors = Colors[scheme];
@@ -138,6 +142,14 @@ export function ThemedText({
     baseStyle.letterSpacing = -0.2;
   }
 
+  const effectiveAdjustsFontSizeToFit =
+    adjustsFontSizeToFit !== undefined
+      ? adjustsFontSizeToFit
+      : numberOfLines === 1;
+
+  const effectiveMinFontScale =
+    minimumFontScale ?? (effectiveAdjustsFontSizeToFit ? 0.8 : undefined);
+
   if (isGradient && gradientColors) {
     return (
       <RNText
@@ -146,6 +158,8 @@ export function ThemedText({
         maxFontSizeMultiplier={maxFontSizeMultiplier}
         numberOfLines={numberOfLines}
         ellipsizeMode={ellipsizeMode}
+        adjustsFontSizeToFit={effectiveAdjustsFontSizeToFit}
+        minimumFontScale={effectiveMinFontScale}
         testID={testID}
         onPress={onPress}
       >
@@ -165,6 +179,8 @@ export function ThemedText({
             maxFontSizeMultiplier={maxFontSizeMultiplier}
             numberOfLines={numberOfLines}
             ellipsizeMode={ellipsizeMode}
+            adjustsFontSizeToFit={effectiveAdjustsFontSizeToFit}
+            minimumFontScale={effectiveMinFontScale}
             testID={testID}
             onPress={onPress}
           >
@@ -182,6 +198,8 @@ export function ThemedText({
       maxFontSizeMultiplier={maxFontSizeMultiplier}
       numberOfLines={numberOfLines}
       ellipsizeMode={ellipsizeMode}
+      adjustsFontSizeToFit={effectiveAdjustsFontSizeToFit}
+      minimumFontScale={effectiveMinFontScale}
       testID={testID}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}

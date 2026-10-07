@@ -77,10 +77,10 @@ export default function ResultSearchScreen() {
                   <Ionicons name="document-text" size={18} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm, paddingRight: spacing.xs }}>
-                  <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={2}>
+                  <ThemedText variant="body" color="text" fontFamily="bold">
                     {item.pollingUnitName}
                   </ThemedText>
-                  <ThemedText variant="caption" color="textSecondary" numberOfLines={2}>
+                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
                     {item.totalVotesCast.toLocaleString()} votes cast · Accredited: {item.totalAccreditedVoters}
                   </ThemedText>
                 </View>

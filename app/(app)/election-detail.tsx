@@ -120,7 +120,7 @@ export default function ElectionDetailScreen() {
                     #{c.candidateNumber ?? index + 1}
                   </ThemedText>
                 </View>
-                <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm, paddingRight: spacing.xs }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <ThemedText variant="body" color="text" fontFamily="bold">
                       {c.fullName}
@@ -140,7 +140,7 @@ export default function ElectionDetailScreen() {
                     </ThemedText>
                   ) : null}
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: colors.successSubtle }]}>
+                <View style={[styles.statusBadge, { backgroundColor: colors.successSubtle, flexShrink: 0 }]}>
                   <ThemedText variant="label" color="success" fontFamily="bold">
                     {c.status}
                   </ThemedText>
@@ -206,6 +206,8 @@ const styles = StyleSheet.create({
   candRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
   },
   avatarBox: {
     width: 36,
@@ -213,11 +215,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.full,
+    flexShrink: 0,
   },
   partyPill: {
     paddingHorizontal: 6,

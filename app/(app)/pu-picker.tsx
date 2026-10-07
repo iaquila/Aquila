@@ -79,7 +79,7 @@ export default function PUPickerScreen() {
           <View style={[styles.puIconBadge, { backgroundColor: colors.primary + '16' }]}>
             <Ionicons name="location" size={20} color={colors.primary} />
           </View>
-          <View style={{ flex: 1, marginLeft: spacing.sm }}>
+          <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm, paddingRight: spacing.xs }}>
             <ThemedText variant="body" color="text" fontFamily="bold">
               {item.name}
             </ThemedText>
@@ -88,7 +88,7 @@ export default function PUPickerScreen() {
               {item.code} · {parentLga}, {parentState}
             </ThemedText>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={{ flexShrink: 0 }} />
         </View>
       </Card>
     );

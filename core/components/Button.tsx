@@ -131,7 +131,8 @@ export function Button({
           <ThemedText
             variant="label"
             numberOfLines={1}
-            ellipsizeMode="tail"
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
             style={[
               styles.label,
               {
@@ -157,6 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     minWidth: 0,
+    overflow: 'hidden',
   },
   row: {
     alignItems: 'center',

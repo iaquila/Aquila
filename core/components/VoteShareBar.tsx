@@ -27,7 +27,7 @@ export function VoteShareBar({ entries }: { entries: VoteShareEntry[] }) {
       {entries.slice(0, 5).map((e, i) => (
         <View key={e.id} style={styles.row}>
           <View style={styles.labelWrap}>
-            <ThemedText variant="body" style={styles.name} numberOfLines={2} accessibilityLabel={e.name}>
+            <ThemedText variant="body" style={styles.name} accessibilityLabel={e.name}>
               {e.name}
             </ThemedText>
             <ThemedText variant="caption" color="textSecondary">
