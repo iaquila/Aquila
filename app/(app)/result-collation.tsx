@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, Shimmer, SkeletonCard, Badge } from '@/core/components';
+import { ThemedText, Card, Shimmer, SkeletonCard, Badge, SectionHeader } from '@/core/components';
 import { useResultsQuery, useCandidatesQuery } from '@/features/elections/hooks';
 import { spacing, radius, shadows } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
@@ -218,16 +218,10 @@ export default function ResultCollationScreen() {
 
       {/* 3. Reporting Polling Units Breakdown Log */}
       <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <View>
-            <ThemedText variant="title" color="text" fontFamily="bold">
-              Recent Polling Unit Returns ({allCollated.length})
-            </ThemedText>
-            <ThemedText variant="caption" color="textSecondary">
-              Tap any returning station to inspect full candidate uploaded record breakdown
-            </ThemedText>
-          </View>
-        </View>
+        <SectionHeader
+          title={`Recent Polling Unit Returns (${allCollated.length})`}
+          subtitle="Tap any returning station to inspect full candidate uploaded record breakdown"
+        />
 
         <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
           {allCollated.slice(0, 10).map((r) => (

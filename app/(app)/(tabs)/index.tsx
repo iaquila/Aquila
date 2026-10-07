@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable, Animated, Platform } from 'react-native';
 import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge } from '@/core/components';
+import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge, SectionHeader } from '@/core/components';
 import { EntranceView } from '@/core/components/EntranceView';
 import { useAuthStore, useResultsStore } from '@/features/auth/store';
 import { ROUTES } from '@/constants/routes';
@@ -332,24 +332,20 @@ export default function DashboardScreen() {
       {!isPollingAgent && (
         <EntranceView delay={150}>
           <Card style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionHeaderLeft}>
-              <ThemedText variant="title" color="text" fontFamily="bold">
-                Snapshot Performance
-              </ThemedText>
-              <ThemedText variant="caption" color="textSecondary">
-                Live top candidates ranked by verified vote tally
-              </ThemedText>
-            </View>
-            {winningCandidate && (
-              <View style={[styles.winnerBadge, { backgroundColor: colors.primarySubtle }]}>
-                <Ionicons name="trophy" size={12} color={colors.primary} />
-                <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginLeft: 4 }}>
-                  Leading
-                </ThemedText>
-              </View>
-            )}
-          </View>
+            <SectionHeader
+              title="Snapshot Performance"
+              subtitle="Live top candidates ranked by verified vote tally"
+              action={
+                winningCandidate ? (
+                  <View style={[styles.winnerBadge, { backgroundColor: colors.primarySubtle }]}>
+                    <Ionicons name="trophy" size={12} color={colors.primary} />
+                    <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginLeft: 4 }}>
+                      Leading
+                    </ThemedText>
+                  </View>
+                ) : null
+              }
+            />
 
           {/* Candidate score rows (Audio Part 2: Agent's affiliated candidate pinned at the top) */}
           <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
@@ -741,35 +737,35 @@ export default function DashboardScreen() {
       {/* 5. Assigned Polling Units (PRD: PU Agent = 1 PU, Field Agent = 3 PUs, Officer = Supervisory) */}
       <EntranceView delay={250}>
         <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionHeaderLeft}>
-              <ThemedText variant="title" color="text" fontFamily="bold">
-                {user?.role === 'POLLING_AGENT'
-                  ? 'My Assigned Polling Unit'
-                  : isElectionOfficer
-                    ? 'Jurisdictional Polling Units'
-                    : 'My Assigned Polling Units'}
-              </ThemedText>
-              <ThemedText variant="caption" color="textSecondary">
-                {user?.role === 'POLLING_AGENT'
-                  ? 'Polling Unit Agent assignment · 1 Polling Unit'
-                  : isElectionOfficer
-                    ? 'Election Officer supervisory overview · 3 Reporting Units'
-                    : 'Field Agent jurisdiction · 3 Polling Units'}
-              </ThemedText>
-            </View>
-            <DebouncedPressable
-              onPress={() => {
-                impact(Haptics.ImpactFeedbackStyle.Light);
-                router.push(ROUTES.LOCATIONS);
-              }}
-              style={styles.viewAllBtn}
-            >
-              <ThemedText variant="caption" color="primary" fontFamily="bold">
-                View All
-              </ThemedText>
-            </DebouncedPressable>
-          </View>
+          <SectionHeader
+            title={
+              user?.role === 'POLLING_AGENT'
+                ? 'My Assigned Polling Unit'
+                : isElectionOfficer
+                  ? 'Jurisdictional Polling Units'
+                  : 'My Assigned Polling Units'
+            }
+            subtitle={
+              user?.role === 'POLLING_AGENT'
+                ? 'Polling Unit Agent assignment · 1 Polling Unit'
+                : isElectionOfficer
+                  ? 'Election Officer supervisory overview · 3 Reporting Units'
+                  : 'Field Agent jurisdiction · 3 Polling Units'
+            }
+            action={
+              <DebouncedPressable
+                onPress={() => {
+                  impact(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(ROUTES.LOCATIONS);
+                }}
+                style={styles.viewAllBtn}
+              >
+                <ThemedText variant="caption" color="primary" fontFamily="bold">
+                  View All
+                </ThemedText>
+              </DebouncedPressable>
+            }
+          />
 
           <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
             {(user?.role === 'POLLING_AGENT' ? ASSIGNED_DEMO_PUS.slice(0, 1) : ASSIGNED_DEMO_PUS).map((pu) => {
@@ -819,7 +815,7 @@ export default function DashboardScreen() {
                     />
                   </View>
 
-                  <View style={styles.puBottomRow}>
+                  <View style={[styles.puBottomRow, { borderTopColor: colors.borderSubtle }]}>
                     <View style={{ flex: 1, minWidth: 0, flexShrink: 1, paddingRight: spacing.xs }}>
                       <ThemedText variant="caption" color="textSecondary">
                         {isPub
@@ -1295,7 +1291,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     paddingTop: spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
     gap: spacing.xs,
     flexWrap: 'wrap',
   },

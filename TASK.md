@@ -101,5 +101,12 @@
     - Enforced Structural Containment in Core Components:
       * `Card.tsx`: Injected `overflow: 'hidden'` onto `styles.card`, `AnimatedCard`, and the content container, guaranteeing children can never bleed past card boundaries or rounded corners.
       * `Button.tsx`: Added `maxWidth: '100%'` onto `DebouncedPressable` to guarantee buttons never exceed parent container widths.
-      * Unconstrained Rigid minWidth Clamps: Replaced rigid `minWidth: 160`, `minWidth: 140`, and `minWidth: 120` clamps with responsive `minWidth: 0, flex: 1, flexShrink: 1` across `index.tsx` (`puBottomRow`, `sectionHeaderLeft`, `candLeft`), `result-submit.tsx` (`candidate tally header`), `results.tsx` (lead subtitle), and `SectionHeader.tsx`.
+    - Standardized SectionHeader Architecture:
+      * Upgraded `core/components/SectionHeader.tsx` to support `subtitle`, `action`, `indicatorColor`, `showIndicator`, and custom `style` with fluid flex constraints (`minWidth: 0, flexShrink: 1`).
+      * Adopted `<SectionHeader>` in `index.tsx` (Assigned Polling Units & Candidate Snapshot) and `result-collation.tsx` (Recent Polling Unit Returns).
+    - 100% ThemedText Compliance:
+      * Replaced the last remaining raw React Native `<Text>` element in `core/components/ToastProvider.tsx` with `<ThemedText variant="body">`, achieving 100% code-wide adherence to the text token SSOT rule.
+    - Semantic Theme Consistency in Polling Unit Cards:
+      * Replaced hardcoded `borderTopColor: rgba(0,0,0,0.05)` in `puBottomRow` with semantic `colors.borderSubtle` across light and dark modes.
+
 
