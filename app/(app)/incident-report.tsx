@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Platform, Alert, Pressable, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { View, Platform, Alert, Pressable, StyleSheet, KeyboardAvoidingView, Keyboard } from 'react-native';
 import { useAudioRecorder, useAudioRecorderState, AudioModule, RecordingPresets, setAudioModeAsync } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenView } from '@/core/components/ScreenView';
@@ -80,6 +80,9 @@ export default function ReportIncidentScreen() {
         setSelectedPuName(picked.name);
         setElectoralArea(picked.name);
       }
+      return () => {
+        Keyboard.dismiss();
+      };
     }, [])
   );
 
@@ -323,7 +326,7 @@ export default function ReportIncidentScreen() {
     Alert.alert(
       'Incident Dispatched',
       'Incident report transmitted successfully to the iAquila Incident Control Room.',
-      [{ text: 'OK', onPress: () => router.back() }]
+      [{ text: 'OK', onPress: () => router.replace(ROUTES.INCIDENTS_TAB) }]
     );
   };
 
@@ -341,7 +344,7 @@ export default function ReportIncidentScreen() {
             <Button
               label="Go to Incident Triage Center"
               variant="primary"
-              onPress={() => router.replace('/(app)/(tabs)/incidents' as any)}
+              onPress={() => router.replace(ROUTES.INCIDENTS_TAB)}
             />
           </Card>
         </View>

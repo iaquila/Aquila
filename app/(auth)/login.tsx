@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Pressable } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Pressable, Keyboard } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,7 @@ import { spacing, radius, shadows } from '@/constants/tokens';
 import { useLoginMutation } from '@/features/auth/hooks';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
+import { useFocusEffect } from 'expo-router';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -29,6 +30,14 @@ export default function LoginScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   useStatusBar({ barStyle: 'light', hidden: false });
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        Keyboard.dismiss();
+      };
+    }, [])
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -118,7 +118,7 @@ export function Card({
         containerStyle={layoutStyle}
         hasFlex={hasFlex}
       >
-        <View style={cardStyle} accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
+        <View style={cardStyle}>
           {children}
         </View>
       </AnimatedCard>

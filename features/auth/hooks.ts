@@ -17,6 +17,7 @@ export function useLogoutMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
+      await queryClient.cancelQueries();
       await logoutApi();
     },
     onSettled: () => {

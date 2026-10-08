@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Button, Input, Card } from '@/core/components';
 import { useResultsStore, useAuthStore, ResultSubmission } from '@/features/auth/store';
@@ -89,6 +89,9 @@ export default function SubmitResultScreen() {
         setSelectedPuId(picked.id);
         setSelectedPuName(picked.name);
       }
+      return () => {
+        Keyboard.dismiss();
+      };
     }, [])
   );
 
