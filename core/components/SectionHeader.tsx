@@ -9,6 +9,7 @@ type SectionHeaderProps = {
   title: string;
   subtitle?: string;
   color?: string;
+  indicatorColor?: string;
   showIndicator?: boolean;
   action?: React.ReactNode;
   style?: ViewStyle;
@@ -26,6 +27,7 @@ export function SectionHeader({
   title,
   subtitle,
   color,
+  indicatorColor,
   showIndicator = false,
   action,
   style,
@@ -38,7 +40,7 @@ export function SectionHeader({
       <View style={styles.left}>
         <View style={styles.titleRow}>
           {showIndicator && (
-            <View style={[styles.indicator, { backgroundColor: color ?? colors.primary }]} />
+            <View style={[styles.indicator, { backgroundColor: indicatorColor ?? color ?? colors.primary }]} />
           )}
           <ThemedText variant="title" color="text" fontFamily="bold" style={styles.titleText}>
             {title}

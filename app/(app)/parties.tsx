@@ -101,7 +101,7 @@ export default function PartiesScreen() {
                       </ThemedText>
                     </View>
 
-                    <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                    <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm }}>
                       <ThemedText variant="body" color="text" fontFamily="bold">
                         {cand.fullName}
                       </ThemedText>
@@ -156,7 +156,7 @@ export default function PartiesScreen() {
                         {party.acronym.slice(0, 3)}
                       </ThemedText>
                     </View>
-                    <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                    <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm }}>
                       <ThemedText variant="body" color="text" fontFamily="bold">
                         {party.name}
                       </ThemedText>

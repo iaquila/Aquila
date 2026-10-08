@@ -174,6 +174,9 @@ interface AuthState {
   setOnboarded: (val: boolean) => void;
   setWatchCandidate: (candidateId: string | undefined) => void;
   setSelectedPollingUnit: (id: string | undefined, name: string | undefined) => void;
+  transientPickerPU: { id: string; name: string } | null;
+  setTransientPickerPU: (pu: { id: string; name: string } | null) => void;
+  consumeTransientPickerPU: () => { id: string; name: string } | null;
   selectedPollingUnitId: string | undefined;
   selectedPollingUnitName: string | undefined;
 }
@@ -184,19 +187,28 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isOnboarded: false,
+      transientPickerPU: null,
       login: (user) => {
         if (__DEV__) console.log('[auth] login', user.email, user.role);
         set({ user, isAuthenticated: true });
       },
       logout: () => {
         if (__DEV__) console.log('[auth] logout');
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, isAuthenticated: false, transientPickerPU: null });
       },
       setOnboarded: (val) => set({ isOnboarded: val }),
       setWatchCandidate: (watchCandidateId) =>
         set((s) => ({ user: s.user ? { ...s.user, watchCandidateId } : null })),
       setSelectedPollingUnit: (selectedPollingUnitId, selectedPollingUnitName) =>
         set((s) => ({ user: s.user ? { ...s.user, selectedPollingUnitId, selectedPollingUnitName } : null })),
+      setTransientPickerPU: (transientPickerPU) => set({ transientPickerPU }),
+      consumeTransientPickerPU: () => {
+        const pu = get().transientPickerPU;
+        if (pu) {
+          set({ transientPickerPU: null });
+        }
+        return pu;
+      },
       // derived selectors — keep as getters for back-compat but persist will stringify their values; prefer useAuthStore(s=>s.user?.selectedPollingUnitId) in components
       get selectedPollingUnitId() { return get().user?.selectedPollingUnitId; },
       get selectedPollingUnitName() { return get().user?.selectedPollingUnitName; },

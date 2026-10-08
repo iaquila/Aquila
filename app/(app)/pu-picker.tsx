@@ -48,6 +48,7 @@ export default function PUPickerScreen() {
   const handleSelect = useCallback((pu: PollingUnit) => {
     impact(Haptics.ImpactFeedbackStyle.Medium);
     useAuthStore.getState().setSelectedPollingUnit(pu.id, pu.name);
+    useAuthStore.getState().setTransientPickerPU({ id: pu.id, name: pu.name });
     if (router.canGoBack()) {
       router.back();
     } else {

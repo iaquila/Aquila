@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Button, Input, Card } from '@/core/components';
 import { useResultsStore, useAuthStore, ResultSubmission } from '@/features/auth/store';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { spacing, shadows, radius } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -81,6 +81,16 @@ export default function SubmitResultScreen() {
       setVotes(initVotes);
     }
   }, [existingDraft]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const picked = useAuthStore.getState().consumeTransientPickerPU();
+      if (picked) {
+        setSelectedPuId(picked.id);
+        setSelectedPuName(picked.name);
+      }
+    }, [])
+  );
 
   useEffect(() => {
     if (preselectedPuId) {

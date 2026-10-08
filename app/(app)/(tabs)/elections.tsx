@@ -3,7 +3,7 @@ import { StyleSheet, View, LayoutAnimation, Pressable, ScrollView } from 'react-
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, EmptyState, SkeletonCard, Card, Input, Badge } from '@/core/components';
+import { ThemedText, EmptyState, SkeletonCard, Card, Input, Badge, SectionHeader } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
@@ -124,15 +124,13 @@ export default function ElectionsScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       {/* Title Header */}
-      <View style={{ marginBottom: spacing.sm }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 2 }}>
-          <View style={[styles.titleIndicator, { backgroundColor: colors.primary }]} />
-          <ThemedText variant="title" color="text" fontFamily="bold">Elections & Mandates</ThemedText>
-        </View>
-        <ThemedText variant="caption" color="textSecondary">
-          Browse election cycles, contest statuses, and candidate slates
-        </ThemedText>
-      </View>
+      <SectionHeader
+        title="Elections & Mandates"
+        subtitle="Browse election cycles, contest statuses, and candidate slates"
+        showIndicator
+        indicatorColor={colors.primary}
+        style={{ marginBottom: spacing.sm }}
+      />
 
       {/* Cycle Selector (Segmented Tabs) */}
       <View style={[styles.tabBar, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
@@ -428,6 +426,7 @@ const styles = StyleSheet.create({
   },
   cycleMetaItem: {
     flex: 1,
+    minWidth: 0,
   },
   searchBar: {
     flexDirection: 'row',
@@ -462,6 +461,7 @@ const styles = StyleSheet.create({
   },
   quickLinkPill: {
     flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

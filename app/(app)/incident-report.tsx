@@ -6,7 +6,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Input, Button, Card } from '@/core/components';
 import { IncidentReport } from '@/features/auth/store';
 import { useIncidentsStore, useAuthStore } from '@/features/auth/store';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { spacing, shadows, radius } from '@/constants/tokens';
 import { IncidentCategory, IncidentSeverity } from '@/types';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
@@ -17,6 +17,17 @@ import Colors from '@/constants/colors';
 import { FEATURES } from '@/constants/features';
 import { Ionicons } from '@expo/vector-icons';
 import { INCIDENT_CATEGORIES as CATEGORIES, INCIDENT_SEVERITIES as SEVERITIES } from '@/constants/incidents';
+import { Badge } from '@/core/components';
+import { useLocationSearchQuery } from '@/features/elections/hooks';
+import { useHaptics } from '@/core/hooks';
+import * as Haptics from 'expo-haptics';
+
+const AREA_PRESETS = [
+  'Ikeja LGA Collation Center',
+  'Highway In-Transit Route',
+  'Lagos State Collation HQ',
+  'Alimosho LGA Sector',
+] as const;
 
 export default function ReportIncidentScreen() {
   const { electionId, pollingUnitId: preselectedPuId, pollingUnitName: preselectedPuName } = useLocalSearchParams<{ electionId?: string; pollingUnitId?: string; pollingUnitName?: string }>();
@@ -24,6 +35,7 @@ export default function ReportIncidentScreen() {
   const [severity, setSeverity] = useState<IncidentSeverity>('MEDIUM');
   const [description, setDescription] = useState('');
   const [electoralArea, setElectoralArea] = useState('');
+  const [showAreaSuggestions, setShowAreaSuggestions] = useState(false);
   const [selectedPuId, setSelectedPuId] = useState(preselectedPuId ?? '');
   const [selectedPuName, setSelectedPuName] = useState(preselectedPuName ?? '');
   const [mediaUris, setMediaUris] = useState<string[]>([]);
@@ -54,13 +66,29 @@ export default function ReportIncidentScreen() {
   const colors = Colors[scheme];
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
+  const { data: locationSuggestions = [], isLoading: isLocationsLoading } = useLocationSearchQuery(electoralArea);
+  const { impact } = useHaptics();
 
   const isRecordingRef = useRef(false);
   isRecordingRef.current = isRecording;
 
+  useFocusEffect(
+    useCallback(() => {
+      const picked = useAuthStore.getState().consumeTransientPickerPU();
+      if (picked) {
+        setSelectedPuId(picked.id);
+        setSelectedPuName(picked.name);
+        setElectoralArea(picked.name);
+      }
+    }, [])
+  );
+
   useEffect(() => {
     if (preselectedPuId) setSelectedPuId(preselectedPuId);
-    if (preselectedPuName) setSelectedPuName(preselectedPuName);
+    if (preselectedPuName) {
+      setSelectedPuName(preselectedPuName);
+      setElectoralArea(preselectedPuName);
+    }
   }, [preselectedPuId, preselectedPuName]);
 
   useEffect(() => {
@@ -73,13 +101,17 @@ export default function ReportIncidentScreen() {
     };
   }, [audioRecorder]);
 
+  const initialAreaSetRef = useRef(false);
   useEffect(() => {
-    if (!electoralArea) {
+    if (!initialAreaSetRef.current && !electoralArea) {
       if (selectedPuName) {
+        initialAreaSetRef.current = true;
         setElectoralArea(selectedPuName);
       } else if (user?.selectedPollingUnitName) {
+        initialAreaSetRef.current = true;
         setElectoralArea(user.selectedPollingUnitName);
       } else if (user?.assignedLocations?.[0]) {
+        initialAreaSetRef.current = true;
         setElectoralArea('Ikeja LGA (Operational Sector)');
       }
     }
@@ -341,10 +373,10 @@ export default function ReportIncidentScreen() {
       <ThemedText variant="label" style={{ marginBottom: spacing.xs }}>
         Incident Location Scope
       </ThemedText>
-      {selectedPuId ? (
-            <Card style={[shadows.sm, { marginBottom: spacing.md, borderColor: colors.primary, borderWidth: 1 }]}>
+      {selectedPuId || selectedPuName ? (
+            <Card style={[shadows.sm, { marginBottom: spacing.md, borderColor: colors.primary, borderWidth: 1, backgroundColor: colors.primary + '0C' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flex: 1, marginRight: spacing.xs }}>
+                <View style={{ flex: 1, minWidth: 0, marginRight: spacing.xs }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="location" size={15} color={colors.primary} />
                     <ThemedText variant="caption" color="primary" fontFamily="bold">
@@ -358,12 +390,25 @@ export default function ReportIncidentScreen() {
                     Operational Sector: {electoralArea || 'Ikeja LGA · Lagos State'}
                   </ThemedText>
                 </View>
-                <Button
-                  label="Change"
-                  size="sm"
-                  variant="outline"
-                  onPress={() => router.push({ pathname: ROUTES.PU_PICKER, params: { mode: 'incident', ...(electionId ? { electionId } : {}) } })}
-                />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 }}>
+                  <Button
+                    label="Change"
+                    size="sm"
+                    variant="outline"
+                    onPress={() => router.push({ pathname: ROUTES.PU_PICKER, params: { mode: 'incident', ...(electionId ? { electionId } : {}) } })}
+                  />
+                  <Button
+                    label="Remove"
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => {
+                      impact(Haptics.ImpactFeedbackStyle.Light);
+                      setSelectedPuId('');
+                      setSelectedPuName('');
+                      setElectoralArea('');
+                    }}
+                  />
+                </View>
               </View>
             </Card>
           ) : (
@@ -375,15 +420,104 @@ export default function ReportIncidentScreen() {
                 onPress={() => router.push({ pathname: ROUTES.PU_PICKER, params: { mode: 'incident', ...(electionId ? { electionId } : {}) } })}
                 leftIcon="location-outline"
               />
-              <ThemedText variant="caption" color="textMuted" style={{ marginHorizontal: 2 }}>
+              <ThemedText variant="caption" color="textMuted" style={{ marginHorizontal: 2, marginTop: spacing.xs }}>
                 Or report an area-wide incident (collation center, highway in-transit, or general sector):
               </ThemedText>
+
+              {/* Quick Area-Wide Suggestion Chips */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                {AREA_PRESETS.map((preset) => {
+                  const active = electoralArea === preset;
+                  return (
+                    <Pressable
+                      key={preset}
+                      onPress={() => {
+                        impact(Haptics.ImpactFeedbackStyle.Light);
+                        setElectoralArea(preset);
+                        setShowAreaSuggestions(false);
+                      }}
+                      style={[
+                        styles.suggestionChip,
+                        {
+                          backgroundColor: active ? colors.primary + '18' : colors.surfaceElevated,
+                          borderColor: active ? colors.primary : colors.border,
+                        },
+                      ]}
+                      accessibilityLabel={`Select ${preset}`}
+                    >
+                      <ThemedText
+                        variant="caption"
+                        color={active ? 'primary' : 'textSecondary'}
+                        fontFamily={active ? 'bold' : 'medium'}
+                        style={{ fontSize: 11 }}
+                      >
+                        {preset}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
               <Input
                 placeholder="e.g. Ikeja LGA Collation Center / Transit Route"
                 value={electoralArea}
-                onChangeText={setElectoralArea}
+                onChangeText={(text) => {
+                  setElectoralArea(text);
+                  setShowAreaSuggestions(true);
+                }}
+                onFocus={() => setShowAreaSuggestions(true)}
                 leftIcon="business-outline"
+                rightIcon={electoralArea ? 'close-circle' : undefined}
+                onRightIconPress={() => {
+                  setElectoralArea('');
+                  setShowAreaSuggestions(false);
+                }}
               />
+
+              {/* Autocomplete Dropdown List */}
+              {showAreaSuggestions && (
+                <View style={[styles.suggestionsDropdown, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                  <View style={styles.dropdownHeader}>
+                    <ThemedText variant="label" color="textMuted" fontFamily="bold">
+                      LOCATION SUGGESTIONS
+                    </ThemedText>
+                    <Pressable onPress={() => setShowAreaSuggestions(false)} hitSlop={8}>
+                      <Ionicons name="close" size={16} color={colors.textMuted} />
+                    </Pressable>
+                  </View>
+                  {locationSuggestions.length === 0 ? (
+                    <ThemedText variant="caption" color="textMuted" style={{ padding: spacing.sm, textAlign: 'center' }}>
+                      {isLocationsLoading ? 'Searching locations...' : 'Custom area name will be logged.'}
+                    </ThemedText>
+                  ) : (
+                    locationSuggestions.slice(0, 5).map((item) => (
+                      <Pressable
+                        key={item.id}
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          setElectoralArea(item.name);
+                          setShowAreaSuggestions(false);
+                        }}
+                        style={[styles.suggestionItem, { borderBottomColor: colors.border + '50' }]}
+                        accessibilityLabel={item.name}
+                      >
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <ThemedText variant="body" fontFamily="bold" numberOfLines={1} style={{ flex: 1 }}>
+                              {item.name}
+                            </ThemedText>
+                            <Badge label={item.type} size="sm" variant="neutral" />
+                          </View>
+                          <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ marginTop: 2 }}>
+                            {item.qualification}
+                          </ThemedText>
+                        </View>
+                        <Ionicons name="chevron-forward" size={14} color={colors.textMuted} style={{ marginLeft: spacing.xs }} />
+                      </Pressable>
+                    ))
+                  )}
+                </View>
+              )}
             </View>
           )}
 
@@ -553,6 +687,36 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  suggestionChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  suggestionsDropdown: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginTop: spacing.xs,
+    ...shadows.md,
+  },
+  dropdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });
 
