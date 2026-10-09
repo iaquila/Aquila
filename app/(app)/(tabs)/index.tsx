@@ -232,7 +232,7 @@ export default function DashboardScreen() {
           <View>
             <View style={[styles.orgTagRow, { flex: 1, minWidth: 0, marginBottom: 2, marginRight: 0 }]}>
               <View style={[styles.orgDot, { backgroundColor: colors.primary, flexShrink: 0 }]} />
-              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={user?.organizationName ?? 'iAquila Situation Room'}>
+              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={user?.organizationName ?? 'iAQUILA Situation Room'}>
                 {user?.organizationName ?? 'iAQUILA SITUATION ROOM'}
               </ThemedText>
             </View>
@@ -468,7 +468,7 @@ export default function DashboardScreen() {
               </View>
               <View style={{ marginLeft: spacing.xs }}>
                 <ThemedText variant="title" color="text" fontFamily="bold">
-                  iAquila AI Projection
+                  iAQUILA AI Projection
                 </ThemedText>
                 <ThemedText variant="label" color="primary" fontFamily="medium">
                   NEURAL ELECTION SIMULATION MODEL

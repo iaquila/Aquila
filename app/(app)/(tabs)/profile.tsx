@@ -306,17 +306,17 @@ export default function ProfileTabScreen() {
               Government Non-Affiliation Notice
             </ThemedText>
           </View>
-          <ThemedText variant="label" color="textSecondary" style={{ lineHeight: 15 }}>
-            iAquila is an independent election monitoring, academic collation, and research tool developed by Alabian Solutions Limited. iAquila does NOT represent, and is NOT affiliated with, authorized by, or endorsed by any government entity or statutory electoral body, including Nigeria's Independent National Electoral Commission (INEC).
+          <ThemedText variant="caption" color="textSecondary" style={{ lineHeight: 16, fontSize: 11 }}>
+            <ThemedText variant="caption" color="text" fontFamily="bold" style={{ fontSize: 11 }}>iAQUILA</ThemedText> is an independent election monitoring, academic collation, and research tool developed by Alabian Solutions Limited. <ThemedText variant="caption" color="text" fontFamily="bold" style={{ fontSize: 11 }}>iAQUILA</ThemedText> does NOT represent, and is NOT affiliated with, authorized by, or endorsed by any government entity or statutory electoral body, including Nigeria's Independent National Electoral Commission (INEC).
           </ThemedText>
-          <ThemedText variant="label" color="textSecondary" style={{ lineHeight: 15, marginTop: 4 }}>
+          <ThemedText variant="caption" color="textSecondary" style={{ lineHeight: 16, fontSize: 11, marginTop: 4 }}>
             Official election schedules, registered parties, polling units, and declared results are published by INEC:
           </ThemedText>
           <Pressable
             onPress={() => WebBrowser.openBrowserAsync(LEGAL_URLS.INEC_WEBSITE).catch(() => {})}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}
           >
-            <ThemedText variant="label" color="primary" fontFamily="bold">
+            <ThemedText variant="caption" color="primary" fontFamily="bold" style={{ fontSize: 11 }}>
               • Official Website: inecnigeria.org
             </ThemedText>
             <Ionicons name="open-outline" size={12} color={colors.primary} />

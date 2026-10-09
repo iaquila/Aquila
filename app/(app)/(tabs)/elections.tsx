@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, LayoutAnimation, Pressable, ScrollView } from 'react-native';
+import { StyleSheet, View, LayoutAnimation, Pressable, ScrollView, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
@@ -129,7 +129,7 @@ export default function ElectionsScreen() {
         subtitle="Browse election cycles, contest statuses, and candidate slates"
         showIndicator
         indicatorColor={colors.primary}
-        style={{ marginBottom: spacing.sm }}
+        style={{ marginBottom: 0 }}
       />
 
       {/* Cycle Selector (Segmented Tabs) */}
@@ -229,7 +229,7 @@ export default function ElectionsScreen() {
         leftIcon="search-outline"
         rightIcon={searchQuery ? 'close-circle' : undefined}
         onRightIconPress={() => setSearchQuery('')}
-        containerStyle={{ marginBottom: spacing.xs }}
+        containerStyle={{ marginBottom: 0 }}
       />
 
       {/* Position Filter Chips (Horizontal Scroll) */}
@@ -301,7 +301,7 @@ export default function ElectionsScreen() {
 
       {/* Loading Skeleton State */}
       {loading ? (
-        <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
+        <View style={{ gap: spacing.md }}>
           <SkeletonCard />
           <SkeletonCard />
         </View>
@@ -323,7 +323,7 @@ export default function ElectionsScreen() {
       ) : null}
 
       {/* Contest Cards */}
-      <View style={{ marginTop: spacing.sm }}>
+      <View style={{ gap: spacing.sm }}>
         {filteredElections.map((election) => {
           const statusColorKey = STATUS_COLORS[election.status] || 'textSecondary';
           const statusColor = colors[statusColorKey as keyof typeof Colors.light] as string;
@@ -391,12 +391,12 @@ export default function ElectionsScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
+    paddingTop: Platform.OS === 'web' ? 76 : spacing.xs,
     paddingBottom: 110,
+    gap: spacing.md,
   },
   tabBar: {
     flexDirection: 'row',
-    marginBottom: spacing.sm,
     padding: 4,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -413,7 +413,6 @@ const styles = StyleSheet.create({
   },
   cycleCard: {
     padding: spacing.md,
-    marginBottom: spacing.sm,
     borderWidth: border.thin,
     borderRadius: radius.md,
   },
@@ -435,16 +434,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    marginBottom: spacing.sm,
   },
   searchInput: {
     flex: 1,
     fontSize: 13,
     paddingVertical: 4,
   },
-  filterScrollContainer: {
-    marginBottom: spacing.sm,
-  },
+  filterScrollContainer: {},
   filterScroll: {
     gap: spacing.xs,
   },
@@ -457,7 +453,6 @@ const styles = StyleSheet.create({
   quickLinksRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
   },
   quickLinkPill: {
     flex: 1,
@@ -471,7 +466,6 @@ const styles = StyleSheet.create({
     borderWidth: border.thin,
   },
   electionCard: {
-    marginBottom: spacing.sm,
     padding: spacing.md,
     borderWidth: border.thin,
     borderRadius: radius.md,

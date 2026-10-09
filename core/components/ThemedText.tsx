@@ -131,7 +131,7 @@ export function ThemedText({
     includeFontPadding: Platform.select({ android: false }),
   };
 
-  if (uppercase || variant === 'label') {
+  if (uppercase ?? (variant === 'label')) {
     baseStyle.textTransform = 'uppercase';
   }
   if (tracking !== undefined) {

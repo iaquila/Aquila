@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Pressable, Keyboard } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Keyboard } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,19 +11,6 @@ import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useFocusEffect } from 'expo-router';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-
-const ORG_PRESETS = [
-  { id: 'org-iaquila', name: 'iAQUILA Situation Room' },
-  { id: 'org-cpa', name: 'CPA Situation Room' },
-  { id: 'org-dpp', name: 'DPP Situation Room' },
-  { id: 'org-pl', name: 'PL Situation Room' },
-  { id: 'org-ppnf', name: 'PPNF Situation Room' },
-  { id: 'org-adp', name: 'ADP Situation Room' },
-  { id: 'org-cdd', name: 'CDD West Africa' },
-  { id: 'org-yiaga', name: 'YIAGA Africa Watching The Vote' },
-  { id: 'org-ind-obs', name: 'Accredited Observer Mission' },
-];
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -41,23 +28,11 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedOrg, setSelectedOrg] = useState(ORG_PRESETS[0]!);
-  const [orgSearch, setOrgSearch] = useState(ORG_PRESETS[0]!.name);
-  const [showOrgSuggestions, setShowOrgSuggestions] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const loginMutation = useLoginMutation();
 
-  const filteredOrgs = useMemo(() => {
-    const q = orgSearch.trim().toLowerCase();
-    if (!q) return ORG_PRESETS;
-    return ORG_PRESETS.filter((org) => org.name.toLowerCase().includes(q));
-  }, [orgSearch]);
-
   const handleLogin = async () => {
-    const orgId = selectedOrg?.id ?? 'org-iaquila';
-    const orgName = orgSearch.trim() || selectedOrg.name;
-
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password');
       return;
@@ -67,10 +42,8 @@ export default function LoginScreen() {
       await loginMutation.mutateAsync({
         email: email.trim(),
         password,
-        organizationId: orgId,
-        organizationName: orgName,
       });
-      if (__DEV__) console.log('[login] success', email.trim(), orgName);
+      if (__DEV__) console.log('[login] success', email.trim());
     } catch (e) {
       console.warn('[login] failed', e);
       setError('Authentication failed. Please verify credentials.');
@@ -81,20 +54,15 @@ export default function LoginScreen() {
     setError('');
     try {
       let demoEmail = 'agent@iaquila.com.ng';
-      let org = ORG_PRESETS.find((o) => o.id === 'org-iaquila') ?? ORG_PRESETS[0]!;
       if (role === 'polling') {
         demoEmail = 'polling@iaquila.com.ng';
-        org = ORG_PRESETS.find((o) => o.id === 'org-yiaga') ?? ORG_PRESETS[7]!;
       } else if (role === 'officer') {
         demoEmail = 'officer@iaquila.com.ng';
-        org = ORG_PRESETS.find((o) => o.id === 'org-iaquila') ?? ORG_PRESETS[0]!;
       }
 
       await loginMutation.mutateAsync({
         email: demoEmail,
         password: 'demo',
-        organizationId: org.id,
-        organizationName: org.name,
       });
     } catch (e) {
       console.warn('[login] demo failed', role, e);
@@ -151,67 +119,8 @@ export default function LoginScreen() {
                 Sign In
               </ThemedText>
               <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.md }}>
-                Enter credentials to connect to your assigned situation room.
+                Enter credentials to connect to the situation room.
               </ThemedText>
-
-              {/* Organization Selector */}
-              <View style={{ marginBottom: spacing.md }}>
-                <View style={styles.labelRow}>
-                  <Ionicons name="business-outline" size={14} color={colors.primary} />
-                  <ThemedText variant="label" color="textSecondary" fontFamily="medium" style={{ marginLeft: 4 }}>
-                    ORGANIZATION
-                  </ThemedText>
-                </View>
-                <Input
-                  placeholder="Search organization (e.g. iAQUILA Situation Room)"
-                  value={orgSearch}
-                  onChangeText={(text) => {
-                    setOrgSearch(text);
-                    setShowOrgSuggestions(true);
-                  }}
-                  onFocus={() => setShowOrgSuggestions(true)}
-                  leftIcon="search-outline"
-                  containerStyle={{ marginBottom: showOrgSuggestions && filteredOrgs.length > 0 ? spacing.xs : 0 }}
-                />
-
-                {showOrgSuggestions && filteredOrgs.length > 0 && (
-                  <View style={[styles.orgDropdown, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                    {filteredOrgs.map((org) => {
-                      const active = selectedOrg.id === org.id && orgSearch.trim().toLowerCase() === org.name.toLowerCase();
-                      return (
-                        <Pressable
-                          key={org.id}
-                          onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setSelectedOrg(org);
-                            setOrgSearch(org.name);
-                            setShowOrgSuggestions(false);
-                          }}
-                          style={[
-                            styles.orgOption,
-                            {
-                              backgroundColor: active ? colors.primary + '16' : 'transparent',
-                              borderColor: active ? colors.primary : 'transparent',
-                            },
-                          ]}
-                          accessibilityLabel={org.name}
-                        >
-                          <ThemedText
-                            variant="body"
-                            color="text"
-                            fontFamily={active ? 'bold' : 'regular'}
-                            numberOfLines={1}
-                            style={{ flex: 1 }}
-                          >
-                            {org.name}
-                          </ThemedText>
-                          {active && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
 
               <Input
                 label="Email"
@@ -293,8 +202,8 @@ export default function LoginScreen() {
             {/* Government Non-Affiliation Disclaimer */}
             <View style={styles.disclaimerBox}>
               <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" style={{ marginTop: 1 }} />
-              <ThemedText variant="label" color="#A3B8AC" style={{ flex: 1, fontSize: 10, lineHeight: 14 }}>
-                iAquila is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
+              <ThemedText variant="caption" color="#A3B8AC" style={{ flex: 1, fontSize: 10, lineHeight: 14 }}>
+                <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold" style={{ fontSize: 10 }}>iAQUILA</ThemedText> is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
               </ThemedText>
             </View>
 
@@ -349,26 +258,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     ...shadows.lg,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  orgDropdown: {
-    marginTop: 6,
-    padding: spacing.xs,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    gap: 2,
-  },
-  orgOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-    borderWidth: 1,
   },
   errorBanner: {
     flexDirection: 'row',
