@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
 import { Shimmer } from './Shimmer';
 import { spacing, radius, sizes } from '@/constants/tokens';
 
@@ -9,7 +9,7 @@ type SkeletonCircleProps = {
 };
 
 type SkeletonLineProps = {
-  width?: number | string;
+  width?: DimensionValue;
   height?: number;
   style?: ViewStyle;
   borderRadius?: number;
@@ -21,11 +21,11 @@ type SkeletonCardProps = {
 };
 
 export function SkeletonCircle({ size = sizes.icon, style }: SkeletonCircleProps) {
-  return <Shimmer width={size} height={size} borderRadius={radius.full} style={[{ width: size, height: size }, style]} />;
+  return <Shimmer width={size} height={size} borderRadius={radius.full} style={style} />;
 }
 
 export function SkeletonLine({ width = '100%', height = 12, style, borderRadius = radius.sm }: SkeletonLineProps) {
-  return <Shimmer width={typeof width === 'number' ? width : undefined} height={height} borderRadius={borderRadius} style={[{ width }, style]} />;
+  return <Shimmer width={width} height={height} borderRadius={borderRadius} style={style} />;
 }
 
 export function SkeletonCard({ style, lines = 3 }: SkeletonCardProps) {

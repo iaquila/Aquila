@@ -1,31 +1,31 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Animated, StyleSheet, Dimensions } from 'react-native';
+import { View, Animated, StyleSheet, useWindowDimensions, DimensionValue, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
 import { animation } from '@/constants/tokens';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 type ShimmerProps = {
-  width?: number | string;
+  width?: DimensionValue;
   height?: number;
   borderRadius?: number;
-  style?: object;
+  style?: StyleProp<ViewStyle>;
   speed?: number;
 };
 
 export function Shimmer({
-  width = SCREEN_WIDTH,
+  width,
   height = 12,
   borderRadius = 4,
   style,
   speed = animation.slow,
 }: ShimmerProps) {
+  const { width: windowWidth } = useWindowDimensions();
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const numericWidth = typeof width === 'number' ? width : SCREEN_WIDTH;
+  const resolvedWidth = width ?? windowWidth;
+  const numericWidth = typeof resolvedWidth === 'number' ? resolvedWidth : windowWidth;
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -50,7 +50,7 @@ export function Shimmer({
   const highlightColor = isDark ? colors.primaryLight + '38' : colors.primaryLight + '55';
 
   return (
-    <View style={[{ width, height, borderRadius, backgroundColor: baseColor, overflow: 'hidden' }, style]}>
+    <View style={[{ width: resolvedWidth, height, borderRadius, backgroundColor: baseColor, overflow: 'hidden' }, style]}>
       <Animated.View
         style={[
           styles.shimmerGradient,
