@@ -4,6 +4,10 @@ import Colors from '@/constants/colors';
 import { ScreenViewContext } from '@/core/components/ScreenView';
 import { typography } from '@/constants/tokens';
 
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -11,12 +15,13 @@ export default function TabLayout() {
   return (
     <ScreenViewContext.Provider value={{ isTab: true }}>
       <NativeTabs
-      iconColor={{ default: colors.textMuted, selected: colors.primary }}
-      labelStyle={{ fontSize: typography.micro }}
-      backgroundColor={colors.surface}
-      disableTransparentOnScrollEdge
-      blurEffect="systemChromeMaterial"
-    >
+        tintColor={colors.primary}
+        iconColor={{ default: colors.textMuted, selected: colors.primary }}
+        labelStyle={{ fontSize: typography.micro }}
+        backgroundColor={colors.surface}
+        disableTransparentOnScrollEdge
+        blurEffect="systemChromeMaterial"
+      >
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
         <NativeTabs.Trigger.Label>Dashboard</NativeTabs.Trigger.Label>

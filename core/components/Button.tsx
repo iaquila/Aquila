@@ -35,8 +35,8 @@ type ButtonProps = {
 } & Omit<PressableProps, 'children'>;
 
 const sizeStyles: Record<ButtonSize, ViewStyle> = {
-  sm: { paddingVertical: spacing['2xs'] + 2, paddingHorizontal: spacing.sm, minHeight: 34 },
-  md: { paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md, minHeight: 44 },
+  sm: { paddingVertical: spacing['2xs'] + spacing['3xs'], paddingHorizontal: spacing.sm, minHeight: 34 },
+  md: { paddingVertical: spacing.xs + spacing['3xs'], paddingHorizontal: spacing.md, minHeight: 44 },
   lg: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, minHeight: 50 },
 };
 
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
     flexShrink: 1,
     minWidth: 0,
   },

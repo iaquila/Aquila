@@ -2520,7 +2520,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.md,
     borderWidth: border.thin,
     marginTop: spacing.xs,

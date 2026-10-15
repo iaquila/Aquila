@@ -108,7 +108,7 @@ export default function ProfileTabScreen() {
             </ThemedText>
           </View>
 
-          <ThemedText variant="caption" color="#A3B8AC" style={{ marginTop: 2 }}>
+          <ThemedText variant="caption" color="#A3B8AC" style={{ marginTop: spacing['3xs'] }}>
             {user?.email ?? 'agent@iaquila.com.ng'}
           </ThemedText>
         </View>
@@ -228,7 +228,7 @@ export default function ProfileTabScreen() {
               }}
               style={[
                 styles.moduleRow,
-                idx < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+                idx < arr.length - 1 && { borderBottomWidth: border.thin, borderBottomColor: colors.borderSubtle },
               ]}
               accessibilityRole="button"
               accessibilityLabel={item.label}
@@ -338,7 +338,7 @@ export default function ProfileTabScreen() {
               }}
               style={[
                 styles.moduleRow,
-                idx < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+                idx < arr.length - 1 && { borderBottomWidth: border.thin, borderBottomColor: colors.borderSubtle },
               ]}
               accessibilityRole="button"
               accessibilityLabel={item.label}
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
   avatarBadge: {
     width: 72,
     height: 72,
-    borderRadius: 24,
-    borderWidth: 1.5,
+    borderRadius: radius.lg,
+    borderWidth: border.thick,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(13, 99, 56, 0.4)',
@@ -398,10 +398,10 @@ const styles = StyleSheet.create({
     height: 52,
   },
   roleChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
-    marginTop: 4,
+    marginTop: spacing['2xs'],
   },
   sectionCard: {
     padding: spacing.md,
