@@ -49,8 +49,19 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
+          "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#0D6338"
+          "backgroundColor": "#0D6338",
+          "dark": {
+            "image": "./assets/splash.png",
+            "backgroundColor": "#070C09"
+          },
+          "android": {
+            "imageWidth": 130
+          },
+          "ios": {
+            "imageWidth": 180
+          }
         }
       ],
       "expo-font",
