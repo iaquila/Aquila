@@ -623,6 +623,72 @@ export default function ResultsScreen() {
     return stateHeatmapData.find((s) => s.id === selectedMapStateId) ?? stateHeatmapData[0]!;
   }, [stateHeatmapData, selectedMapStateId]);
 
+  // Tactical Map Zoom & Focus State
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [mapFocusPoint, setMapFocusPoint] = useState<{ x: number; y: number } | null>(null);
+
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 3.2;
+  const ZOOM_STEP = 0.6;
+
+  const handleZoomIn = useCallback(() => {
+    impact(Haptics.ImpactFeedbackStyle.Light);
+    setZoomLevel((prev) => {
+      const next = Math.min(MAX_ZOOM, Number((prev + ZOOM_STEP).toFixed(1)));
+      if (prev <= 1 && !mapFocusPoint) {
+        const geom = NIGERIA_STATE_GEOMETRIES[selectedMapStateId];
+        if (geom) {
+          setMapFocusPoint({ x: geom.labelX, y: geom.labelY });
+        } else {
+          setMapFocusPoint({ x: 340, y: 280 });
+        }
+      }
+      return next;
+    });
+  }, [impact, mapFocusPoint, selectedMapStateId]);
+
+  const handleZoomOut = useCallback(() => {
+    impact(Haptics.ImpactFeedbackStyle.Light);
+    setZoomLevel((prev) => {
+      const next = Math.max(MIN_ZOOM, Number((prev - ZOOM_STEP).toFixed(1)));
+      if (next <= 1) {
+        setMapFocusPoint(null);
+      }
+      return next;
+    });
+  }, [impact]);
+
+  const handleZoomReset = useCallback(() => {
+    impact(Haptics.ImpactFeedbackStyle.Medium);
+    setZoomLevel(1);
+    setMapFocusPoint(null);
+  }, [impact]);
+
+  const activeViewBox = useMemo(() => {
+    if (geoLevel === 'state') {
+      if (zoomLevel <= 1 || !mapFocusPoint) {
+        return NIGERIA_MAP_VIEWBOX;
+      }
+      const viewW = 680 / zoomLevel;
+      const viewH = 560 / zoomLevel;
+      const minX = Math.max(0, Math.min(680 - viewW, mapFocusPoint.x - viewW / 2));
+      const minY = Math.max(0, Math.min(560 - viewH, mapFocusPoint.y - viewH / 2));
+      return `${minX.toFixed(1)} ${minY.toFixed(1)} ${viewW.toFixed(1)} ${viewH.toFixed(1)}`;
+    }
+
+    const isCustomPolygon = mapLgas.length <= 6 && mapLgas.every((l) => LGA_MAP_POLYGONS[l.id]);
+    const baseW = isCustomPolygon ? 380 : 680;
+    const baseH = isCustomPolygon ? 250 : 460;
+    if (zoomLevel <= 1 || !mapFocusPoint) {
+      return `0 0 ${baseW} ${baseH}`;
+    }
+    const viewW = baseW / zoomLevel;
+    const viewH = baseH / zoomLevel;
+    const minX = Math.max(0, Math.min(baseW - viewW, mapFocusPoint.x - viewW / 2));
+    const minY = Math.max(0, Math.min(baseH - viewH, mapFocusPoint.y - viewH / 2));
+    return `${minX.toFixed(1)} ${minY.toFixed(1)} ${viewW.toFixed(1)} ${viewH.toFixed(1)}`;
+  }, [geoLevel, zoomLevel, mapFocusPoint, mapLgas]);
+
   const handleOpenSatelliteMap = async () => {
     impact(Haptics.ImpactFeedbackStyle.Medium);
     try {
@@ -658,11 +724,19 @@ export default function ResultsScreen() {
     const firstLga = lgaHeatmapData.find((l) => (l.state || '').toLowerCase() === stateName.toLowerCase());
     if (firstLga) setSelectedMapLgaId(firstLga.id);
     setGeoLevel('lga');
+    setZoomLevel(1);
+    setMapFocusPoint(null);
   }, [impact, lgaHeatmapData]);
 
-  const handleFocusMapState = useCallback((stateId: string) => {
+  const handleFocusMapState = useCallback((stateId: string, stateName?: string) => {
     impact(Haptics.ImpactFeedbackStyle.Light);
     setSelectedMapStateId(stateId);
+    if (stateName) setActiveLgaState(stateName);
+    const geom = NIGERIA_STATE_GEOMETRIES[stateId];
+    if (geom) {
+      setMapFocusPoint({ x: geom.labelX, y: geom.labelY });
+      setZoomLevel((prev) => (prev <= 1 ? 1.8 : prev));
+    }
   }, [impact]);
 
   const renderGeoItem = useCallback(
@@ -946,6 +1020,8 @@ export default function ResultsScreen() {
                       onPress={() => {
                         impact(Haptics.ImpactFeedbackStyle.Light);
                         setGeoLevel('state');
+                        setZoomLevel(1);
+                        setMapFocusPoint(null);
                       }}
                       style={[
                         styles.pillBtn,
@@ -972,6 +1048,8 @@ export default function ResultsScreen() {
                       onPress={() => {
                         impact(Haptics.ImpactFeedbackStyle.Light);
                         setGeoLevel('lga');
+                        setZoomLevel(1);
+                        setMapFocusPoint(null);
                       }}
                       style={[
                         styles.pillBtn,
@@ -1054,8 +1132,7 @@ export default function ResultsScreen() {
                               s.code.toLowerCase().includes(q.toLowerCase())
                           );
                           if (match) {
-                            setSelectedMapStateId(match.id);
-                            setActiveLgaState(match.name);
+                            handleFocusMapState(match.id, match.name);
                           }
                         } else {
                           const matchLga = mapLgas.find((l) => l.name.toLowerCase().includes(q.toLowerCase()));
@@ -1105,7 +1182,7 @@ export default function ResultsScreen() {
                             impact(Haptics.ImpactFeedbackStyle.Light);
                             setActiveLgaState(st);
                             setFilterState(st);
-                            if (stateObj) setSelectedMapStateId(stateObj.id);
+                            if (stateObj) handleFocusMapState(stateObj.id, st);
                             const firstLga = lgaHeatmapData.find((l) => l.state.toLowerCase() === st.toLowerCase());
                             if (firstLga) setSelectedMapLgaId(firstLga.id);
                           }}
@@ -1248,6 +1325,14 @@ export default function ResultsScreen() {
                       <ThemedText variant="caption" color="#A3E6C2" numberOfLines={1}>
                         {mapHeatMode === 'party' ? 'Lead Party' : 'Progress'}
                       </ThemedText>
+                      {zoomLevel > 1 && (
+                        <>
+                          <ThemedText variant="caption" color="textMuted">•</ThemedText>
+                          <ThemedText variant="caption" color="#FDE047" fontFamily="bold">
+                            {`${Math.round(zoomLevel * 100)}%`}
+                          </ThemedText>
+                        </>
+                      )}
                     </View>
                     <ThemedText variant="caption" color="#34D39999" fontFamily="medium" style={{ flexShrink: 0, paddingLeft: spacing.xs }}>
                       WGS84
@@ -1259,13 +1344,7 @@ export default function ResultsScreen() {
                     <Svg
                       width="100%"
                       height={270}
-                      viewBox={
-                        geoLevel === 'state'
-                          ? NIGERIA_MAP_VIEWBOX
-                          : mapLgas.length <= 6 && mapLgas.every((l) => LGA_MAP_POLYGONS[l.id])
-                          ? '0 0 380 250'
-                          : '0 0 680 460'
-                      }
+                      viewBox={activeViewBox}
                     >
                       {geoLevel === 'lga' ? (
                         <G key="lga-layer">
@@ -1514,11 +1593,7 @@ export default function ResultsScreen() {
                             return (
                               <G
                                 key={st.id}
-                                onPress={() => {
-                                  impact(Haptics.ImpactFeedbackStyle.Light);
-                                  setSelectedMapStateId(st.id);
-                                  setActiveLgaState(st.name);
-                                }}
+                                onPress={() => handleFocusMapState(st.id, st.name)}
                               >
                                 {isSelected && (
                                   <Path
@@ -1536,33 +1611,105 @@ export default function ResultsScreen() {
                                   stroke={isSelected ? '#FFFFFF' : '#040B06'}
                                   strokeWidth={isSelected ? 2.5 : 1.1}
                                 />
-                                {/* State Code Pill Plate */}
-                                <Rect
-                                  x={geom.labelX - 16}
-                                  y={geom.labelY - 9}
-                                  width={32}
-                                  height={18}
-                                  rx={4}
-                                  fill="#040B06DD"
-                                  stroke={isSelected ? '#FDE047' : '#FFFFFF20'}
-                                  strokeWidth={isSelected ? 1.5 : 0.6}
-                                />
-                                <SvgText
-                                  x={geom.labelX}
-                                  y={geom.labelY + 4}
-                                  fill={isSelected ? '#FDE047' : '#FFFFFF'}
-                                  fontSize="9"
-                                  fontWeight="bold"
-                                  textAnchor="middle"
-                                >
-                                  {geom.code}
-                                </SvgText>
+                                {/* Dynamic Tactical State Name/Code Badge Plate (Semantic LOD) */}
+                                {(() => {
+                                  const showFullName = isSelected || zoomLevel >= 1.5;
+                                  const labelText = showFullName ? geom.name : geom.code;
+                                  const pillWidth = showFullName ? Math.max(34, labelText.length * 6.5 + 14) : 32;
+                                  const showSubText = isSelected && zoomLevel >= 1.8;
+                                  const pillHeight = showSubText ? 28 : 18;
+                                  const pillYOffset = showSubText ? 14 : 9;
+
+                                  return (
+                                    <>
+                                      <Rect
+                                        x={geom.labelX - pillWidth / 2}
+                                        y={geom.labelY - pillYOffset}
+                                        width={pillWidth}
+                                        height={pillHeight}
+                                        rx={4}
+                                        fill="#040B06EE"
+                                        stroke={isSelected ? '#FDE047' : showFullName ? '#34D39960' : '#FFFFFF20'}
+                                        strokeWidth={isSelected ? 1.5 : 0.6}
+                                      />
+                                      <SvgText
+                                        x={geom.labelX}
+                                        y={showSubText ? geom.labelY - 2 : geom.labelY + 4}
+                                        fill={isSelected ? '#FDE047' : '#FFFFFF'}
+                                        fontSize={showFullName && labelText.length > 8 ? '8.5' : '9'}
+                                        fontWeight="bold"
+                                        textAnchor="middle"
+                                      >
+                                        {labelText}
+                                      </SvgText>
+                                      {showSubText && (
+                                        <SvgText
+                                          x={geom.labelX}
+                                          y={geom.labelY + 9}
+                                          fill={mapHeatMode === 'party' ? '#34D399' : '#A3E6C2'}
+                                          fontSize="7.5"
+                                          fontWeight="bold"
+                                          textAnchor="middle"
+                                        >
+                                          {mapHeatMode === 'party' ? `${st.leadingParty} (${st.leadingPct}%)` : `${st.reportingPct}% PUs`}
+                                        </SvgText>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </G>
                             );
                           })}
                         </G>
                       )}
                     </Svg>
+
+                    {/* Floating Tactical Zoom HUD Controls */}
+                    <View style={styles.mapZoomControls}>
+                      <Pressable
+                        onPress={handleZoomIn}
+                        disabled={zoomLevel >= MAX_ZOOM}
+                        accessibilityLabel="Zoom In"
+                        hitSlop={spacing.xs}
+                        style={({ pressed }) => [
+                          styles.zoomBtn,
+                          pressed && styles.zoomBtnPressed,
+                          zoomLevel >= MAX_ZOOM && styles.zoomBtnDisabled,
+                        ]}
+                      >
+                        <Ionicons name="add" size={16} color={zoomLevel >= MAX_ZOOM ? '#FFFFFF40' : '#FFFFFF'} />
+                      </Pressable>
+                      <View style={styles.zoomDivider} />
+                      <Pressable
+                        onPress={handleZoomOut}
+                        disabled={zoomLevel <= MIN_ZOOM}
+                        accessibilityLabel="Zoom Out"
+                        hitSlop={spacing.xs}
+                        style={({ pressed }) => [
+                          styles.zoomBtn,
+                          pressed && styles.zoomBtnPressed,
+                          zoomLevel <= MIN_ZOOM && styles.zoomBtnDisabled,
+                        ]}
+                      >
+                        <Ionicons name="remove" size={16} color={zoomLevel <= MIN_ZOOM ? '#FFFFFF40' : '#FFFFFF'} />
+                      </Pressable>
+                      {zoomLevel > MIN_ZOOM && (
+                        <>
+                          <View style={styles.zoomDivider} />
+                          <Pressable
+                            onPress={handleZoomReset}
+                            accessibilityLabel="Reset Map Zoom"
+                            hitSlop={spacing.xs}
+                            style={({ pressed }) => [
+                              styles.zoomBtn,
+                              pressed && styles.zoomBtnPressed,
+                            ]}
+                          >
+                            <Ionicons name="scan-outline" size={14} color="#34D399" />
+                          </Pressable>
+                        </>
+                      )}
+                    </View>
                   </View>
 
                   {/* Legend Bar */}
@@ -2161,12 +2308,41 @@ const styles = StyleSheet.create({
     borderWidth: border.thin,
   },
   svgWrapper: {
+    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: spacing.xs,
     borderRadius: radius.md,
     overflow: 'hidden',
     backgroundColor: '#040B07',
+  },
+  mapZoomControls: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+    backgroundColor: '#040B07F0',
+    borderRadius: radius.sm,
+    borderWidth: border.thin,
+    borderColor: '#34D39940',
+    overflow: 'hidden',
+    zIndex: 10,
+    ...shadows.sm,
+  },
+  zoomBtn: {
+    width: sizes.rankBadge,
+    height: sizes.rankBadge,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  zoomBtnPressed: {
+    backgroundColor: '#34D39925',
+  },
+  zoomBtnDisabled: {
+    opacity: 0.35,
+  },
+  zoomDivider: {
+    height: border.thin,
+    backgroundColor: '#FFFFFF1A',
   },
   mapLegendRow: {
     flexDirection: 'row',
