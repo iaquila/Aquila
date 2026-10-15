@@ -121,12 +121,12 @@ export default function ElectionDetailScreen() {
                     </ThemedText>
                     <Badge label={c.partyAcronym} color={partyColor} size="sm" />
                   </View>
-                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                     {c.partyName}
                   </ThemedText>
                   {c.runningMate ? (
-                    <ThemedText variant="caption" color="textMuted" style={{ marginTop: 2, fontSize: 11 }}>
-                      Running Mate: <ThemedText variant="caption" color="text" fontFamily="medium" style={{ fontSize: 11 }}>{c.runningMate}</ThemedText>
+                    <ThemedText variant="micro" color="textMuted" style={{ marginTop: spacing['3xs'] }}>
+                      Running Mate: <ThemedText variant="micro" color="text" fontFamily="medium">{c.runningMate}</ThemedText>
                     </ThemedText>
                   ) : null}
                 </View>

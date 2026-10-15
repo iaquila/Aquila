@@ -2,6 +2,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
 import { ScreenViewContext } from '@/core/components/ScreenView';
+import { typography } from '@/constants/tokens';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -11,7 +12,7 @@ export default function TabLayout() {
     <ScreenViewContext.Provider value={{ isTab: true }}>
       <NativeTabs
       iconColor={{ default: colors.textMuted, selected: colors.primary }}
-      labelStyle={{ fontSize: 10 }}
+      labelStyle={{ fontSize: typography.micro }}
       backgroundColor={colors.surface}
       disableTransparentOnScrollEdge
       blurEffect="systemChromeMaterial"

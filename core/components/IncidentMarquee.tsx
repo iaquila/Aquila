@@ -192,9 +192,10 @@ export function IncidentMarquee({ incidents, style }: Props) {
       <View style={[styles.label, { backgroundColor: colors.critical }]}>
         <View style={styles.livePulseDot} />
         <ThemedText
-          variant="caption"
+          variant="micro"
+          fontFamily="bold"
           numberOfLines={1}
-          style={{ color: '#FFFFFF', fontWeight: '800', letterSpacing: 0.5, fontSize: 10 }}
+          style={{ color: '#FFFFFF', letterSpacing: 0.5 }}
         >
           LIVE
         </ThemedText>

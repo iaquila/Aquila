@@ -1,4 +1,5 @@
 export const spacing = {
+  '3xs': 2,
   '2xs': 4,
   xs: 8,
   sm: 12,
@@ -41,6 +42,7 @@ export const typography = {
   body: 16,
   caption: 14,
   label: 12,
+  micro: 10,
   xxl: 34,
   xl: 26,
   lg: 20,
@@ -53,6 +55,7 @@ export const typography = {
     body: 24,
     caption: 20,
     label: 18,
+    micro: 14,
   },
   fontFamily: {
     regular: 'Inter-Regular',

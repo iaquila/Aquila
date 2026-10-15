@@ -449,10 +449,9 @@ export default function ReportIncidentScreen() {
                       accessibilityLabel={`Select ${preset}`}
                     >
                       <ThemedText
-                        variant="caption"
+                        variant="micro"
                         color={active ? 'primary' : 'textSecondary'}
                         fontFamily={active ? 'bold' : 'medium'}
-                        style={{ fontSize: 11 }}
                       >
                         {preset}
                       </ThemedText>

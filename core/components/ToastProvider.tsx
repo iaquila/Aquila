@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
-import { spacing, radius, border } from '@/constants/tokens';
+import { spacing, radius, border, typography } from '@/constants/tokens';
 import { ThemedText } from './ThemedText';
 
 type ToastMessage = {
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   text: {
-    fontSize: 14,
+    fontSize: typography.caption,
     fontWeight: '500',
   },
 });

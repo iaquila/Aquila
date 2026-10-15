@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText, Input, Button, Card } from '@/core/components';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, typography } from '@/constants/tokens';
 import { useLoginMutation } from '@/features/auth/hooks';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -202,8 +202,8 @@ export default function LoginScreen() {
             {/* Government Non-Affiliation Disclaimer */}
             <View style={styles.disclaimerBox}>
               <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" style={{ marginTop: 1 }} />
-              <ThemedText variant="caption" color="#A3B8AC" style={{ flex: 1, fontSize: 10, lineHeight: 14 }}>
-                <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold" style={{ fontSize: 10 }}>iAQUILA</ThemedText> is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
+              <ThemedText variant="micro" color="#A3B8AC" style={{ flex: 1 }}>
+                <ThemedText variant="micro" color="#FFFFFF" fontFamily="bold">iAQUILA</ThemedText> is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
               </ThemedText>
             </View>
 
@@ -246,13 +246,13 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     letterSpacing: 3,
-    fontSize: 28,
+    fontSize: typography.h2,
   },
   brandSub: {
     letterSpacing: 1.2,
-    fontSize: 10,
+    fontSize: typography.micro,
     textAlign: 'center',
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
   formCard: {
     padding: spacing.md,

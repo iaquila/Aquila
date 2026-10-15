@@ -9,7 +9,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Input, Badge } from '@/core/components';
 import { useIncidentsQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows, border } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useHaptics, useRefreshControl } from '@/core/hooks';
@@ -278,23 +278,23 @@ export default function IncidentDetailScreen() {
             {/* Tactical Overlay Info */}
             <View style={styles.tacticalMapOverlay}>
               <View style={styles.tacticalBadge}>
-                <Ionicons name="radio" size={12} color="#10B981" />
-                <ThemedText variant="caption" style={{ color: '#10B981', fontWeight: '800', fontSize: 10, letterSpacing: 0.5, marginLeft: 4 }}>
+                <Ionicons name="radio" size={12} color={colors.success} />
+                <ThemedText variant="micro" color="success" fontFamily="bold" style={{ letterSpacing: 0.5, marginLeft: spacing['2xs'] }}>
                   IN-APP SECTOR SATELLITE
                 </ThemedText>
               </View>
 
               <View style={{ marginVertical: spacing.sm, alignItems: 'center' }}>
-                <ThemedText variant="label" color="text" fontFamily="bold" style={{ fontSize: 14 }}>
+                <ThemedText variant="caption" color="text" fontFamily="bold">
                   {incident.latitude.toFixed(5)}°N, {incident.longitude.toFixed(5)}°E
                 </ThemedText>
-                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2, fontSize: 11 }}>
+                <ThemedText variant="micro" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                   {incident.electoralArea} · {puInfo?.name ?? 'Assigned Precinct Grid'}
                 </ThemedText>
               </View>
 
               <View style={[styles.tacticalBottomBar, { borderTopColor: colors.border + '50' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                   <Ionicons name="map-outline" size={14} color={colors.primary} />
                   <ThemedText variant="caption" color="primary" fontFamily="bold">
                     Inspect Interactive Map (In-App)
@@ -345,7 +345,7 @@ export default function IncidentDetailScreen() {
                       />
                       <View style={styles.evidenceExpandOverlay}>
                         <Ionicons name="expand" size={14} color="#FFFFFF" />
-                        <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold" style={{ marginLeft: 4, fontSize: 11 }}>
+                        <ThemedText variant="micro" color="#FFFFFF" fontFamily="bold" style={{ marginLeft: spacing['2xs'] }}>
                           Inspect
                         </ThemedText>
                       </View>
@@ -852,23 +852,23 @@ const styles = StyleSheet.create({
   },
   severityBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   notesInput: {
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     padding: spacing.sm,
-    fontSize: 14,
+    fontSize: typography.caption,
     minHeight: 70,
     textAlignVertical: 'top',
   },
   evidenceMediaCard: {
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
   },
   evidenceImagePressable: {

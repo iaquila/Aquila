@@ -12,7 +12,7 @@ const useScheme = (): ColorScheme => {
 
 type ThemedTextProps = {
   children: React.ReactNode;
-  variant?: 'display' | 'h1' | 'h2' | 'h3' | 'title' | 'body' | 'caption' | 'label' | 'gradient' | 'xl' | 'xxl' | 'lg';
+  variant?: 'display' | 'h1' | 'h2' | 'h3' | 'title' | 'body' | 'caption' | 'label' | 'micro' | 'gradient' | 'xl' | 'xxl' | 'lg';
   color?: keyof typeof Colors.light | string;
   style?: object;
   allowFontScaling?: boolean;
@@ -41,6 +41,7 @@ const SIZE_MAP: Record<string, number> = {
   body: typographyTokens.body,
   caption: typographyTokens.caption,
   label: typographyTokens.label,
+  micro: typographyTokens.micro,
   xxl: typographyTokens.xxl,
   xl: typographyTokens.xl,
   lg: typographyTokens.lg,
@@ -55,6 +56,7 @@ const LINE_HEIGHT_MAP: Record<string, number> = {
   body: typographyTokens.lineHeights.body,
   caption: typographyTokens.lineHeights.caption,
   label: typographyTokens.lineHeights.label,
+  micro: typographyTokens.lineHeights.micro,
   xxl: 38,
   xl: 30,
   lg: 26,

@@ -4,7 +4,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, SkeletonCard, Badge } from '@/core/components';
 import { Ionicons } from '@expo/vector-icons';
 import { usePartiesQuery, useCandidatesQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -97,12 +97,12 @@ export default function PartiesScreen() {
               return (
                 <Card key={cand.id} style={styles.itemCard}>
                   <View style={styles.candTopRow}>
-                    <View style={[styles.avatarWrap, { backgroundColor: pColor + '18', borderColor: pColor + '33', borderWidth: 1 }]}>
+                    <View style={[styles.avatarWrap, { backgroundColor: pColor + '18', borderColor: pColor + '33', borderWidth: border.thin }]}>
                       <ThemedText
-                        variant="caption"
+                        variant="label"
                         fontFamily="bold"
                         numberOfLines={1}
-                        style={{ color: pColor, fontSize: 13, letterSpacing: 0.5, textAlign: 'center' }}
+                        style={{ color: pColor, letterSpacing: 0.5, textAlign: 'center' }}
                       >
                         {cand.partyAcronym}
                       </ThemedText>
@@ -165,12 +165,12 @@ export default function PartiesScreen() {
               return (
                 <Card style={styles.itemCard}>
                   <View style={styles.partyItemRow}>
-                    <View style={[styles.partyIconWrap, { backgroundColor: pColor + '18', borderColor: pColor + '33', borderWidth: 1 }]}>
+                    <View style={[styles.partyIconWrap, { backgroundColor: pColor + '18', borderColor: pColor + '33', borderWidth: border.thin }]}>
                       <ThemedText
-                        variant="caption"
+                        variant="label"
                         fontFamily="bold"
                         numberOfLines={1}
-                        style={{ color: pColor, fontSize: 13, letterSpacing: 0.5, textAlign: 'center' }}
+                        style={{ color: pColor, letterSpacing: 0.5, textAlign: 'center' }}
                       >
                         {party.acronym}
                       </ThemedText>
@@ -226,13 +226,13 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     marginVertical: spacing.xs,
-    padding: 3,
+    padding: spacing['3xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -266,22 +266,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: spacing['2xs'],
   },
   partyTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.xs,
   },
   historyBox: {
     marginTop: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     gap: spacing.xs,
   },
   historyItem: {
-    paddingVertical: 3,
+    paddingVertical: spacing['3xs'],
   },
   historyTopLine: {
     flexDirection: 'row',
@@ -298,11 +298,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: spacing['2xs'],
   },
   activePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
 });

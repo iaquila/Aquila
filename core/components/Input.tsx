@@ -13,7 +13,7 @@ import {
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
 import { ThemedText } from './ThemedText';
-import { radius, spacing, border, animation } from '@/constants/tokens';
+import { radius, spacing, border, animation, typography } from '@/constants/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 type InputProps = {
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: typography.body,
     fontFamily: 'System',
     paddingVertical: spacing.sm,
   },

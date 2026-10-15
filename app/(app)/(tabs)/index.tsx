@@ -6,7 +6,7 @@ import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableTex
 import { EntranceView } from '@/core/components/EntranceView';
 import { useAuthStore, useResultsStore } from '@/features/auth/store';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useElectionsQuery, useIncidentsQuery, useCandidatesQuery, useResultsQuery, useAIProjectionQuery, useLocationSearchQuery } from '@/features/elections/hooks';
@@ -423,7 +423,7 @@ export default function DashboardScreen() {
                           {isWinner && (
                             <View style={[styles.winnerMiniPill, { backgroundColor: colors.primarySubtle }]}>
                               <Ionicons name="trophy" size={10} color={colors.primary} />
-                              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginLeft: 2, fontSize: 10 }}>
+                              <ThemedText variant="micro" color="primary" fontFamily="bold" style={{ marginLeft: spacing['3xs'] }}>
                                 LEADING
                               </ThemedText>
                             </View>
@@ -1334,20 +1334,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     gap: spacing.xs,
   },
   locTextInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: typography.caption,
     padding: 0,
   },
   locDropdown: {
-    marginTop: 4,
+    marginTop: spacing['2xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
     ...shadows.md,
   },

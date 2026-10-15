@@ -104,7 +104,7 @@ export function Badge({
     >
       {icon}
       <ThemedText
-        variant="label"
+        variant={isSmall ? 'micro' : 'label'}
         fontFamily="bold"
         style={[
           styles.text,
@@ -126,22 +126,20 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: radius.full,
     flexShrink: 0,
-    gap: 4,
+    gap: spacing['2xs'],
   },
   sizeMd: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: spacing['3xs'],
   },
   sizeSm: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'],
   },
   text: {
-    fontSize: 11,
     letterSpacing: 0.3,
   },
   textSm: {
-    fontSize: 10,
     letterSpacing: 0.2,
   },
 });

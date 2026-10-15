@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, EmptyState, SkeletonCard, Card, Input, Badge, SectionHeader } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows, border } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -154,7 +154,7 @@ export default function ElectionsScreen() {
                 color={isSelected ? '#FFFFFF' : 'textSecondary'}
                 fontFamily={isSelected ? 'bold' : 'medium'}
                 numberOfLines={1}
-                style={{ fontSize: 12, letterSpacing: 0.2 }}
+                style={{ letterSpacing: 0.2 }}
               >
                 {shortName}
               </ThemedText>
@@ -346,7 +346,7 @@ export default function ElectionsScreen() {
                   </ThemedText>
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <ThemedText variant="body" style={{ fontWeight: '700', fontSize: 15 }}>
+                  <ThemedText variant="body" fontFamily="bold">
                     {election.position}
                   </ThemedText>
                   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['2xs'] }}>
@@ -355,7 +355,7 @@ export default function ElectionsScreen() {
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs, flexWrap: 'wrap' }}>
                     <ThemedText variant="caption" color="textMuted">
-                      {election.electionDate}
+                       {election.electionDate}
                     </ThemedText>
                     <Badge label={statusLabel} color={statusColor} size="sm" />
                   </View>
@@ -364,11 +364,11 @@ export default function ElectionsScreen() {
 
               {/* Major Competing Parties Badges */}
               <View style={[styles.cardFooter, { borderTopColor: colors.border + '50' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'], flex: 1, minWidth: 0 }}>
                   {MAJOR_PARTIES.slice(0, election.candidateCount >= 4 ? 4 : 3).map((p) => (
                     <Badge key={p.acronym} label={p.acronym} color={p.bg} size="sm" />
                   ))}
-                  <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 4, fontSize: 11, flexShrink: 1 }}>
+                  <ThemedText variant="micro" color="textSecondary" style={{ marginLeft: spacing['2xs'], flexShrink: 1 }}>
                     {election.candidateCount} {election.candidateCount === 1 ? 'Candidate' : 'Candidates'}
                   </ThemedText>
                 </View>
@@ -437,8 +437,8 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
-    paddingVertical: 4,
+    fontSize: typography.caption,
+    paddingVertical: spacing['2xs'],
   },
   filterScrollContainer: {},
   filterScroll: {
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingVertical: spacing.xs,
     borderRadius: radius.full,
     borderWidth: border.thin,
   },

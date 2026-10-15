@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, SkeletonCard } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -1080,7 +1080,7 @@ export default function ResultsScreen() {
                     </ThemedText>
                     {draftResults.length > 0 && (
                       <View style={[styles.tabBadge, { backgroundColor: colors.warning }]}>
-                        <ThemedText variant="label" color="#FFFFFF" fontFamily="bold" style={{ fontSize: 9 }}>
+                        <ThemedText variant="micro" color="#FFFFFF" fontFamily="bold">
                           {draftResults.length}
                         </ThemedText>
                       </View>
@@ -2522,13 +2522,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
   },
   searchInputText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: typography.label,
     fontFamily: 'Inter_500Medium',
     padding: 0,
   },
@@ -2536,10 +2536,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 6,
-    borderBottomWidth: 1,
+    paddingBottom: spacing['2xs'] + spacing['3xs'],
+    borderBottomWidth: border.thin,
     borderBottomColor: '#142D1E',
-    marginBottom: 6,
+    marginBottom: spacing['2xs'] + spacing['3xs'],
   },
   modalOverlay: {
     flex: 1,

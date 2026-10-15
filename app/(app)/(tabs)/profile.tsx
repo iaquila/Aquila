@@ -9,7 +9,7 @@ import { ThemedText, Card, Button, DebouncedPressable } from '@/core/components'
 import { useAuthStore } from '@/features/auth/store';
 import { useLogoutMutation } from '@/features/auth/hooks';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { LEGAL_URLS } from '@/constants/legal';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -294,29 +294,29 @@ export default function ProfileTabScreen() {
             backgroundColor: colors.surfaceElevated,
             padding: spacing.sm,
             borderRadius: radius.md,
-            borderWidth: 1,
+            borderWidth: border.thin,
             borderColor: colors.border,
             marginBottom: spacing.xs,
-            gap: 4,
+            gap: spacing['2xs'],
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
             <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
             <ThemedText variant="caption" color="text" fontFamily="bold">
               Government Non-Affiliation Notice
             </ThemedText>
           </View>
-          <ThemedText variant="caption" color="textSecondary" style={{ lineHeight: 16, fontSize: 11 }}>
-            <ThemedText variant="caption" color="text" fontFamily="bold" style={{ fontSize: 11 }}>iAQUILA</ThemedText> is an independent election monitoring, academic collation, and research tool developed by Alabian Solutions Limited. <ThemedText variant="caption" color="text" fontFamily="bold" style={{ fontSize: 11 }}>iAQUILA</ThemedText> does NOT represent, and is NOT affiliated with, authorized by, or endorsed by any government entity or statutory electoral body, including Nigeria's Independent National Electoral Commission (INEC).
+          <ThemedText variant="micro" color="textSecondary">
+            <ThemedText variant="micro" color="text" fontFamily="bold">iAQUILA</ThemedText> is an independent election monitoring, academic collation, and research tool developed by Alabian Solutions Limited. <ThemedText variant="micro" color="text" fontFamily="bold">iAQUILA</ThemedText> does NOT represent, and is NOT affiliated with, authorized by, or endorsed by any government entity or statutory electoral body, including Nigeria's Independent National Electoral Commission (INEC).
           </ThemedText>
-          <ThemedText variant="caption" color="textSecondary" style={{ lineHeight: 16, fontSize: 11, marginTop: 4 }}>
+          <ThemedText variant="micro" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
             Official election schedules, registered parties, polling units, and declared results are published by INEC:
           </ThemedText>
           <Pressable
             onPress={() => WebBrowser.openBrowserAsync(LEGAL_URLS.INEC_WEBSITE).catch(() => {})}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['3xs'], marginTop: spacing['3xs'] }}
           >
-            <ThemedText variant="caption" color="primary" fontFamily="bold" style={{ fontSize: 11 }}>
+            <ThemedText variant="micro" color="primary" fontFamily="bold">
               • Official Website: inecnigeria.org
             </ThemedText>
             <Ionicons name="open-outline" size={12} color={colors.primary} />
