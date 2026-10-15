@@ -16,3 +16,11 @@ export const MAJOR_PARTIES = [
   { acronym: 'PPNF', name: 'Peoples Progressive National Front', bg: '#2563EB' },
   { acronym: 'ADP', name: 'Allied Democratic Party', bg: '#7C3AED' },
 ] as const;
+
+export const PARTY_CANDIDATE_NAMES: Record<string, string> = {
+  CPA: 'Bawa Nassiru',
+  DPP: 'Farouk Haruna',
+  PL: 'Nassiru Bawa',
+  PPNF: 'Ibrahim Shehu',
+  ADP: 'Amina Yusuf',
+};

@@ -11,7 +11,8 @@ import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useResultsQuery, useCandidatesQuery } from '@/features/elections/hooks';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import Colors from '@/constants/colors';
-import { PARTY_COLORS } from '@/constants/parties';
+import { PARTY_COLORS, PARTY_CANDIDATE_NAMES } from '@/constants/parties';
+import { PRIMARY_HUB_OVERRIDES, getZoneDefaultRatio } from '@/constants/resultsBaseline';
 import { useResultsStore, useAuthStore, ResultSubmission, Candidate } from '@/features/auth/store';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -371,33 +372,6 @@ export default function ResultsScreen() {
   // Aggregate Comprehensive 37-State Baseline LGA Data (Official 774 Canonical LGAs)
   // ---------------------------------------------------------------------------
   const lgaHeatmapData = useMemo(() => {
-    const primaryHubOverrides: Record<
-      string,
-      { totalPus: number; baseCollated: number; baseVotes: Record<'CPA' | 'DPP' | 'PL' | 'PPNF', number> }
-    > = {
-      'ikeja': { totalPus: 450, baseCollated: 412, baseVotes: { CPA: 42350, DPP: 28140, PL: 21980, PPNF: 3200 } },
-      'lagos mainland': { totalPus: 380, baseCollated: 345, baseVotes: { CPA: 27800, DPP: 35900, PL: 18450, PPNF: 2800 } },
-      'alimosho': { totalPus: 620, baseCollated: 540, baseVotes: { CPA: 41200, DPP: 22400, PL: 53100, PPNF: 4600 } },
-      'eti-osa': { totalPus: 340, baseCollated: 298, baseVotes: { CPA: 24600, DPP: 14200, PL: 39800, PPNF: 2100 } },
-      'surulere': { totalPus: 395, baseCollated: 360, baseVotes: { CPA: 36400, DPP: 19800, PL: 31200, PPNF: 3100 } },
-      'kosofe': { totalPus: 310, baseCollated: 275, baseVotes: { CPA: 30100, DPP: 24500, PL: 19400, PPNF: 2950 } },
-      'fagge': { totalPus: 320, baseCollated: 292, baseVotes: { CPA: 18400, DPP: 9600, PL: 3100, PPNF: 58700 } },
-      'tarauni': { totalPus: 280, baseCollated: 241, baseVotes: { CPA: 15200, DPP: 8100, PL: 2600, PPNF: 46300 } },
-      'nasarawa': { totalPus: 350, baseCollated: 305, baseVotes: { CPA: 22100, DPP: 11400, PL: 3900, PPNF: 54200 } },
-      'obio-akpor': { totalPus: 420, baseCollated: 381, baseVotes: { CPA: 19800, DPP: 47200, PL: 24600, PPNF: 1800 } },
-      'port harcourt': { totalPus: 300, baseCollated: 256, baseVotes: { CPA: 16400, DPP: 28900, PL: 24700, PPNF: 1400 } },
-      'municipal': { totalPus: 380, baseCollated: 340, baseVotes: { CPA: 22100, DPP: 18400, PL: 34900, PPNF: 3200 } },
-      'bwari': { totalPus: 220, baseCollated: 186, baseVotes: { CPA: 9800, DPP: 11200, PL: 28600, PPNF: 1100 } },
-      'kaduna north': { totalPus: 340, baseCollated: 295, baseVotes: { CPA: 38200, DPP: 29400, PL: 12100, PPNF: 11200 } },
-      'kaduna south': { totalPus: 310, baseCollated: 260, baseVotes: { CPA: 31500, DPP: 33800, PL: 15400, PPNF: 8900 } },
-      'ibadan north': { totalPus: 410, baseCollated: 375, baseVotes: { CPA: 39100, DPP: 36200, PL: 18700, PPNF: 2400 } },
-      'ibadan south-west': { totalPus: 360, baseCollated: 318, baseVotes: { CPA: 34800, DPP: 31200, PL: 16900, PPNF: 1900 } },
-      'enugu north': { totalPus: 290, baseCollated: 270, baseVotes: { CPA: 4200, DPP: 12800, PL: 58400, PPNF: 800 } },
-      'nsukka': { totalPus: 320, baseCollated: 285, baseVotes: { CPA: 5100, DPP: 14200, PL: 61200, PPNF: 950 } },
-      'maiduguri': { totalPus: 380, baseCollated: 340, baseVotes: { CPA: 54200, DPP: 19800, PL: 4100, PPNF: 8300 } },
-      'jere': { totalPus: 290, baseCollated: 245, baseVotes: { CPA: 41800, DPP: 16200, PL: 3200, PPNF: 6400 } },
-    };
-
     const allBases: Array<{
       id: string;
       name: string;
@@ -409,29 +383,14 @@ export default function ResultsScreen() {
 
     Object.values(NIGERIA_STATE_GEOMETRIES).forEach((geom) => {
       const stateLgas = getOfficialLgasForState(geom.name);
-      const zone = geom.zone;
-
-      let defaultRatio: { CPA: number; DPP: number; PL: number; PPNF: number };
-      if (zone === 'North West') {
-        defaultRatio = { CPA: 0.44, DPP: 0.28, PL: 0.08, PPNF: 0.20 };
-      } else if (zone === 'North East') {
-        defaultRatio = { CPA: 0.48, DPP: 0.38, PL: 0.06, PPNF: 0.08 };
-      } else if (zone === 'North Central') {
-        defaultRatio = { CPA: 0.36, DPP: 0.34, PL: 0.25, PPNF: 0.05 };
-      } else if (zone === 'South West') {
-        defaultRatio = { CPA: 0.46, DPP: 0.24, PL: 0.27, PPNF: 0.03 };
-      } else if (zone === 'South East') {
-        defaultRatio = { CPA: 0.08, DPP: 0.22, PL: 0.68, PPNF: 0.02 };
-      } else {
-        defaultRatio = { CPA: 0.28, DPP: 0.42, PL: 0.27, PPNF: 0.03 };
-      }
+      const defaultRatio = getZoneDefaultRatio(geom.zone);
 
       stateLgas.forEach((lgaName) => {
         const cleanName = lgaName.trim();
         const lowerName = cleanName.toLowerCase();
         const baseId = `lga-${geom.name.toLowerCase().replace(/\s+/g, '-')}-${lowerName.replace(/[^a-z0-9]+/g, '-')}`;
         const legacySimpleId = `lga-${lowerName.replace(/[^a-z0-9]+/g, '-')}`;
-        const override = primaryHubOverrides[lowerName] || primaryHubOverrides[cleanName];
+        const override = PRIMARY_HUB_OVERRIDES[lowerName] || PRIMARY_HUB_OVERRIDES[cleanName];
 
         if (override) {
           allBases.push({
@@ -479,13 +438,6 @@ export default function ResultsScreen() {
       });
     });
 
-    const candidateNames: Record<string, string> = {
-      CPA: 'Bawa Nassiru',
-      DPP: 'Farouk Haruna',
-      PL: 'Nassiru Bawa',
-      PPNF: 'Ibrahim Shehu',
-    };
-
     return allBases.map((base) => {
       const dynamicVotes = { ...base.baseVotes };
       let extraCollated = 0;
@@ -530,7 +482,7 @@ export default function ResultsScreen() {
         totalVotes,
         reportingPct,
         leadingParty: leader.party,
-        leadingCandidate: candidateNames[leader.party] ?? leader.party,
+        leadingCandidate: PARTY_CANDIDATE_NAMES[leader.party] ?? leader.party,
         leadingPct: leader.pct.toFixed(1),
         margin,
         shares,
@@ -540,13 +492,6 @@ export default function ResultsScreen() {
 
   // State aggregation: derived from all 774 LGA rows grouped by state
   const stateHeatmapData: StateCollation[] = useMemo(() => {
-    const candidateNames: Record<string, string> = {
-      CPA: 'Bawa Nassiru',
-      DPP: 'Farouk Haruna',
-      PL: 'Nassiru Bawa',
-      PPNF: 'Ibrahim Shehu',
-    };
-
     const byState = new Map<
       string,
       {
@@ -607,7 +552,7 @@ export default function ResultsScreen() {
               ? Number(Math.min(100, (entry.baseCollated / entry.totalPus) * 100).toFixed(0))
               : 0,
           leadingParty: leader.party,
-          leadingCandidate: candidateNames[leader.party] ?? leader.party,
+          leadingCandidate: PARTY_CANDIDATE_NAMES[leader.party] ?? leader.party,
           leadingPct: leader.pct.toFixed(1),
           margin: (leader.pct - runnerUp.pct).toFixed(1),
           shares,
@@ -1626,38 +1571,38 @@ export default function ResultsScreen() {
                       <>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.CPA ?? colors.primary }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">CPA</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">CPA</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.DPP ?? colors.error }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">DPP</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">DPP</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.PL ?? colors.success }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">PL</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PL</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.PPNF ?? colors.primaryLight }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">PPNF</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PPNF</ThemedText>
                         </View>
                       </>
                     ) : (
                       <>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: colors.critical }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">90%+ (Hot)</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">90%+ (Hot)</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: colors.disputed }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">80-90%</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">80-90%</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: colors.warning }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">65-80%</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">65-80%</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
                           <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
-                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">&lt;65%</ThemedText>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">&lt;65%</ThemedText>
                         </View>
                       </>
                     )}
@@ -1800,7 +1745,7 @@ export default function ResultsScreen() {
                         >
                           <ThemedText
                             variant="label"
-                            color={isSelected ? '#FFFFFF' : 'textSecondary'}
+                            color={isSelected ? (party === 'ALL' ? colors.background : '#FFFFFF') : 'textSecondary'}
                             fontFamily={isSelected ? 'bold' : 'medium'}
                           >
                             {party}

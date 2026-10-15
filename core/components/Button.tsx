@@ -83,7 +83,11 @@ export function Button({
   };
 
   const textColor =
-    variant === 'outline' || variant === 'ghost' ? colors.primary : '#FFFFFF';
+    variant === 'outline' || variant === 'ghost'
+      ? colors.primary
+      : scheme === 'dark'
+        ? colors.textInverse
+        : '#FFFFFF';
 
   const renderIcon = (iconName: keyof typeof Ionicons.glyphMap | undefined, iconColor: string) => {
     if (!iconName) return null;
