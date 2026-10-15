@@ -14,7 +14,7 @@ import { DebouncedPressable } from './DebouncedPressable';
 import Colors from '@/constants/colors';
 import { ThemedText } from './ThemedText';
 import { Ionicons } from '@expo/vector-icons';
-import { radius, opacities, border, shadows, spacing, typography } from '@/constants/tokens';
+import { radius, opacities, border, shadows, spacing, typography, sizes } from '@/constants/tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -35,9 +35,9 @@ type ButtonProps = {
 } & Omit<PressableProps, 'children'>;
 
 const sizeStyles: Record<ButtonSize, ViewStyle> = {
-  sm: { paddingVertical: spacing['2xs'] + spacing['3xs'], paddingHorizontal: spacing.sm, minHeight: 34 },
-  md: { paddingVertical: spacing.xs + spacing['3xs'], paddingHorizontal: spacing.md, minHeight: 44 },
-  lg: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, minHeight: 50 },
+  sm: { paddingVertical: spacing['2xs'] + spacing['3xs'], paddingHorizontal: spacing.sm, minHeight: sizes.buttonSm },
+  md: { paddingVertical: spacing.xs + spacing['3xs'], paddingHorizontal: spacing.md, minHeight: sizes.buttonMd },
+  lg: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, minHeight: sizes.buttonLg },
 };
 
 const textSizeStyles: Record<ButtonSize, { fontSize: number; letterSpacing: number }> = {

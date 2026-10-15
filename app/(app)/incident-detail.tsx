@@ -19,16 +19,7 @@ import { IncidentStatus, IncidentSeverity } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { SEVERITY_COLORS } from '@/constants/incidents';
-
-const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  VOTE_BUYING: 'cash-outline',
-  BVAS_FAILURE: 'hardware-chip-outline',
-  VIOLENCE: 'warning-outline',
-  LOGISTICS: 'car-outline',
-  BALLOT_SNATCHING: 'hand-left-outline',
-  OTHER: 'alert-circle-outline',
-};
+import { SEVERITY_COLORS, CATEGORY_ICONS } from '@/constants/incidents';
 
 export default function IncidentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -592,7 +583,7 @@ export default function IncidentDetailScreen() {
             </View>
             <Pressable
               onPress={() => setPreviewImageUri(null)}
-              hitSlop={12}
+              hitSlop={spacing.sm}
               style={styles.lightboxCloseBtn}
             >
               <Ionicons name="close" size={22} color="#FFFFFF" />

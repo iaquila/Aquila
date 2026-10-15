@@ -4,7 +4,7 @@ import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
 import { Button } from './Button';
-import { radius, spacing, border } from '@/constants/tokens';
+import { radius, spacing, border, sizes } from '@/constants/tokens';
 
 type EmptyStateProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -73,12 +73,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
-    maxWidth: 400,
+    maxWidth: sizes.emptyStateMax,
     alignSelf: 'center',
   },
   iconWrap: {
-    width: 64,
-    height: 64,
+    width: sizes.emptyStateIcon,
+    height: sizes.emptyStateIcon,
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',

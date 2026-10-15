@@ -54,7 +54,7 @@ export function CoverageHero({ reporting, total }: CoverageHeroProps) {
 
 const styles = StyleSheet.create({
   card: { overflow: 'hidden', paddingTop: spacing.md },
-  topGlow: { height: 4, borderRadius: radius.full, marginBottom: spacing.sm },
+  topGlow: { height: spacing['2xs'], borderRadius: radius.full, marginBottom: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
   left: { gap: spacing['2xs'] },
   badge: {
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
-  dot: { width: 8, height: 8, borderRadius: 4 },
+  dot: { width: spacing.xs, height: spacing.xs, borderRadius: radius.full },
   track: { height: spacing.sm, borderRadius: radius.sm, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.sm },
 });

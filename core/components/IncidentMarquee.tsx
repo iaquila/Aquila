@@ -10,7 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { ThemedText } from '@/core/components/ThemedText';
-import { spacing, radius } from '@/constants/tokens';
+import { spacing, radius, border, sizes } from '@/constants/tokens';
 import Colors from '@/constants/colors';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import type { IncidentReport } from '@/features/auth/store';
@@ -156,7 +156,7 @@ export function IncidentMarquee({ incidents, style }: Props) {
         variant="caption"
         numberOfLines={1}
         color="textSecondary"
-        style={{ marginLeft: 4, flexShrink: 0 }}
+        style={{ marginLeft: spacing['2xs'], flexShrink: 0 }}
       >
         @{i.electoralArea}: {i.description.slice(0, 48)}
       </ThemedText>
@@ -164,7 +164,7 @@ export function IncidentMarquee({ incidents, style }: Props) {
         name="chevron-forward"
         size={11}
         color={colors.critical}
-        style={{ opacity: 0.8, marginLeft: 2, flexShrink: 0 }}
+        style={{ opacity: 0.8, marginLeft: spacing['3xs'], flexShrink: 0 }}
       />
       <ThemedText
         variant="caption"
@@ -276,7 +276,7 @@ export function IncidentMarqueeScrollable({ incidents, style }: Props) {
               variant="caption"
               numberOfLines={1}
               color="textSecondary"
-              style={{ marginLeft: 4, flexShrink: 0 }}
+              style={{ marginLeft: spacing['2xs'], flexShrink: 0 }}
             >
               @{i.electoralArea} •
             </ThemedText>
@@ -291,37 +291,37 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: border.thin,
     borderRadius: radius.md,
     overflow: 'hidden',
-    paddingVertical: 4,
+    paddingVertical: spacing['2xs'],
     paddingHorizontal: spacing.sm,
     gap: spacing.xs,
-    height: 38,
-    maxHeight: 38,
+    height: sizes.marqueeHeight,
+    maxHeight: sizes.marqueeHeight,
   },
   label: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    gap: spacing['2xs'],
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'] + border.thin,
     borderRadius: radius.xs,
     flexShrink: 0,
     zIndex: 2,
   },
   livePulseDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#FFFFFF',
+    width: spacing['2xs'] + border.thin,
+    height: spacing['2xs'] + border.thin,
+    borderRadius: radius.full,
+    backgroundColor: Colors.light.textInverse,
   },
   track: {
     flex: 1,
-    height: 38,
+    height: sizes.marqueeHeight,
     overflow: 'hidden',
     justifyContent: 'center',
-    marginLeft: 4,
+    marginLeft: spacing['2xs'],
   },
   tickerRow: {
     position: 'absolute',
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'nowrap',
-    height: 38,
+    height: sizes.marqueeHeight,
   },
   sequenceGroup: {
     flexDirection: 'row',

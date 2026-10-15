@@ -10,41 +10,17 @@ import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hook
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useElectionsQuery, useElectionCyclesQuery } from '@/features/elections/hooks';
+import { MAJOR_PARTIES } from '@/constants/parties';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'textMuted',
-  SCHEDULED: 'pending',
-  ACTIVE: 'verified',
-  COMPLETED: 'primary',
-  ARCHIVED: 'textSecondary',
-};
+import {
+  ELECTION_STATUS_COLORS as STATUS_COLORS,
+  ELECTION_STATUS_LABELS as STATUS_LABELS,
+  ELECTION_POSITION_FILTERS as POSITION_FILTERS,
+} from '@/constants/elections';
 
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Draft',
-  SCHEDULED: 'Scheduled',
-  ACTIVE: 'Active',
-  COMPLETED: 'Completed',
-  ARCHIVED: 'Archived',
-};
 
-const POSITION_FILTERS = [
-  { id: 'ALL', label: 'All Contests' },
-  { id: 'PRESIDENT', label: 'Presidential' },
-  { id: 'GOVERNOR', label: 'Governorship' },
-  { id: 'SENATOR', label: 'Senatorial' },
-  { id: 'REPRESENTATIVES', label: 'House of Reps' },
-  { id: 'LOCAL', label: 'LGA / Local' },
-] as const;
-
-// Key parties participating across Nigerian elections
-const MAJOR_PARTIES = [
-  { acronym: 'CPA', bg: '#0D9488', text: '#FFFFFF' },
-  { acronym: 'DPP', bg: '#DC2626', text: '#FFFFFF' },
-  { acronym: 'PL', bg: '#16A34A', text: '#FFFFFF' },
-  { acronym: 'PPNF', bg: '#2563EB', text: '#FFFFFF' },
-];
 
 export default function ElectionsScreen() {
   const { data: cycles = [], isLoading: cyclesLoading } = useElectionCyclesQuery();

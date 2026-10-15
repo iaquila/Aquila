@@ -32,7 +32,7 @@ function pushOptions(title: string, scheme: 'light' | 'dark') {
 
 export default function AppLayout() {
   const scheme = useColorScheme() ?? 'light';
-  const rootBg = scheme === 'dark' ? '#070C09' : '#F8FAF9';
+  const rootBg = Colors[scheme].background;
 
   return (
     <Stack

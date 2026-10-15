@@ -18,6 +18,7 @@ import * as ScreenCapture from 'expo-screen-capture';
 import { fontMap } from '@/constants/fonts';
 import { FEATURES } from '@/constants/features';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
+import Colors from '@/constants/colors';
 import {
   ObserveRoot,
   configureObserve,
@@ -40,7 +41,7 @@ function RootLayout() {
   const fontsLoaded = !FEATURES.ENABLE_CUSTOM_FONTS || customFontsLoaded;
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const scheme = useColorScheme() ?? 'light';
-  const rootBg = scheme === 'dark' ? '#070C09' : '#F8FAF9';
+  const rootBg = Colors[scheme].background;
 
   useEffect(() => {
     async function preloadAssets() {
@@ -351,7 +352,7 @@ function RootLayoutNav() {
   }, [isNavigationReady, isAuthenticated, segments, router]);
 
   const scheme = useColorScheme() ?? 'light';
-  const rootBg = scheme === 'dark' ? '#070C09' : '#F8FAF9';
+  const rootBg = Colors[scheme].background;
 
   return (
     <Stack

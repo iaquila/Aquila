@@ -13,6 +13,7 @@ import Colors from '@/constants/colors';
 import { useResultsStore } from '@/features/auth/store';
 import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '@/constants/routes';
+import { PARTY_COLORS } from '@/constants/parties';
 
 export default function ResultDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -181,13 +182,7 @@ export default function ResultDetailScreen() {
         <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
           {candidateRows.map((c, idx) => {
             const isWinner = idx === 0;
-            const partyColors: Record<string, string> = {
-              CPA: '#0D6338',
-              DPP: '#DC2626',
-              PL: '#16A34A',
-              PPNF: '#2563EB',
-            };
-            const partyColor = partyColors[c.partyAcronym] ?? colors.primary;
+            const partyColor = PARTY_COLORS[c.partyAcronym] ?? colors.primary;
 
             return (
               <View

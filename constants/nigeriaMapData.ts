@@ -738,3 +738,148 @@ export const NIGERIA_STATE_GEOMETRIES: Record<string, NigeriaStateGeometry> = {
     }
   }
 };
+
+export interface LgaMapPolygon {
+  path: string;
+  labelX: number;
+  labelY: number;
+  label: string;
+}
+
+export const LGA_MAP_POLYGONS: Record<string, LgaMapPolygon> = {
+  // Lagos LGAs (Scoped to 380x250 viewport)
+  'lga-alimosho': {
+    path: 'M 30 45 L 125 35 L 135 110 L 70 130 L 25 95 Z',
+    labelX: 75,
+    labelY: 80,
+    label: 'Alimosho',
+  },
+  'lga-ikeja': {
+    path: 'M 125 35 L 220 30 L 225 100 L 135 110 Z',
+    labelX: 172,
+    labelY: 65,
+    label: 'Ikeja',
+  },
+  'lga-kosofe': {
+    path: 'M 220 30 L 345 25 L 355 105 L 225 100 Z',
+    labelX: 285,
+    labelY: 62,
+    label: 'Kosofe',
+  },
+  'lga-mainland': {
+    path: 'M 135 110 L 225 100 L 230 160 L 150 170 Z',
+    labelX: 180,
+    labelY: 132,
+    label: 'Mainland',
+  },
+  'lga-surulere': {
+    path: 'M 70 130 L 150 170 L 135 210 L 55 180 Z',
+    labelX: 102,
+    labelY: 170,
+    label: 'Surulere',
+  },
+  'lga-etiosa': {
+    path: 'M 150 170 L 230 160 L 360 145 L 355 195 L 240 205 L 135 210 Z',
+    labelX: 250,
+    labelY: 178,
+    label: 'Eti-Osa',
+  },
+  // Kano LGAs (Scoped to 380x250 viewport)
+  'lga-fagge': {
+    path: 'M 40 40 L 195 40 L 180 128 L 40 128 Z',
+    labelX: 115,
+    labelY: 82,
+    label: 'Fagge',
+  },
+  'lga-tarauni': {
+    path: 'M 195 40 L 340 40 L 340 128 L 180 128 Z',
+    labelX: 260,
+    labelY: 82,
+    label: 'Tarauni',
+  },
+  'lga-nassarawa-kn': {
+    path: 'M 40 128 L 340 128 L 320 215 L 60 215 Z',
+    labelX: 190,
+    labelY: 170,
+    label: 'Nassarawa',
+  },
+  // Rivers LGAs (Scoped to 380x250 viewport)
+  'lga-obio-akpor': {
+    path: 'M 45 45 L 335 45 L 335 125 L 45 125 Z',
+    labelX: 190,
+    labelY: 82,
+    label: 'Obio-Akpor',
+  },
+  'lga-phalga': {
+    path: 'M 45 125 L 335 125 L 310 210 L 70 210 Z',
+    labelX: 190,
+    labelY: 168,
+    label: 'Port Harcourt',
+  },
+  // FCT Councils (Scoped to 380x250 viewport)
+  'lga-bwari': {
+    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
+    labelX: 190,
+    labelY: 82,
+    label: 'Bwari',
+  },
+  'lga-amac': {
+    path: 'M 70 125 L 310 125 L 285 210 L 95 210 Z',
+    labelX: 190,
+    labelY: 168,
+    label: 'AMAC',
+  },
+  // Kaduna LGAs (Scoped to 380x250 viewport)
+  'lga-kaduna-north': {
+    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
+    labelX: 190,
+    labelY: 82,
+    label: 'Kaduna North',
+  },
+  'lga-kaduna-south': {
+    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
+    labelX: 190,
+    labelY: 168,
+    label: 'Kaduna South',
+  },
+  // Oyo LGAs (Scoped to 380x250 viewport)
+  'lga-ibadan-north': {
+    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
+    labelX: 190,
+    labelY: 82,
+    label: 'Ibadan North',
+  },
+  'lga-ibadan-sw': {
+    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
+    labelX: 190,
+    labelY: 168,
+    label: 'Ibadan South-West',
+  },
+  // Enugu LGAs (Scoped to 380x250 viewport)
+  'lga-nsukka': {
+    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
+    labelX: 190,
+    labelY: 82,
+    label: 'Nsukka',
+  },
+  'lga-enugu-north': {
+    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
+    labelX: 190,
+    labelY: 168,
+    label: 'Enugu North',
+  },
+  // Borno LGAs (Scoped to 380x250 viewport)
+  'lga-maiduguri': {
+    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
+    labelX: 190,
+    labelY: 82,
+    label: 'Maiduguri',
+  },
+  'lga-jere': {
+    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
+    labelX: 190,
+    labelY: 168,
+    label: 'Jere',
+  },
+};
+

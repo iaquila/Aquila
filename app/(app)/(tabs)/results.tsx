@@ -21,153 +21,13 @@ import {
   NIGERIA_STATE_GEOMETRIES,
   NIGERIA_MAP_VIEWBOX,
   NIGERIA_RIVERS,
-  NigeriaStateGeometry,
+  LGA_MAP_POLYGONS,
 } from '@/constants/nigeriaMapData';
 import {
-  NIGERIA_OFFICIAL_LGAS,
   getOfficialLgasForState,
-  TOTAL_OFFICIAL_LGAS_COUNT,
 } from '@/constants/nigeriaLgasData';
 
-const LGA_MAP_POLYGONS: Record<string, { path: string; labelX: number; labelY: number; label: string }> = {
-  // Lagos LGAs (Scoped to 380x250 viewport)
-  'lga-alimosho': {
-    path: 'M 30 45 L 125 35 L 135 110 L 70 130 L 25 95 Z',
-    labelX: 75,
-    labelY: 80,
-    label: 'Alimosho',
-  },
-  'lga-ikeja': {
-    path: 'M 125 35 L 220 30 L 225 100 L 135 110 Z',
-    labelX: 172,
-    labelY: 65,
-    label: 'Ikeja',
-  },
-  'lga-kosofe': {
-    path: 'M 220 30 L 345 25 L 355 105 L 225 100 Z',
-    labelX: 285,
-    labelY: 62,
-    label: 'Kosofe',
-  },
-  'lga-mainland': {
-    path: 'M 135 110 L 225 100 L 230 160 L 150 170 Z',
-    labelX: 180,
-    labelY: 132,
-    label: 'Mainland',
-  },
-  'lga-surulere': {
-    path: 'M 70 130 L 150 170 L 135 210 L 55 180 Z',
-    labelX: 102,
-    labelY: 170,
-    label: 'Surulere',
-  },
-  'lga-etiosa': {
-    path: 'M 150 170 L 230 160 L 360 145 L 355 195 L 240 205 L 135 210 Z',
-    labelX: 250,
-    labelY: 178,
-    label: 'Eti-Osa',
-  },
-  // Kano LGAs (Scoped to 380x250 viewport)
-  'lga-fagge': {
-    path: 'M 40 40 L 195 40 L 180 128 L 40 128 Z',
-    labelX: 115,
-    labelY: 82,
-    label: 'Fagge',
-  },
-  'lga-tarauni': {
-    path: 'M 195 40 L 340 40 L 340 128 L 180 128 Z',
-    labelX: 260,
-    labelY: 82,
-    label: 'Tarauni',
-  },
-  'lga-nassarawa-kn': {
-    path: 'M 40 128 L 340 128 L 320 215 L 60 215 Z',
-    labelX: 190,
-    labelY: 170,
-    label: 'Nassarawa',
-  },
-  // Rivers LGAs (Scoped to 380x250 viewport)
-  'lga-obio-akpor': {
-    path: 'M 45 45 L 335 45 L 335 125 L 45 125 Z',
-    labelX: 190,
-    labelY: 82,
-    label: 'Obio-Akpor',
-  },
-  'lga-phalga': {
-    path: 'M 45 125 L 335 125 L 310 210 L 70 210 Z',
-    labelX: 190,
-    labelY: 168,
-    label: 'Port Harcourt',
-  },
-  // FCT Councils (Scoped to 380x250 viewport)
-  'lga-bwari': {
-    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
-    labelX: 190,
-    labelY: 82,
-    label: 'Bwari',
-  },
-  'lga-amac': {
-    path: 'M 70 125 L 310 125 L 285 210 L 95 210 Z',
-    labelX: 190,
-    labelY: 168,
-    label: 'AMAC',
-  },
-  // Kaduna LGAs (Scoped to 380x250 viewport)
-  'lga-kaduna-north': {
-    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
-    labelX: 190,
-    labelY: 82,
-    label: 'Kaduna North',
-  },
-  'lga-kaduna-south': {
-    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
-    labelX: 190,
-    labelY: 168,
-    label: 'Kaduna South',
-  },
-  // Oyo LGAs (Scoped to 380x250 viewport)
-  'lga-ibadan-north': {
-    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
-    labelX: 190,
-    labelY: 82,
-    label: 'Ibadan North',
-  },
-  'lga-ibadan-sw': {
-    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
-    labelX: 190,
-    labelY: 168,
-    label: 'Ibadan South-West',
-  },
-  // Enugu LGAs (Scoped to 380x250 viewport)
-  'lga-nsukka': {
-    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
-    labelX: 190,
-    labelY: 82,
-    label: 'Nsukka',
-  },
-  'lga-enugu-north': {
-    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
-    labelX: 190,
-    labelY: 168,
-    label: 'Enugu North',
-  },
-  // Borno LGAs (Scoped to 380x250 viewport)
-  'lga-maiduguri': {
-    path: 'M 50 45 L 330 45 L 310 125 L 70 125 Z',
-    labelX: 190,
-    labelY: 82,
-    label: 'Maiduguri',
-  },
-  'lga-jere': {
-    path: 'M 70 125 L 310 125 L 290 210 L 90 210 Z',
-    labelX: 190,
-    labelY: 168,
-    label: 'Jere',
-  },
-};
 
-// Authentic 37-State Federation Map Geometries (36 States + FCT)
-const STATE_MAP_POLYGONS = NIGERIA_STATE_GEOMETRIES;
 
 export type LgaCollation = {
   id: string;
@@ -831,13 +691,13 @@ export default function ResultsScreen() {
 
   const getLgaFillColor = useCallback((lga: { reportingPct: number; leadingParty: string }) => {
     if (mapHeatMode === 'density') {
-      if (lga.reportingPct >= 90) return '#DC2626'; // High reporting heat
-      if (lga.reportingPct >= 80) return '#EA580C'; // Medium-high
-      if (lga.reportingPct >= 65) return '#D97706'; // Medium
-      return '#16A34A'; // Initial
+      if (lga.reportingPct >= 90) return colors.critical; // High reporting heat
+      if (lga.reportingPct >= 80) return colors.disputed; // Medium-high
+      if (lga.reportingPct >= 65) return colors.warning; // Medium
+      return colors.success; // Initial
     }
-    return PARTY_COLORS[lga.leadingParty] ?? '#0D6338';
-  }, [mapHeatMode]);
+    return PARTY_COLORS[lga.leadingParty] ?? colors.primary;
+  }, [mapHeatMode, colors]);
 
   const handleInspectLga = useCallback((lgaName: string) => {
     impact(Haptics.ImpactFeedbackStyle.Light);
@@ -1276,7 +1136,7 @@ export default function ResultsScreen() {
                         impact(Haptics.ImpactFeedbackStyle.Light);
                         setSearchQuery('');
                       }}
-                      hitSlop={8}
+                      hitSlop={spacing.xs}
                     >
                       <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                     </Pressable>
@@ -1765,39 +1625,39 @@ export default function ResultsScreen() {
                     {mapHeatMode === 'party' ? (
                       <>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#0D6338' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">CPA</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.CPA ?? colors.primary }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">CPA</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">DPP</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.DPP ?? colors.error }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">DPP</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#16A34A' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PL</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.PL ?? colors.success }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">PL</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#2563EB' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">PPNF</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: PARTY_COLORS.PPNF ?? colors.primaryLight }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">PPNF</ThemedText>
                         </View>
                       </>
                     ) : (
                       <>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">90%+ (Hot)</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: colors.critical }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">90%+ (Hot)</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#EA580C' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">80-90%</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: colors.disputed }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">80-90%</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#D97706' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">65-80%</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: colors.warning }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">65-80%</ThemedText>
                         </View>
                         <View style={styles.legendPill}>
-                          <View style={[styles.legendDot, { backgroundColor: '#16A34A' }]} />
-                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">&lt;65%</ThemedText>
+                          <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
+                          <ThemedText variant="caption" color={colors.textInverse} fontFamily="bold">&lt;65%</ThemedText>
                         </View>
                       </>
                     )}
@@ -1921,14 +1781,7 @@ export default function ResultsScreen() {
                   <View style={styles.compactPartyFilterRow}>
                     {(['ALL', 'CPA', 'DPP', 'PL', 'PPNF'] as const).map((party) => {
                       const isSelected = partyFilter === party;
-                      const pColors: Record<string, string> = {
-                        CPA: '#0D6338',
-                        DPP: '#DC2626',
-                        PL: '#16A34A',
-                        PPNF: '#2563EB',
-                        ALL: colors.text,
-                      };
-                      const color = pColors[party] ?? colors.text;
+                      const color = party === 'ALL' ? colors.text : (PARTY_COLORS[party] ?? colors.text);
 
                       return (
                         <Pressable

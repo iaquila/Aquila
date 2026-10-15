@@ -33,6 +33,14 @@ export const sizes = {
   rankBadge: 32,
   tabBarClearance: 110,
   modalClearance: 120,
+  buttonSm: 34,
+  buttonMd: 44,
+  buttonLg: 50,
+  inputHeight: 56,
+  inputIconPadding: 44,
+  marqueeHeight: 38,
+  emptyStateMax: 400,
+  emptyStateIcon: 64,
 } as const;
 
 export const typography = {

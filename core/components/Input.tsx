@@ -13,7 +13,7 @@ import {
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
 import { ThemedText } from './ThemedText';
-import { radius, spacing, border, animation, typography } from '@/constants/tokens';
+import { radius, spacing, border, animation, typography, sizes } from '@/constants/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 type InputProps = {
@@ -136,7 +136,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
         {hasRightIcon && (
           <Pressable
             onPress={handleRightPress}
-            hitSlop={8}
+            hitSlop={spacing.xs}
             accessibilityRole="button"
             style={styles.rightIcon}
           >
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: border.thick,
     paddingHorizontal: spacing.md,
-    height: 56,
+    height: sizes.inputHeight,
   },
   input: {
     flex: 1,
@@ -188,9 +188,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   inputWithLeftIcon: {
-    paddingLeft: 44,
+    paddingLeft: sizes.inputIconPadding,
   },
   inputWithRightIcon: {
-    paddingRight: 44,
+    paddingRight: sizes.inputIconPadding,
   },
 });

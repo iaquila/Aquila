@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   indicator: {
-    width: 4,
-    height: 16,
+    width: spacing['2xs'],
+    height: spacing.md,
     borderRadius: radius.full,
     flexShrink: 0,
   },
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   subtitleText: {
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
   actionWrap: {
     flexShrink: 0,

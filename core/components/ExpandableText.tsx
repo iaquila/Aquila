@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { ThemedText } from './ThemedText';
 import Colors from '@/constants/colors';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
+import { spacing } from '@/constants/tokens';
 
 type ExpandableTextProps = {
   children: string;
@@ -73,6 +74,6 @@ export function ExpandableText({
 
 const styles = StyleSheet.create({
   toggle: {
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
 });

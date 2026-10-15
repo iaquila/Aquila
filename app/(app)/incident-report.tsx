@@ -16,18 +16,11 @@ import { ROUTES } from '@/constants/routes';
 import Colors from '@/constants/colors';
 import { FEATURES } from '@/constants/features';
 import { Ionicons } from '@expo/vector-icons';
-import { INCIDENT_CATEGORIES as CATEGORIES, INCIDENT_SEVERITIES as SEVERITIES } from '@/constants/incidents';
+import { INCIDENT_CATEGORIES as CATEGORIES, INCIDENT_SEVERITIES as SEVERITIES, AREA_PRESETS } from '@/constants/incidents';
 import { Badge } from '@/core/components';
 import { useLocationSearchQuery } from '@/features/elections/hooks';
 import { useHaptics } from '@/core/hooks';
 import * as Haptics from 'expo-haptics';
-
-const AREA_PRESETS = [
-  'Ikeja LGA Collation Center',
-  'Highway In-Transit Route',
-  'Lagos State Collation HQ',
-  'Alimosho LGA Sector',
-] as const;
 
 export default function ReportIncidentScreen() {
   const { electionId, pollingUnitId: preselectedPuId, pollingUnitName: preselectedPuName } = useLocalSearchParams<{ electionId?: string; pollingUnitId?: string; pollingUnitName?: string }>();
@@ -483,7 +476,7 @@ export default function ReportIncidentScreen() {
                     <ThemedText variant="label" color="textMuted" fontFamily="bold">
                       LOCATION SUGGESTIONS
                     </ThemedText>
-                    <Pressable onPress={() => setShowAreaSuggestions(false)} hitSlop={8}>
+                    <Pressable onPress={() => setShowAreaSuggestions(false)} hitSlop={spacing.xs}>
                       <Ionicons name="close" size={16} color={colors.textMuted} />
                     </Pressable>
                   </View>
@@ -646,7 +639,7 @@ export default function ReportIncidentScreen() {
                         {filename || `file-${idx + 1}`}
                       </ThemedText>
                       <Pressable
-                        hitSlop={8}
+                        hitSlop={spacing.xs}
                         onPress={() => handleRemoveMedia(uri)}
                         style={{ marginLeft: spacing['3xs'] }}
                       >
