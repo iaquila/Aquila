@@ -108,5 +108,44 @@
       * Replaced the last remaining raw React Native `<Text>` element in `core/components/ToastProvider.tsx` with `<ThemedText variant="body">`, achieving 100% code-wide adherence to the text token SSOT rule.
     - Semantic Theme Consistency in Polling Unit Cards:
       * Replaced hardcoded `borderTopColor: rgba(0,0,0,0.05)` in `puBottomRow` with semantic `colors.borderSubtle` across light and dark modes.
+  * Android Layout & Typography Rectification (Exhaustive Pass):
+    - Root Cause 1 (Yoga Zero-Basis Collapse): Blanket `flexWrap: 'wrap'` on rows with `flex: 1, minWidth: 0` children caused Yoga on Android to assign 0% basis to flex items, crushing text horizontally into vertical 1-character word-broken columns. Systematically audited and eliminated `flexWrap: 'wrap'` across ALL metadata, header, and action rows:
+      * `parties.tsx`: `historyRow`
+      * `locations.tsx`: `lgaItem`
+      * `result-collation.tsx`: `puLogItem`
+      * `SectionHeader.tsx`: `container`
+      * `election-detail.tsx`: `candRow`
+      * `result-detail.tsx`: `heroTopRow`, `candHeader`
+      * `result-submit.tsx`: candidate section header, `bottomActions`
+      * `incident-detail.tsx`: `bottomActions` / `caseStatusActions`
+      * `(tabs)/index.tsx`: `consoleTopRow`, `sectionHeaderRow`, `candHeader`, `puTopRow`, `puBottomRow`
+      * `(tabs)/incidents.tsx`: `cardHeader`, `cardActionsRow`
+      * `(tabs)/elections.tsx`: `cardFooter`, competing party badge row
+      * `(tabs)/results.tsx`: `topControlBar`, Row 2 candidate summary
+    - Root Cause 2 (Microscopic Text from Implicit Auto-Scaling): `ThemedText.tsx` was implicitly enabling `adjustsFontSizeToFit={true}` for all `numberOfLines === 1` text and defaulting `ellipsizeMode='clip'`. On Android, `adjustsFontSizeToFit` with fixed/computed `lineHeight` or within animated/measured containers aggressively shrivels text to microscopic scale. Reverted `adjustsFontSizeToFit` default to `false` (explicit opt-in only) and restored standard `ellipsizeMode='tail'`.
+    - Root Cause 3 (Android Word-Breaking & Forced Uppercase): Injected `textBreakStrategy="simple"` across `ThemedText.tsx` to prevent Android's default `highQuality` hyphenation algorithm from splitting words across line breaks (`obse / rver`). Removed automatic `uppercase` conversion on `variant="label"` so labels no longer inflate character widths unless explicitly requested via `uppercase={true}`.
+    - Root Cause 4 (Status Chip Width Blowout & Subtitle Squishing): `results.tsx` had an inflated 20-character badge label (`'UPLOADED BY OBSERVER'`) with `flexShrink: 0` in `itemHeader`, starving the left column of space. Compacted badge to clean status (`'PUBLISHED'`), added `gap` and `numberOfLines={1}` safeguards across `leadStrip` and `itemFooter`.
+    - Root Cause 6 (Button Text Disappearance on Android): `Button.tsx` had `adjustsFontSizeToFit` combined with fixed `lineHeight: 16`. In React Native Android, `adjustsFontSizeToFit` inside flex/minHeight containers triggers a native font measurement glitch that collapses font size to 0, rendering buttons completely blank (as seen in `PU Agent` primary button). Removed `adjustsFontSizeToFit` from `Button.tsx`.
+    - Root Cause 7 (Historical Tracker Vote Truncation): In `parties.tsx`, cramming the 40-character vote string and 25-character election name into a single horizontal row with `numberOfLines={1}` forced the vote count to truncate to `"8..."`. Restructured into an institutional 2-tier timeline row (Badge + Election Name on Line 1; bold vote tally + percentage on Line 2).
+    - Heat Map Synchronization with aquilaweb & Tactical Modal Parity:
+      * Full 37-State National Federation Map: Integrated authentic WGS84 Spherical Mercator state geometries (`NIGERIA_STATE_GEOMETRIES`), territorial boundary styling, and Niger & Benue river paths (`NIGERIA_RIVERS`) matching `aquilaweb`'s `NigeriaHeatMap.tsx`.
+      * Telemetry Status Strip: Embedded live `#34D399` canvas telemetry bar with `37 HUBS` / `{STATE} LGAS`, pulsating live dot, `Lead Party` / `Progress` choropleth mode indicator, and unclipped `WGS84` badge.
+      * Interactive Collation Inspection Modal: Built `<Modal>` bottom sheet in `results.tsx` matching `aquilaweb`'s `inspectModalUnit`:
+        - Administrative unit name, state code, zone, and dismiss button.
+        - Collation progress track with "Verified Returns" indicator and PU tallies.
+        - Projected leader callout with margin of lead and party pill.
+        - Candidate & party distribution progress bars for CPA, DPP, PL, PPNF.
+        - Direct action button: "Explore [State] LGAs" / "Audit Polling Units".
+      * Scoped LGA Quick Selection: Horizontal scrolling LGA chip bar with localized leading party standings, updating both the interactive SVG canvas and telemetry.
+      * Role-Gated AI Projections: Gated AI Projection Engine on Dashboard (`index.tsx`) to `ELECTION_OFFICER`, completely hidden for `FIELD_AGENT` and `POLLING_AGENT`.
+      * Live Waydroid ADB Verification: Tested and screencapped every state on Waydroid (`192.168.240.112:5555`) — confirmed zero clipping, clean typography, responsive layout, and smooth inspection modal workflow.
+    - Invariants: Verified complete clean build with `npx tsc --noEmit`.
+  * Typography Architecture (System Platform Fonts SSOT & Inter Feature Flag):
+    - 2026/2027 Mobile App Standards: Configured native platform system fonts (San Francisco on iOS, Roboto on Android) as ground-truth default, eliminating Flash of Unstyled Text (FOUT), cold-start Splash Screen font resolution delays, and multi-megabyte TTF asset overhead while providing automatic OS Dynamic Type & optical accessibility scaling.
+    - Feature Flag Isolation: Added `FEATURES.ENABLE_CUSTOM_FONTS: false` in `constants/features.ts`.
+    - Surgical Font Style Resolver: Created `getFontStyle(weight)` in `constants/fonts.ts`. When disabled, applies `Platform.select({ ios: 'System', default: 'sans-serif' })` alongside native `fontWeight: '400' | '500' | '700'`. When enabled, resolves custom Inter postscript names (`Inter-Regular`, `Inter-Medium`, `Inter-Bold`) with `fontWeight: undefined` to avoid Android faux bolding artifacts.
+    - Zero-Delay Splash Screen: Root layout `app/_layout.tsx` gates `useFonts` behind `FEATURES.ENABLE_CUSTOM_FONTS ? fontMap : {}`, skipping custom font loading on launch when using system fonts.
+    - Component Adoption: Centralized in `core/components/ThemedText.tsx`.
+
 
 

@@ -283,7 +283,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
     overflow: 'hidden',
-    flexWrap: 'wrap',
     gap: spacing.xs,
   },
 });

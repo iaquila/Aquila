@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { StyleSheet, View, Pressable, FlatList, ScrollView } from 'react-native';
+import { StyleSheet, View, Pressable, FlatList, ScrollView, TextInput, Modal } from 'react-native';
 import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, SkeletonCard } from '@/core/components';
@@ -17,6 +17,17 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from 'expo-web-browser';
 import Svg, { Path, G, Circle, Rect, Text as SvgText } from 'react-native-svg';
+import {
+  NIGERIA_STATE_GEOMETRIES,
+  NIGERIA_MAP_VIEWBOX,
+  NIGERIA_RIVERS,
+  NigeriaStateGeometry,
+} from '@/constants/nigeriaMapData';
+import {
+  NIGERIA_OFFICIAL_LGAS,
+  getOfficialLgasForState,
+  TOTAL_OFFICIAL_LGAS_COUNT,
+} from '@/constants/nigeriaLgasData';
 
 const LGA_MAP_POLYGONS: Record<string, { path: string; labelX: number; labelY: number; label: string }> = {
   // Lagos LGAs (Scoped to 380x250 viewport)
@@ -155,79 +166,8 @@ const LGA_MAP_POLYGONS: Record<string, { path: string; labelX: number; labelY: n
   },
 };
 
-const STATE_MAP_POLYGONS: Record<string, {
-  path: string;
-  labelX: number;
-  labelY: number;
-  name: string;
-  code: string;
-  zone: string;
-}> = {
-  'state-kano': {
-    path: 'M 180 38 L 240 32 L 252 74 L 202 82 L 180 62 Z',
-    labelX: 212,
-    labelY: 56,
-    name: 'Kano',
-    code: 'KAN',
-    zone: 'North West',
-  },
-  'state-kaduna': {
-    path: 'M 148 76 L 202 82 L 210 122 L 154 118 Z',
-    labelX: 178,
-    labelY: 98,
-    name: 'Kaduna',
-    code: 'KAD',
-    zone: 'North West',
-  },
-  'state-fct': {
-    path: 'M 168 122 L 204 122 L 208 148 L 170 150 Z',
-    labelX: 187,
-    labelY: 135,
-    name: 'FCT',
-    code: 'FCT',
-    zone: 'North Central',
-  },
-  'state-oyo': {
-    path: 'M 54 142 L 102 138 L 108 178 L 62 182 Z',
-    labelX: 80,
-    labelY: 158,
-    name: 'Oyo',
-    code: 'OYO',
-    zone: 'South West',
-  },
-  'state-lagos': {
-    path: 'M 58 184 L 120 180 L 122 206 L 54 206 Z',
-    labelX: 86,
-    labelY: 195,
-    name: 'Lagos',
-    code: 'LOS',
-    zone: 'South West',
-  },
-  'state-rivers': {
-    path: 'M 184 192 L 230 190 L 236 222 L 182 221 Z',
-    labelX: 208,
-    labelY: 206,
-    name: 'Rivers',
-    code: 'RIV',
-    zone: 'South South',
-  },
-  'state-enugu': {
-    path: 'M 208 152 L 248 150 L 252 186 L 210 188 Z',
-    labelX: 228,
-    labelY: 168,
-    name: 'Enugu',
-    code: 'ENU',
-    zone: 'South East',
-  },
-  'state-borno': {
-    path: 'M 268 42 L 334 52 L 322 105 L 264 92 Z',
-    labelX: 296,
-    labelY: 72,
-    name: 'Borno',
-    code: 'BOR',
-    zone: 'North East',
-  },
-};
+// Authentic 37-State Federation Map Geometries (36 States + FCT)
+const STATE_MAP_POLYGONS = NIGERIA_STATE_GEOMETRIES;
 
 export type LgaCollation = {
   id: string;
@@ -334,7 +274,7 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
               color: isPublished ? colors.success : colors.warning,
             }}
           >
-            {item.status === 'PUBLISHED' ? 'Uploaded by observer' : item.status}
+            {item.status}
           </ThemedText>
         </View>
       </View>
@@ -343,7 +283,7 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
       <View style={[styles.leadStrip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
         <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
           <ThemedText variant="label" color="textMuted">LEADING CANDIDATE</ThemedText>
-          <ThemedText variant="body" color="text" fontFamily="bold">
+          <ThemedText variant="body" color="text" fontFamily="bold" numberOfLines={1}>
             {leadCand?.fullName ?? (topCandId ? `Candidate ${topCandId}` : 'Awaiting breakdown')}
           </ThemedText>
         </View>
@@ -351,18 +291,18 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
           <ThemedText variant="title" color="primary" fontFamily="bold">
             {topCandVotes.toLocaleString()}
           </ThemedText>
-          <ThemedText variant="label" color="textSecondary">
-            {leadPct}% of cast ballots
+          <ThemedText variant="label" color="textSecondary" uppercase={false}>
+            {leadPct}% of ballots
           </ThemedText>
         </View>
       </View>
 
       {/* Bottom Accreditation & Ballot summary bar */}
       <View style={styles.itemFooter}>
-        <ThemedText variant="caption" color="textSecondary">
+        <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, minWidth: 0 }} numberOfLines={1}>
           Accredited: {item.totalAccreditedVoters.toLocaleString()} · Ballots: {item.totalVotesCast.toLocaleString()}
         </ThemedText>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: spacing.xs }}>
           <ThemedText variant="caption" color="primary" fontFamily="bold">
             {isPublished ? 'View Details' : 'Continue Draft'}
           </ThemedText>
@@ -449,7 +389,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
         </View>
 
         {/* Row 2: Candidate + Party pill + Subtitle */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={[styles.partyPill, { backgroundColor: leadColor, paddingVertical: 1, paddingHorizontal: 6 }]}>
             <ThemedText variant="label" color="#FFFFFF" fontFamily="bold">
               {leadingParty}
@@ -546,10 +486,11 @@ export default function ResultsScreen() {
   // Geography Level: 'state' aggregates LGAs by state, 'lga' shows LGA detail.
   // LGA rows are the source of truth (inline collation bases + live submissions);
   // state rows are derived by summing their LGAs, so the two levels always agree.
-  const [geoLevel, setGeoLevel] = useState<'state' | 'lga'>('lga');
+  const [geoLevel, setGeoLevel] = useState<'state' | 'lga'>('state');
   const [filterLga, setFilterLga] = useState<string | null>(null);
   const [filterState, setFilterState] = useState<string | null>(null);
   const [partyFilter, setPartyFilter] = useState<'ALL' | 'CPA' | 'DPP' | 'PL' | 'PPNF'>('ALL');
+  const [inspectModalUnit, setInspectModalUnit] = useState<LgaCollation | StateCollation | null>(null);
 
   // Filtered active list for PU returns
   const displayedReturns = useMemo(() => {
@@ -563,226 +504,171 @@ export default function ResultsScreen() {
     return list;
   }, [activeList, filterLga]);
 
-  // Aggregate LGA Collation Heatmap data
+  // Tactical Search Query for Quick Jump across States and LGAs
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // ---------------------------------------------------------------------------
+  // Aggregate Comprehensive 37-State Baseline LGA Data (Official 774 Canonical LGAs)
+  // ---------------------------------------------------------------------------
   const lgaHeatmapData = useMemo(() => {
-    const lgaBases: Array<{
+    const primaryHubOverrides: Record<
+      string,
+      { totalPus: number; baseCollated: number; baseVotes: Record<'CPA' | 'DPP' | 'PL' | 'PPNF', number> }
+    > = {
+      'ikeja': { totalPus: 450, baseCollated: 412, baseVotes: { CPA: 42350, DPP: 28140, PL: 21980, PPNF: 3200 } },
+      'lagos mainland': { totalPus: 380, baseCollated: 345, baseVotes: { CPA: 27800, DPP: 35900, PL: 18450, PPNF: 2800 } },
+      'alimosho': { totalPus: 620, baseCollated: 540, baseVotes: { CPA: 41200, DPP: 22400, PL: 53100, PPNF: 4600 } },
+      'eti-osa': { totalPus: 340, baseCollated: 298, baseVotes: { CPA: 24600, DPP: 14200, PL: 39800, PPNF: 2100 } },
+      'surulere': { totalPus: 395, baseCollated: 360, baseVotes: { CPA: 36400, DPP: 19800, PL: 31200, PPNF: 3100 } },
+      'kosofe': { totalPus: 310, baseCollated: 275, baseVotes: { CPA: 30100, DPP: 24500, PL: 19400, PPNF: 2950 } },
+      'fagge': { totalPus: 320, baseCollated: 292, baseVotes: { CPA: 18400, DPP: 9600, PL: 3100, PPNF: 58700 } },
+      'tarauni': { totalPus: 280, baseCollated: 241, baseVotes: { CPA: 15200, DPP: 8100, PL: 2600, PPNF: 46300 } },
+      'nasarawa': { totalPus: 350, baseCollated: 305, baseVotes: { CPA: 22100, DPP: 11400, PL: 3900, PPNF: 54200 } },
+      'obio-akpor': { totalPus: 420, baseCollated: 381, baseVotes: { CPA: 19800, DPP: 47200, PL: 24600, PPNF: 1800 } },
+      'port harcourt': { totalPus: 300, baseCollated: 256, baseVotes: { CPA: 16400, DPP: 28900, PL: 24700, PPNF: 1400 } },
+      'municipal': { totalPus: 380, baseCollated: 340, baseVotes: { CPA: 22100, DPP: 18400, PL: 34900, PPNF: 3200 } },
+      'bwari': { totalPus: 220, baseCollated: 186, baseVotes: { CPA: 9800, DPP: 11200, PL: 28600, PPNF: 1100 } },
+      'kaduna north': { totalPus: 340, baseCollated: 295, baseVotes: { CPA: 38200, DPP: 29400, PL: 12100, PPNF: 11200 } },
+      'kaduna south': { totalPus: 310, baseCollated: 260, baseVotes: { CPA: 31500, DPP: 33800, PL: 15400, PPNF: 8900 } },
+      'ibadan north': { totalPus: 410, baseCollated: 375, baseVotes: { CPA: 39100, DPP: 36200, PL: 18700, PPNF: 2400 } },
+      'ibadan south-west': { totalPus: 360, baseCollated: 318, baseVotes: { CPA: 34800, DPP: 31200, PL: 16900, PPNF: 1900 } },
+      'enugu north': { totalPus: 290, baseCollated: 270, baseVotes: { CPA: 4200, DPP: 12800, PL: 58400, PPNF: 800 } },
+      'nsukka': { totalPus: 320, baseCollated: 285, baseVotes: { CPA: 5100, DPP: 14200, PL: 61200, PPNF: 950 } },
+      'maiduguri': { totalPus: 380, baseCollated: 340, baseVotes: { CPA: 54200, DPP: 19800, PL: 4100, PPNF: 8300 } },
+      'jere': { totalPus: 290, baseCollated: 245, baseVotes: { CPA: 41800, DPP: 16200, PL: 3200, PPNF: 6400 } },
+    };
+
+    const allBases: Array<{
       id: string;
       name: string;
       state: string;
       totalPus: number;
       baseCollated: number;
-      baseVotes: { CPA: number; DPP: number; PL: number; PPNF: number };
-    }> = [
-      {
-        id: 'lga-ikeja',
-        name: 'Ikeja LGA',
-        state: 'Lagos',
-        totalPus: 450,
-        baseCollated: 412,
-        baseVotes: { CPA: 42350, DPP: 28140, PL: 21980, PPNF: 3200 },
-      },
-      {
-        id: 'lga-mainland',
-        name: 'Lagos Mainland',
-        state: 'Lagos',
-        totalPus: 380,
-        baseCollated: 345,
-        baseVotes: { CPA: 27800, DPP: 35900, PL: 18450, PPNF: 2800 },
-      },
-      {
-        id: 'lga-alimosho',
-        name: 'Alimosho LGA',
-        state: 'Lagos',
-        totalPus: 620,
-        baseCollated: 540,
-        baseVotes: { CPA: 41200, DPP: 22400, PL: 53100, PPNF: 4600 },
-      },
-      {
-        id: 'lga-etiosa',
-        name: 'Eti-Osa LGA',
-        state: 'Lagos',
-        totalPus: 340,
-        baseCollated: 298,
-        baseVotes: { CPA: 24600, DPP: 14200, PL: 39800, PPNF: 2100 },
-      },
-      {
-        id: 'lga-surulere',
-        name: 'Surulere LGA',
-        state: 'Lagos',
-        totalPus: 395,
-        baseCollated: 360,
-        baseVotes: { CPA: 36400, DPP: 19800, PL: 31200, PPNF: 3100 },
-      },
-      {
-        id: 'lga-kosofe',
-        name: 'Kosofe LGA',
-        state: 'Lagos',
-        totalPus: 310,
-        baseCollated: 275,
-        baseVotes: { CPA: 30100, DPP: 24500, PL: 19400, PPNF: 2950 },
-      },
-      // ---- Mock expansion states: illustrative demo figures only, not real results ----
-      {
-        id: 'lga-fagge',
-        name: 'Fagge LGA',
-        state: 'Kano',
-        totalPus: 320,
-        baseCollated: 292,
-        baseVotes: { CPA: 18400, DPP: 9600, PL: 3100, PPNF: 58700 },
-      },
-      {
-        id: 'lga-tarauni',
-        name: 'Tarauni LGA',
-        state: 'Kano',
-        totalPus: 280,
-        baseCollated: 241,
-        baseVotes: { CPA: 15200, DPP: 8100, PL: 2600, PPNF: 46300 },
-      },
-      {
-        id: 'lga-nassarawa-kn',
-        name: 'Nassarawa LGA',
-        state: 'Kano',
-        totalPus: 350,
-        baseCollated: 305,
-        baseVotes: { CPA: 22100, DPP: 11400, PL: 3900, PPNF: 54200 },
-      },
-      {
-        id: 'lga-obio-akpor',
-        name: 'Obio-Akpor LGA',
-        state: 'Rivers',
-        totalPus: 420,
-        baseCollated: 381,
-        baseVotes: { CPA: 19800, DPP: 47200, PL: 24600, PPNF: 1800 },
-      },
-      {
-        id: 'lga-phalga',
-        name: 'Port Harcourt LGA',
-        state: 'Rivers',
-        totalPus: 300,
-        baseCollated: 256,
-        baseVotes: { CPA: 16400, DPP: 28900, PL: 24700, PPNF: 1400 },
-      },
-      {
-        id: 'lga-amac',
-        name: 'AMAC Area Council',
-        state: 'FCT',
-        totalPus: 380,
-        baseCollated: 342,
-        baseVotes: { CPA: 18900, DPP: 21700, PL: 51400, PPNF: 2300 },
-      },
-      {
-        id: 'lga-bwari',
-        name: 'Bwari Area Council',
-        state: 'FCT',
-        totalPus: 220,
-        baseCollated: 186,
-        baseVotes: { CPA: 9800, DPP: 11200, PL: 28600, PPNF: 1100 },
-      },
-      {
-        id: 'lga-kaduna-north',
-        name: 'Kaduna North LGA',
-        state: 'Kaduna',
-        totalPus: 340,
-        baseCollated: 295,
-        baseVotes: { CPA: 38200, DPP: 29400, PL: 12100, PPNF: 11200 },
-      },
-      {
-        id: 'lga-kaduna-south',
-        name: 'Kaduna South LGA',
-        state: 'Kaduna',
-        totalPus: 310,
-        baseCollated: 260,
-        baseVotes: { CPA: 31500, DPP: 33800, PL: 15400, PPNF: 8900 },
-      },
-      {
-        id: 'lga-ibadan-north',
-        name: 'Ibadan North LGA',
-        state: 'Oyo',
-        totalPus: 410,
-        baseCollated: 375,
-        baseVotes: { CPA: 39100, DPP: 36200, PL: 18700, PPNF: 2400 },
-      },
-      {
-        id: 'lga-ibadan-sw',
-        name: 'Ibadan South-West LGA',
-        state: 'Oyo',
-        totalPus: 360,
-        baseCollated: 318,
-        baseVotes: { CPA: 34800, DPP: 31200, PL: 16900, PPNF: 1900 },
-      },
-      {
-        id: 'lga-enugu-north',
-        name: 'Enugu North LGA',
-        state: 'Enugu',
-        totalPus: 290,
-        baseCollated: 270,
-        baseVotes: { CPA: 4200, DPP: 12800, PL: 58400, PPNF: 800 },
-      },
-      {
-        id: 'lga-nsukka',
-        name: 'Nsukka LGA',
-        state: 'Enugu',
-        totalPus: 320,
-        baseCollated: 285,
-        baseVotes: { CPA: 5100, DPP: 14200, PL: 61200, PPNF: 950 },
-      },
-      {
-        id: 'lga-maiduguri',
-        name: 'Maiduguri LGA',
-        state: 'Borno',
-        totalPus: 380,
-        baseCollated: 340,
-        baseVotes: { CPA: 54200, DPP: 19800, PL: 4100, PPNF: 8300 },
-      },
-      {
-        id: 'lga-jere',
-        name: 'Jere LGA',
-        state: 'Borno',
-        totalPus: 290,
-        baseCollated: 245,
-        baseVotes: { CPA: 41800, DPP: 16200, PL: 3200, PPNF: 6400 },
-      },
-    ];
+      baseVotes: Record<'CPA' | 'DPP' | 'PL' | 'PPNF', number>;
+    }> = [];
 
-    // Fold in dynamic live submissions
-    publishedResults.forEach((sub) => {
-      const match = lgaBases.find((l) =>
-        sub.pollingUnitName?.toLowerCase().includes(l.name.toLowerCase().split(' ')[0]!)
-      );
-      if (match && sub.candidateVotes) {
-        match.baseCollated += 1;
-        match.baseVotes.CPA += sub.candidateVotes['cand1'] || 0;
-        match.baseVotes.DPP += sub.candidateVotes['cand2'] || 0;
-        match.baseVotes.PL += sub.candidateVotes['cand3'] || 0;
-        match.baseVotes.PPNF += sub.candidateVotes['cand4'] || 0;
+    Object.values(NIGERIA_STATE_GEOMETRIES).forEach((geom) => {
+      const stateLgas = getOfficialLgasForState(geom.name);
+      const zone = geom.zone;
+
+      let defaultRatio: { CPA: number; DPP: number; PL: number; PPNF: number };
+      if (zone === 'North West') {
+        defaultRatio = { CPA: 0.44, DPP: 0.28, PL: 0.08, PPNF: 0.20 };
+      } else if (zone === 'North East') {
+        defaultRatio = { CPA: 0.48, DPP: 0.38, PL: 0.06, PPNF: 0.08 };
+      } else if (zone === 'North Central') {
+        defaultRatio = { CPA: 0.36, DPP: 0.34, PL: 0.25, PPNF: 0.05 };
+      } else if (zone === 'South West') {
+        defaultRatio = { CPA: 0.46, DPP: 0.24, PL: 0.27, PPNF: 0.03 };
+      } else if (zone === 'South East') {
+        defaultRatio = { CPA: 0.08, DPP: 0.22, PL: 0.68, PPNF: 0.02 };
+      } else {
+        defaultRatio = { CPA: 0.28, DPP: 0.42, PL: 0.27, PPNF: 0.03 };
       }
+
+      stateLgas.forEach((lgaName) => {
+        const cleanName = lgaName.trim();
+        const lowerName = cleanName.toLowerCase();
+        const baseId = `lga-${geom.name.toLowerCase().replace(/\s+/g, '-')}-${lowerName.replace(/[^a-z0-9]+/g, '-')}`;
+        const legacySimpleId = `lga-${lowerName.replace(/[^a-z0-9]+/g, '-')}`;
+        const override = primaryHubOverrides[lowerName] || primaryHubOverrides[cleanName];
+
+        if (override) {
+          allBases.push({
+            id: legacySimpleId in LGA_MAP_POLYGONS ? legacySimpleId : baseId,
+            name: cleanName.endsWith('LGA') || cleanName.endsWith('Council') ? cleanName : `${cleanName} LGA`,
+            state: geom.name,
+            totalPus: override.totalPus,
+            baseCollated: override.baseCollated,
+            baseVotes: { ...override.baseVotes },
+          });
+          return;
+        }
+
+        const seed = (geom.name + '_' + cleanName)
+          .split('')
+          .reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0);
+        const hash = Math.abs(seed);
+
+        const pus = 175 + (hash % 210);
+        const collatedPct = 0.85 + ((hash % 12) / 100);
+        const collated = Math.round(pus * collatedPct);
+        const totalV = collated * (110 + (hash % 30));
+
+        const deltaCPA = ((hash % 7) - 3) / 100;
+        const deltaDPP = (((hash >> 2) % 7) - 3) / 100;
+        const ratioCPA = Math.max(0.04, defaultRatio.CPA + deltaCPA);
+        const ratioDPP = Math.max(0.04, defaultRatio.DPP + deltaDPP);
+        const rem = 1 - (ratioCPA + ratioDPP);
+        const ratioPL = Math.max(0.02, (defaultRatio.PL * rem) / (defaultRatio.PL + defaultRatio.PPNF));
+        const ratioPPNF = Math.max(0.02, 1 - (ratioCPA + ratioDPP + ratioPL));
+
+        allBases.push({
+          id: legacySimpleId in LGA_MAP_POLYGONS ? legacySimpleId : baseId,
+          name: cleanName.endsWith('LGA') || cleanName.endsWith('Council') ? cleanName : `${cleanName} LGA`,
+          state: geom.name,
+          totalPus: pus,
+          baseCollated: collated,
+          baseVotes: {
+            CPA: Math.round(totalV * ratioCPA),
+            DPP: Math.round(totalV * ratioDPP),
+            PL: Math.round(totalV * ratioPL),
+            PPNF: Math.round(totalV * ratioPPNF),
+          },
+        });
+      });
     });
 
-    return lgaBases.map((lga) => {
-      const totalVotes = lga.baseVotes.CPA + lga.baseVotes.DPP + lga.baseVotes.PL + lga.baseVotes.PPNF;
+    const candidateNames: Record<string, string> = {
+      CPA: 'Bawa Nassiru',
+      DPP: 'Farouk Haruna',
+      PL: 'Nassiru Bawa',
+      PPNF: 'Ibrahim Shehu',
+    };
+
+    return allBases.map((base) => {
+      const dynamicVotes = { ...base.baseVotes };
+      let extraCollated = 0;
+
+      publishedResults.forEach((sub) => {
+        const pName = sub.pollingUnitName?.toLowerCase() || '';
+        if (pName.includes(base.state.toLowerCase()) || pName.includes(base.name.toLowerCase().split(' ')[0]!)) {
+          extraCollated += 1;
+          if (sub.candidateVotes) {
+            dynamicVotes.CPA += sub.candidateVotes['cand1'] || 0;
+            dynamicVotes.DPP += sub.candidateVotes['cand2'] || 0;
+            dynamicVotes.PL += sub.candidateVotes['cand3'] || 0;
+            dynamicVotes.PPNF += sub.candidateVotes['cand4'] || 0;
+          }
+        }
+      });
+
+      const totalVotes =
+        (dynamicVotes.CPA || 0) +
+        (dynamicVotes.DPP || 0) +
+        (dynamicVotes.PL || 0) +
+        (dynamicVotes.PPNF || 0);
+
       const shares: Array<{ party: 'CPA' | 'DPP' | 'PL' | 'PPNF'; votes: number; pct: number }> = [
-        { party: 'CPA' as const, votes: lga.baseVotes.CPA, pct: (lga.baseVotes.CPA / totalVotes) * 100 },
-        { party: 'DPP' as const, votes: lga.baseVotes.DPP, pct: (lga.baseVotes.DPP / totalVotes) * 100 },
-        { party: 'PL' as const, votes: lga.baseVotes.PL, pct: (lga.baseVotes.PL / totalVotes) * 100 },
-        { party: 'PPNF' as const, votes: lga.baseVotes.PPNF, pct: (lga.baseVotes.PPNF / totalVotes) * 100 },
+        { party: 'CPA' as const, votes: dynamicVotes.CPA, pct: totalVotes > 0 ? (dynamicVotes.CPA / totalVotes) * 100 : 0 },
+        { party: 'DPP' as const, votes: dynamicVotes.DPP, pct: totalVotes > 0 ? (dynamicVotes.DPP / totalVotes) * 100 : 0 },
+        { party: 'PL' as const, votes: dynamicVotes.PL, pct: totalVotes > 0 ? (dynamicVotes.PL / totalVotes) * 100 : 0 },
+        { party: 'PPNF' as const, votes: dynamicVotes.PPNF, pct: totalVotes > 0 ? (dynamicVotes.PPNF / totalVotes) * 100 : 0 },
       ].sort((a, b) => b.votes - a.votes);
 
       const leader = shares[0]!;
       const runnerUp = shares[1]!;
       const margin = (leader.pct - runnerUp.pct).toFixed(1);
-      const reportingPct = Math.min(100, (lga.baseCollated / lga.totalPus) * 100).toFixed(0);
-
-      const candidateNames: Record<string, string> = {
-        CPA: 'Bawa Nassiru',
-        DPP: 'Farouk Haruna',
-        PL: 'Nassiru Bawa',
-        PPNF: 'Ibrahim Shehu',
-      };
+      const reportingPct = Math.min(100, Math.round(((base.baseCollated + extraCollated) / base.totalPus) * 100));
 
       return {
-        ...lga,
+        id: base.id,
+        name: base.name,
+        state: base.state,
+        totalPus: base.totalPus,
+        baseCollated: base.baseCollated + extraCollated,
         totalVotes,
-        reportingPct: Number(reportingPct),
+        reportingPct,
         leadingParty: leader.party,
         leadingCandidate: candidateNames[leader.party] ?? leader.party,
         leadingPct: leader.pct.toFixed(1),
@@ -792,30 +678,8 @@ export default function ResultsScreen() {
     });
   }, [publishedResults]);
 
-  const filteredLgas = useMemo(() => {
-    let list = lgaHeatmapData;
-    if (filterState) {
-      list = list.filter((l) => l.state.toLowerCase() === filterState.toLowerCase());
-    }
-    if (partyFilter !== 'ALL') {
-      list = list.filter((l) => l.leadingParty === partyFilter);
-    }
-    return list;
-  }, [lgaHeatmapData, filterState, partyFilter]);
-
-  // State aggregation: derived from LGA rows (source of truth), grouped by state.
+  // State aggregation: derived from all 774 LGA rows grouped by state
   const stateHeatmapData: StateCollation[] = useMemo(() => {
-    const STATE_ZONES: Record<string, { zone: string; code: string }> = {
-      Lagos: { zone: 'South West', code: 'LOS' },
-      Kano: { zone: 'North West', code: 'KAN' },
-      Rivers: { zone: 'South South', code: 'RIV' },
-      FCT: { zone: 'North Central', code: 'FCT' },
-      Kaduna: { zone: 'North West', code: 'KAD' },
-      Oyo: { zone: 'South West', code: 'OYO' },
-      Enugu: { zone: 'South East', code: 'ENU' },
-      Borno: { zone: 'North East', code: 'BOR' },
-    };
-
     const candidateNames: Record<string, string> = {
       CPA: 'Bawa Nassiru',
       DPP: 'Farouk Haruna',
@@ -823,12 +687,26 @@ export default function ResultsScreen() {
       PPNF: 'Ibrahim Shehu',
     };
 
-    const byState = new Map<string, { totalPus: number; baseCollated: number; votes: Record<'CPA' | 'DPP' | 'PL' | 'PPNF', number>; lgaCount: number }>();
+    const byState = new Map<
+      string,
+      {
+        totalPus: number;
+        baseCollated: number;
+        votes: Record<'CPA' | 'DPP' | 'PL' | 'PPNF', number>;
+        lgaCount: number;
+      }
+    >();
+
     lgaHeatmapData.forEach((lga) => {
-      const entry = byState.get(lga.state) ?? { totalPus: 0, baseCollated: 0, votes: { CPA: 0, DPP: 0, PL: 0, PPNF: 0 }, lgaCount: 0 };
+      const entry = byState.get(lga.state) ?? {
+        totalPus: 0,
+        baseCollated: 0,
+        votes: { CPA: 0, DPP: 0, PL: 0, PPNF: 0 },
+        lgaCount: 0,
+      };
       entry.totalPus += lga.totalPus;
       entry.baseCollated += lga.baseCollated;
-      (Object.keys(entry.votes) as Array<'CPA' | 'DPP' | 'PL' | 'PPNF'>).forEach((p) => {
+      (['CPA', 'DPP', 'PL', 'PPNF'] as const).forEach((p) => {
         const share = lga.shares.find((s) => s.party === p);
         entry.votes[p] += share?.votes ?? 0;
       });
@@ -836,37 +714,81 @@ export default function ResultsScreen() {
       byState.set(lga.state, entry);
     });
 
-    return [...byState.entries()].map(([state, entry]) => {
-      const totalVotes = entry.votes.CPA + entry.votes.DPP + entry.votes.PL + entry.votes.PPNF;
-      const shares = (Object.entries(entry.votes) as Array<[StateCollation['leadingParty'], number]>)
-        .map(([party, votes]) => ({ party, votes, pct: totalVotes > 0 ? (votes / totalVotes) * 100 : 0 }))
-        .sort((a, b) => b.votes - a.votes);
-      const leader = shares[0]!;
-      const runnerUp = shares[1]!;
-      const meta = STATE_ZONES[state] ?? { zone: 'Federation Zone', code: state.substring(0, 3).toUpperCase() };
-      return {
-        id: `state-${state.toLowerCase().replace(/\s+/g, '-')}`,
-        name: state,
-        zone: meta.zone,
-        code: meta.code,
-        lgaCount: entry.lgaCount,
-        totalPus: entry.totalPus,
-        baseCollated: entry.baseCollated,
-        totalVotes,
-        reportingPct: entry.totalPus > 0 ? Number(Math.min(100, (entry.baseCollated / entry.totalPus) * 100).toFixed(0)) : 0,
-        leadingParty: leader.party,
-        leadingCandidate: candidateNames[leader.party] ?? leader.party,
-        leadingPct: leader.pct.toFixed(1),
-        margin: (leader.pct - runnerUp.pct).toFixed(1),
-        shares,
-      };
-    });
+    return [...byState.entries()]
+      .map(([state, entry]) => {
+        const totalVotes = entry.votes.CPA + entry.votes.DPP + entry.votes.PL + entry.votes.PPNF;
+        const shares = (['CPA', 'DPP', 'PL', 'PPNF'] as const)
+          .map((party) => {
+            const votes = entry.votes[party];
+            return {
+              party,
+              votes,
+              pct: totalVotes > 0 ? (votes / totalVotes) * 100 : 0,
+            };
+          })
+          .sort((a, b) => b.votes - a.votes);
+
+        const leader = shares[0]!;
+        const runnerUp = shares[1]!;
+        const stateKey = `state-${state.toLowerCase().replace(/\s+/g, '-')}`;
+        const geom = NIGERIA_STATE_GEOMETRIES[stateKey];
+
+        return {
+          id: stateKey,
+          name: state,
+          zone: geom?.zone ?? 'Federation Zone',
+          code: geom?.code ?? state.substring(0, 3).toUpperCase(),
+          lgaCount: entry.lgaCount,
+          totalPus: entry.totalPus,
+          baseCollated: entry.baseCollated,
+          totalVotes,
+          reportingPct:
+            entry.totalPus > 0
+              ? Number(Math.min(100, (entry.baseCollated / entry.totalPus) * 100).toFixed(0))
+              : 0,
+          leadingParty: leader.party,
+          leadingCandidate: candidateNames[leader.party] ?? leader.party,
+          leadingPct: leader.pct.toFixed(1),
+          margin: (leader.pct - runnerUp.pct).toFixed(1),
+          shares,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [lgaHeatmapData]);
 
   const filteredStates = useMemo(() => {
-    if (partyFilter === 'ALL') return stateHeatmapData;
-    return stateHeatmapData.filter((s) => s.leadingParty === partyFilter);
-  }, [stateHeatmapData, partyFilter]);
+    let list = stateHeatmapData;
+    if (partyFilter !== 'ALL') {
+      list = list.filter((s) => s.leadingParty === partyFilter);
+    }
+    if (searchQuery.trim().length > 0) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter((s) => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q));
+    }
+    return list;
+  }, [stateHeatmapData, partyFilter, searchQuery]);
+
+  // Geographic SVG Map State
+  const [selectedMapLgaId, setSelectedMapLgaId] = useState<string>('lga-ikeja');
+  const [selectedMapStateId, setSelectedMapStateId] = useState<string>('state-lagos');
+  const [mapHeatMode, setMapHeatMode] = useState<'party' | 'density'>('party');
+  const [activeLgaState, setActiveLgaState] = useState<string>('Lagos');
+
+  const effectiveLgaState = filterState ?? activeLgaState ?? 'Lagos';
+
+  const filteredLgas = useMemo(() => {
+    let list = lgaHeatmapData;
+    const targetState = (filterState || activeLgaState || 'Lagos').toLowerCase();
+    list = list.filter((l) => (l.state || '').toLowerCase() === targetState);
+    if (partyFilter !== 'ALL') {
+      list = list.filter((l) => l.leadingParty === partyFilter);
+    }
+    if (searchQuery.trim().length > 0) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter((l) => (l.name || '').toLowerCase().includes(q) || (l.state || '').toLowerCase().includes(q));
+    }
+    return list;
+  }, [lgaHeatmapData, filterState, activeLgaState, partyFilter, searchQuery]);
 
   const totalCollatedAcrossLgas = useMemo(() => {
     return lgaHeatmapData.reduce((acc, l) => acc + l.baseCollated, 0);
@@ -883,16 +805,9 @@ export default function ResultsScreen() {
     return [...new Set(lgaHeatmapData.map((l) => l.state))];
   }, [lgaHeatmapData]);
 
-  // Geographic SVG Map State
-  const [selectedMapLgaId, setSelectedMapLgaId] = useState<string>('lga-ikeja');
-  const [selectedMapStateId, setSelectedMapStateId] = useState<string>('state-lagos');
-  const [mapHeatMode, setMapHeatMode] = useState<'party' | 'density'>('party');
-  const [activeLgaState, setActiveLgaState] = useState<string>('Lagos');
-
-  const effectiveLgaState = filterState ?? activeLgaState;
-
   const mapLgas = useMemo(() => {
-    return lgaHeatmapData.filter((l) => l.state.toLowerCase() === effectiveLgaState.toLowerCase());
+    const target = (effectiveLgaState || 'Lagos').toLowerCase();
+    return lgaHeatmapData.filter((l) => (l.state || '').toLowerCase() === target);
   }, [lgaHeatmapData, effectiveLgaState]);
 
   const selectedMapLga = useMemo(() => {
@@ -930,11 +845,12 @@ export default function ResultsScreen() {
     setViewMode('returns');
   }, [impact]);
 
-  const handleDrillToState = useCallback((stateName: string) => {
+  const handleDrillToState = useCallback((stateName?: string) => {
+    if (!stateName) return;
     impact(Haptics.ImpactFeedbackStyle.Light);
     setActiveLgaState(stateName);
     setFilterState(stateName);
-    const firstLga = lgaHeatmapData.find((l) => l.state.toLowerCase() === stateName.toLowerCase());
+    const firstLga = lgaHeatmapData.find((l) => (l.state || '').toLowerCase() === stateName.toLowerCase());
     if (firstLga) setSelectedMapLgaId(firstLga.id);
     setGeoLevel('lga');
   }, [impact, lgaHeatmapData]);
@@ -965,6 +881,7 @@ export default function ResultsScreen() {
             onPress={() => {
               impact(Haptics.ImpactFeedbackStyle.Light);
               handleFocusMapState(st.id);
+              setInspectModalUnit(st);
             }}
             onAction={() => handleDrillToState(st.name)}
             actionIcon="chevron-forward"
@@ -989,13 +906,14 @@ export default function ResultsScreen() {
           onPress={() => {
             impact(Haptics.ImpactFeedbackStyle.Light);
             setSelectedMapLgaId(lga.id);
+            setInspectModalUnit(lga);
           }}
           onAction={() => handleInspectLga(lga.name)}
           actionIcon="arrow-forward"
         />
       );
     },
-    [geoLevel, selectedMapStateId, selectedMapLgaId, colors, impact, handleFocusMapState, handleDrillToState, handleInspectLga]
+    [geoLevel, selectedMapStateId, selectedMapLgaId, colors, impact, handleFocusMapState, handleDrillToState, handleInspectLga, setInspectModalUnit]
   );
 
   return (
@@ -1061,6 +979,7 @@ export default function ResultsScreen() {
                   variant="caption"
                   color={effectiveViewMode === 'returns' ? '#FFFFFF' : 'textSecondary'}
                   fontFamily={effectiveViewMode === 'returns' ? 'bold' : 'medium'}
+                  numberOfLines={1}
                 >
                   PU Returns ({publishedResults.length})
                 </ThemedText>
@@ -1087,6 +1006,7 @@ export default function ResultsScreen() {
                   variant="caption"
                   color={effectiveViewMode === 'heatmap' ? '#FFFFFF' : 'textSecondary'}
                   fontFamily={effectiveViewMode === 'heatmap' ? 'bold' : 'medium'}
+                  numberOfLines={1}
                 >
                   Heat Map ({geoLevel === 'state' ? `${stateHeatmapData.length} States` : `${lgaHeatmapData.length} LGAs`})
                 </ThemedText>
@@ -1314,58 +1234,148 @@ export default function ResultsScreen() {
                   </View>
                 </View>
 
-                {/* State Scoping Selector for LGA View */}
+                {/* Tactical Quick Search & Navigation Bar */}
+                <View style={[styles.tacticalSearchBar, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                  <Ionicons name="search" size={14} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                  <TextInput
+                    value={searchQuery}
+                    onChangeText={(q) => {
+                      setSearchQuery(q);
+                      if (q.trim().length >= 2) {
+                        if (geoLevel === 'state') {
+                          const match = stateHeatmapData.find(
+                            (s) =>
+                              s.name.toLowerCase().includes(q.toLowerCase()) ||
+                              s.code.toLowerCase().includes(q.toLowerCase())
+                          );
+                          if (match) {
+                            setSelectedMapStateId(match.id);
+                            setActiveLgaState(match.name);
+                          }
+                        } else {
+                          const matchLga = mapLgas.find((l) => l.name.toLowerCase().includes(q.toLowerCase()));
+                          if (matchLga) {
+                            setSelectedMapLgaId(matchLga.id);
+                          } else {
+                            const anyLga = lgaHeatmapData.find((l) => l.name.toLowerCase().includes(q.toLowerCase()));
+                            if (anyLga) {
+                              setActiveLgaState(anyLga.state);
+                              setSelectedMapLgaId(anyLga.id);
+                            }
+                          }
+                        }
+                      }
+                    }}
+                    placeholder={geoLevel === 'state' ? 'Quick jump across 37 states or codes...' : `Quick search ${effectiveLgaState} LGAs...`}
+                    placeholderTextColor={colors.textMuted}
+                    style={[styles.searchInputText, { color: colors.text }]}
+                  />
+                  {searchQuery.length > 0 && (
+                    <Pressable
+                      onPress={() => {
+                        impact(Haptics.ImpactFeedbackStyle.Light);
+                        setSearchQuery('');
+                      }}
+                      hitSlop={8}
+                    >
+                      <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
+                    </Pressable>
+                  )}
+                </View>
+
+                {/* State Scoping Selector for State and LGA View */}
+                <View style={styles.stateSelectorContainer}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.stateSelectorScroll}
+                  >
+                    {statesInView.map((st) => {
+                      const isSelected = effectiveLgaState.toLowerCase() === st.toLowerCase();
+                      const stateObj = stateHeatmapData.find((s) => s.name === st);
+                      return (
+                        <Pressable
+                          key={st}
+                          onPress={() => {
+                            impact(Haptics.ImpactFeedbackStyle.Light);
+                            setActiveLgaState(st);
+                            setFilterState(st);
+                            if (stateObj) setSelectedMapStateId(stateObj.id);
+                            const firstLga = lgaHeatmapData.find((l) => l.state.toLowerCase() === st.toLowerCase());
+                            if (firstLga) setSelectedMapLgaId(firstLga.id);
+                          }}
+                          style={[
+                            styles.stateSelectorChip,
+                            {
+                              backgroundColor: isSelected ? colors.primary : colors.surfaceElevated,
+                              borderColor: isSelected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <ThemedText
+                            variant="caption"
+                            color={isSelected ? '#FFFFFF' : 'text'}
+                            fontFamily={isSelected ? 'bold' : 'medium'}
+                          >
+                            {st}
+                          </ThemedText>
+                        </Pressable>
+                      );
+                    })}
+                    {filterState && (
+                      <Pressable
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          setFilterState(null);
+                        }}
+                        style={[styles.stateSelectorChip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+                      >
+                        <Ionicons name="close-circle" size={13} color={colors.textSecondary} style={{ marginRight: 3 }} />
+                        <ThemedText variant="caption" color="textSecondary" fontFamily="medium">
+                          Reset Filter
+                        </ThemedText>
+                      </Pressable>
+                    )}
+                  </ScrollView>
+                </View>
+
+                {/* Secondary LGA Scoping Selector when in LGA View (Parity with aquilaweb) */}
                 {geoLevel === 'lga' && (
-                  <View style={styles.stateSelectorContainer}>
+                  <View style={[styles.stateSelectorContainer, { marginTop: 4 }]}>
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.stateSelectorScroll}
                     >
-                      {statesInView.map((st) => {
-                        const isSelected = effectiveLgaState.toLowerCase() === st.toLowerCase();
+                      {mapLgas.map((lga) => {
+                        const isSel = selectedMapLgaId === lga.id;
+                        const pCol = PARTY_COLORS[lga.leadingParty] ?? colors.primary;
                         return (
                           <Pressable
-                            key={st}
+                            key={lga.id}
                             onPress={() => {
                               impact(Haptics.ImpactFeedbackStyle.Light);
-                              setActiveLgaState(st);
-                              setFilterState(st);
-                              const firstLga = lgaHeatmapData.find((l) => l.state.toLowerCase() === st.toLowerCase());
-                              if (firstLga) setSelectedMapLgaId(firstLga.id);
+                              setSelectedMapLgaId(lga.id);
+                              setInspectModalUnit(lga);
                             }}
                             style={[
                               styles.stateSelectorChip,
                               {
-                                backgroundColor: isSelected ? colors.primary : colors.surfaceElevated,
-                                borderColor: isSelected ? colors.primary : colors.border,
+                                backgroundColor: isSel ? pCol + '25' : colors.surfaceElevated,
+                                borderColor: isSel ? pCol : colors.border,
                               },
                             ]}
                           >
                             <ThemedText
                               variant="caption"
-                              color={isSelected ? '#FFFFFF' : 'text'}
-                              fontFamily={isSelected ? 'bold' : 'medium'}
+                              color={isSel ? pCol : 'text'}
+                              fontFamily={isSel ? 'bold' : 'medium'}
                             >
-                              {st}
+                              {lga.name.replace(/\s+LGA$/i, '')} ({lga.leadingParty} {lga.leadingPct}%)
                             </ThemedText>
                           </Pressable>
                         );
                       })}
-                      {filterState && (
-                        <Pressable
-                          onPress={() => {
-                            impact(Haptics.ImpactFeedbackStyle.Light);
-                            setFilterState(null);
-                          }}
-                          style={[styles.stateSelectorChip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
-                        >
-                          <Ionicons name="close-circle" size={13} color={colors.textSecondary} style={{ marginRight: 3 }} />
-                          <ThemedText variant="caption" color="textSecondary" fontFamily="medium">
-                            Clear Filter
-                          </ThemedText>
-                        </Pressable>
-                      )}
                     </ScrollView>
                   </View>
                 )}
@@ -1422,218 +1432,277 @@ export default function ResultsScreen() {
                     />
                   </View>
 
+                  {/* Top Canvas Telemetry Strip (Parity with aquilaweb) */}
+                  <View style={styles.telemetryStrip}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                      <View style={[styles.liveDot, { backgroundColor: colors.primary }]} />
+                      <ThemedText variant="caption" color="#34D399" fontFamily="bold" numberOfLines={1}>
+                        {geoLevel === 'state' ? '37 HUBS' : `${effectiveLgaState.toUpperCase()} LGAS`}
+                      </ThemedText>
+                      <ThemedText variant="caption" color="textMuted">•</ThemedText>
+                      <ThemedText variant="caption" color="#A3E6C2" numberOfLines={1}>
+                        {mapHeatMode === 'party' ? 'Lead Party' : 'Progress'}
+                      </ThemedText>
+                    </View>
+                    <ThemedText variant="caption" color="#34D39999" fontFamily="medium" style={{ flexShrink: 0, paddingLeft: 8 }}>
+                      WGS84
+                    </ThemedText>
+                  </View>
+
                   {/* SVG Canvas */}
                   <View style={styles.svgWrapper}>
-                    <Svg width="100%" height={240} viewBox="0 0 380 250">
-                      {/* Background Water / Atlantic Ocean */}
-                      <Path
-                        d="M 0 215 Q 180 200 380 218 L 380 250 L 0 250 Z"
-                        fill="#0284C722"
-                      />
-                      <SvgText x={190} y={242} fill="#38BDF866" fontSize="9" fontWeight="bold" textAnchor="middle">
-                        GULF OF GUINEA · ATLANTIC OCEAN
-                      </SvgText>
-
-                      {/* Tactical Grid Crosshairs */}
-                      <Path d="M 0 60 L 380 60" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
-                      <Path d="M 0 120 L 380 120" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
-                      <Path d="M 0 180 L 380 180" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
-                      <Path d="M 120 0 L 120 250" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
-                      <Path d="M 240 0 L 240 250" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
-
+                    <Svg
+                      width="100%"
+                      height={270}
+                      viewBox={
+                        geoLevel === 'state'
+                          ? NIGERIA_MAP_VIEWBOX
+                          : mapLgas.length <= 6 && mapLgas.every((l) => LGA_MAP_POLYGONS[l.id])
+                          ? '0 0 380 250'
+                          : '0 0 680 460'
+                      }
+                    >
                       {geoLevel === 'lga' ? (
                         <G key="lga-layer">
-                          {/* LGA Polygons for Current Active State */}
-                          {mapLgas.map((lga) => {
-                            const poly = LGA_MAP_POLYGONS[lga.id];
-                            if (!poly) return null;
-                            const isSelected = selectedMapLgaId === lga.id;
-                            const fillColor = getLgaFillColor(lga);
+                          {mapLgas.length <= 6 && mapLgas.every((l) => LGA_MAP_POLYGONS[l.id]) ? (
+                            /* Custom LGA Polygons */
+                            mapLgas.map((lga) => {
+                              const poly = LGA_MAP_POLYGONS[lga.id];
+                              if (!poly) return null;
+                              const isSelected = selectedMapLgaId === lga.id;
+                              const fillColor = getLgaFillColor(lga);
 
-                            return (
-                              <G
-                                key={lga.id}
-                                onPress={() => {
-                                  impact(Haptics.ImpactFeedbackStyle.Light);
-                                  setSelectedMapLgaId(lga.id);
-                                }}
-                              >
-                                {isSelected && (
+                              return (
+                                <G
+                                  key={lga.id}
+                                  onPress={() => {
+                                    impact(Haptics.ImpactFeedbackStyle.Light);
+                                    setSelectedMapLgaId(lga.id);
+                                  }}
+                                >
+                                  {isSelected && (
+                                    <Path
+                                      d={poly.path}
+                                      fill="none"
+                                      stroke={colors.primaryLight}
+                                      strokeWidth={5}
+                                      strokeOpacity={0.6}
+                                    />
+                                  )}
                                   <Path
                                     d={poly.path}
-                                    fill="none"
-                                    stroke={colors.primaryLight}
-                                    strokeWidth={5}
-                                    strokeOpacity={0.6}
+                                    fill={fillColor}
+                                    fillOpacity={isSelected ? 0.95 : 0.78}
+                                    stroke={isSelected ? '#FFFFFF' : '#070C09'}
+                                    strokeWidth={isSelected ? 2.5 : 1.5}
                                   />
-                                )}
-                                <Path
-                                  d={poly.path}
-                                  fill={fillColor}
-                                  fillOpacity={isSelected ? 0.95 : 0.78}
-                                  stroke={isSelected ? '#FFFFFF' : '#070C09'}
-                                  strokeWidth={isSelected ? 2.5 : 1.5}
-                                />
-                                {/* Contrast Badge Plate behind text for crisp readability */}
-                                <Rect
-                                  x={poly.labelX - 44}
-                                  y={poly.labelY - 14}
-                                  width={88}
-                                  height={28}
-                                  rx={5}
-                                  fill="#040B06DD"
-                                  stroke={isSelected ? '#FDE047' : '#FFFFFF25'}
-                                  strokeWidth={isSelected ? 1.5 : 0.8}
-                                />
-                                <SvgText
-                                  x={poly.labelX}
-                                  y={poly.labelY - 2}
-                                  fill="#FFFFFF"
-                                  fontSize="10"
-                                  fontWeight="bold"
-                                  textAnchor="middle"
-                                >
-                                  {poly.label}
-                                </SvgText>
-                                <SvgText
-                                  x={poly.labelX}
-                                  y={poly.labelY + 9}
-                                  fill={isSelected ? '#FDE047' : '#FFFFFFCC'}
-                                  fontSize="8"
-                                  fontWeight="bold"
-                                  textAnchor="middle"
-                                >
-                                  {mapHeatMode === 'party' ? `${lga.leadingParty} (${lga.leadingPct}%)` : `${lga.reportingPct}% PUs`}
-                                </SvgText>
-                                {isSelected && (
-                                  <>
-                                    <Circle cx={poly.labelX} cy={poly.labelY - 19} r={4.5} fill="#FFFFFF" />
-                                    <Circle cx={poly.labelX} cy={poly.labelY - 19} r={8.5} stroke="#FFFFFF88" strokeWidth={1.5} fill="none" />
-                                  </>
-                                )}
-                              </G>
-                            );
-                          })}
+                                  <Rect
+                                    x={poly.labelX - 44}
+                                    y={poly.labelY - 14}
+                                    width={88}
+                                    height={28}
+                                    rx={5}
+                                    fill="#040B06DD"
+                                    stroke={isSelected ? '#FDE047' : '#FFFFFF25'}
+                                    strokeWidth={isSelected ? 1.5 : 0.8}
+                                  />
+                                  <SvgText
+                                    x={poly.labelX}
+                                    y={poly.labelY - 2}
+                                    fill="#FFFFFF"
+                                    fontSize="10"
+                                    fontWeight="bold"
+                                    textAnchor="middle"
+                                  >
+                                    {poly.label}
+                                  </SvgText>
+                                  <SvgText
+                                    x={poly.labelX}
+                                    y={poly.labelY + 9}
+                                    fill={isSelected ? '#FDE047' : '#FFFFFFCC'}
+                                    fontSize="8"
+                                    fontWeight="bold"
+                                    textAnchor="middle"
+                                  >
+                                    {mapHeatMode === 'party' ? `${lga.leadingParty} (${lga.leadingPct}%)` : `${lga.reportingPct}% PUs`}
+                                  </SvgText>
+                                  {isSelected && (
+                                    <>
+                                      <Circle cx={poly.labelX} cy={poly.labelY - 19} r={4.5} fill="#FFFFFF" />
+                                      <Circle cx={poly.labelX} cy={poly.labelY - 19} r={8.5} stroke="#FFFFFF88" strokeWidth={1.5} fill="none" />
+                                    </>
+                                  )}
+                                </G>
+                              );
+                            })
+                          ) : (
+                            /* Dynamic Tactical District Radar Matrix for Canonical INEC LGAs (parity with aquilaweb) */
+                            <G key="district-matrix">
+                              {(() => {
+                                const total = mapLgas.length;
+                                let cols = 3;
+                                if (total > 28) cols = 6;
+                                else if (total > 20) cols = 5;
+                                else if (total > 12) cols = 4;
+                                else if (total > 6) cols = 3;
+                                else cols = 2;
+
+                                const rows = Math.ceil(total / cols);
+                                const availW = 620;
+                                const availH = 390;
+                                const cellGapX = cols > 4 ? 6 : 8;
+                                const cellGapY = rows > 4 ? 6 : 8;
+                                const cellW = (availW - (cols - 1) * cellGapX) / cols;
+                                const cellH = Math.min(rows > 4 ? 44 : 58, (availH - (rows - 1) * cellGapY) / rows);
+                                const startLeft = 30;
+                                const startTop = 35;
+
+                                return mapLgas.map((lga, idx) => {
+                                  const row = Math.floor(idx / cols);
+                                  const col = idx % cols;
+                                  const startX = startLeft + col * (cellW + cellGapX);
+                                  const startY = startTop + row * (cellH + cellGapY);
+                                  const isSelected = selectedMapLgaId === lga.id;
+                                  const fillColor = getLgaFillColor(lga);
+                                  const displayName = cols >= 5 ? lga.name.replace(/\s+LGA$/i, '') : lga.name;
+
+                                  return (
+                                    <G
+                                      key={lga.id}
+                                      onPress={() => {
+                                        impact(Haptics.ImpactFeedbackStyle.Light);
+                                        setSelectedMapLgaId(lga.id);
+                                      }}
+                                    >
+                                      <Rect
+                                        x={startX}
+                                        y={startY}
+                                        width={cellW}
+                                        height={cellH}
+                                        rx={cols > 4 ? 6 : 8}
+                                        fill={fillColor}
+                                        fillOpacity={isSelected ? 0.95 : 0.75}
+                                        stroke={isSelected ? '#34D399' : '#1C2E24'}
+                                        strokeWidth={isSelected ? 2.5 : 1.2}
+                                      />
+                                      {isSelected && (
+                                        <Rect
+                                          x={startX - 2}
+                                          y={startY - 2}
+                                          width={cellW + 4}
+                                          height={cellH + 4}
+                                          rx={cols > 4 ? 8 : 10}
+                                          fill="none"
+                                          stroke="#FDE047"
+                                          strokeWidth={1.5}
+                                          strokeDasharray="4,2"
+                                        />
+                                      )}
+                                      <SvgText
+                                        x={startX + cellW / 2}
+                                        y={startY + (cellH > 48 ? 19 : 16)}
+                                        fill="#FFFFFF"
+                                        fontSize={cols >= 5 ? 8.5 : 10}
+                                        fontWeight="bold"
+                                        textAnchor="middle"
+                                      >
+                                        {displayName}
+                                      </SvgText>
+                                      <SvgText
+                                        x={startX + cellW / 2}
+                                        y={startY + (cellH > 48 ? 34 : 28)}
+                                        fill={isSelected ? '#FDE047' : '#FFFFFFDD'}
+                                        fontSize={cols >= 5 ? 7.5 : 8.5}
+                                        fontWeight="bold"
+                                        textAnchor="middle"
+                                      >
+                                        {mapHeatMode === 'party'
+                                          ? `${lga.leadingParty} · ${lga.leadingPct}%`
+                                          : `${lga.reportingPct}% Collated`}
+                                      </SvgText>
+                                      {cellH > 48 && (
+                                        <SvgText
+                                          x={startX + cellW / 2}
+                                          y={startY + 47}
+                                          fill="#FFFFFF99"
+                                          fontSize="7.5"
+                                          textAnchor="middle"
+                                        >
+                                          {lga.baseCollated} / {lga.totalPus} PUs
+                                        </SvgText>
+                                      )}
+                                    </G>
+                                  );
+                                });
+                              })()}
+                            </G>
+                          )}
                         </G>
                       ) : (
                         <G key="state-layer">
-                          {/* Nigeria Land Boundary Contour Silhouette */}
+                          {/* Atlantic Ocean Backdrop */}
                           <Path
-                            d="M 52 206 L 40 165 L 38 120 L 50 82 L 85 52 L 138 35 L 180 38 L 240 32 L 270 26 L 336 48 L 348 85 L 324 135 L 310 170 L 265 202 L 236 222 L 182 221 L 140 216 L 80 208 Z"
-                            fill="#0B1A12"
-                            stroke="#19482D"
-                            strokeWidth={1.5}
-                            strokeDasharray="4,2"
+                            d="M 0 510 Q 240 490 680 515 L 680 560 L 0 560 Z"
+                            fill="#0284C720"
                           />
-
-                          {/* Ambient Geopolitical Background Zones */}
-                          {/* North West Ambient */}
-                          <Path
-                            d="M 85 52 L 180 38 L 180 62 L 148 76 L 95 95 Z"
-                            fill="#0E281B"
-                            stroke="#1B422D"
-                            strokeWidth={1}
-                            opacity={0.65}
-                          />
-                          <SvgText x={126} y={64} fill="#34D39944" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            NW ZONE
+                          <SvgText x={340} y={545} fill="#38BDF855" fontSize="11" fontWeight="bold" textAnchor="middle">
+                            GULF OF GUINEA · ATLANTIC OCEAN
                           </SvgText>
 
-                          {/* North East Ambient */}
-                          <Path
-                            d="M 240 32 L 270 26 L 268 42 L 264 92 L 210 122 Z"
-                            fill="#0E281B"
-                            stroke="#1B422D"
-                            strokeWidth={1}
-                            opacity={0.65}
-                          />
-                          <SvgText x={242} y={72} fill="#34D39944" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            NE ZONE
-                          </SvgText>
+                          {/* Tactical Coordinate Grid Crosshairs */}
+                          <Path d="M 0 140 L 680 140" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
+                          <Path d="M 0 280 L 680 280" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
+                          <Path d="M 0 420 L 680 420" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
+                          <Path d="M 220 0 L 220 560" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
+                          <Path d="M 460 0 L 460 560" stroke="#FFFFFF08" strokeWidth="1" strokeDasharray="4,4" />
 
-                          {/* North Central / Middle Belt Ambient */}
+                          {/* Authentic Rivers Niger & Benue Confluence */}
                           <Path
-                            d="M 95 95 L 148 76 L 168 122 L 102 138 Z"
-                            fill="#0E281B"
-                            stroke="#1B422D"
-                            strokeWidth={1}
-                            opacity={0.65}
-                          />
-                          <SvgText x={128} y={114} fill="#34D39944" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            NC ZONE
-                          </SvgText>
-
-                          {/* Benue / Plateau Ambient */}
-                          <Path
-                            d="M 206 150 L 264 92 L 310 135 L 252 152 Z"
-                            fill="#0E281B"
-                            stroke="#1B422D"
-                            strokeWidth={1}
-                            opacity={0.65}
-                          />
-
-                          {/* South South Ambient */}
-                          <Path
-                            d="M 115 180 L 184 192 L 182 221 L 122 206 Z"
-                            fill="#0E281B"
-                            stroke="#1B422D"
-                            strokeWidth={1}
-                            opacity={0.65}
-                          />
-                          <SvgText x={148} y={204} fill="#34D39944" fontSize="8" fontWeight="bold" textAnchor="middle">
-                            SS ZONE
-                          </SvgText>
-
-                          {/* Iconic River Niger & River Benue Confluence */}
-                          <Path
-                            d="M 68 85 Q 115 110 172 144"
+                            d={NIGERIA_RIVERS.riverNiger}
                             stroke="#38BDF866"
-                            strokeWidth={2}
-                            fill="none"
-                          />
-                          <Path
-                            d="M 312 125 Q 245 138 172 144"
-                            stroke="#38BDF866"
-                            strokeWidth={2}
-                            fill="none"
-                          />
-                          <Path
-                            d="M 172 144 Q 182 178 190 220"
-                            stroke="#38BDF888"
                             strokeWidth={2.5}
                             fill="none"
                           />
-                          <SvgText x={112} y={112} fill="#38BDF855" fontSize="7" fontWeight="bold">
+                          <Path
+                            d={NIGERIA_RIVERS.riverBenue}
+                            stroke="#38BDF866"
+                            strokeWidth={2.5}
+                            fill="none"
+                          />
+                          <Path
+                            d={NIGERIA_RIVERS.lowerNiger}
+                            stroke="#38BDF888"
+                            strokeWidth={3}
+                            fill="none"
+                          />
+                          <Circle
+                            cx={NIGERIA_RIVERS.confluence.x}
+                            cy={NIGERIA_RIVERS.confluence.y}
+                            r={3.5}
+                            fill="#38BDF8"
+                          />
+                          <SvgText x={145} y={255} fill="#38BDF855" fontSize="9" fontWeight="bold">
                             R. Niger
                           </SvgText>
-                          <SvgText x={245} y={135} fill="#38BDF855" fontSize="7" fontWeight="bold">
+                          <SvgText x={410} y={315} fill="#38BDF855" fontSize="9" fontWeight="bold">
                             R. Benue
                           </SvgText>
-                          <Circle cx={172} cy={144} r={2.5} fill="#38BDF8" />
 
-                          {/* Tactical Compass Telemetry */}
-                          <SvgText x={358} y={18} fill="#34D399" fontSize="9" fontWeight="bold" textAnchor="middle">
+                          {/* Telemetry Headers */}
+                          <SvgText x={340} y={24} fill="#34D39944" fontSize="10" fontWeight="bold" textAnchor="middle" letterSpacing="2">
+                            FEDERAL REPUBLIC OF NIGERIA · 37 STATE HUBS
+                          </SvgText>
+                          <SvgText x={640} y={28} fill="#34D399" fontSize="10" fontWeight="bold" textAnchor="middle">
                             ▲ N
                           </SvgText>
-                          <SvgText x={358} y={28} fill="#34D39966" fontSize="7" textAnchor="middle">
+                          <SvgText x={640} y={40} fill="#34D39966" fontSize="8" textAnchor="middle">
                             09°04'N
                           </SvgText>
 
-                          {/* Border Labels */}
-                          <SvgText x={210} y={14} fill="#34D39944" fontSize="8" fontWeight="bold" textAnchor="middle" letterSpacing="2">
-                            NIGERIA REPUBLIC
-                          </SvgText>
-                          <SvgText x={16} y={115} fill="#34D39944" fontSize="7" fontWeight="bold" textAnchor="middle">
-                            BENIN
-                          </SvgText>
-                          <SvgText x={358} y={115} fill="#34D39944" fontSize="7" fontWeight="bold" textAnchor="middle">
-                            CAMEROON
-                          </SvgText>
-
-                          {/* Reporting State Polygons */}
+                          {/* Complete Authentic 37 States + FCT Polygons */}
                           {stateHeatmapData.map((st) => {
-                            const poly = STATE_MAP_POLYGONS[st.id];
-                            if (!poly) return null;
+                            const geom = NIGERIA_STATE_GEOMETRIES[st.id];
+                            if (!geom) return null;
                             const isSelected = selectedMapStateId === st.id;
                             const fill = getLgaFillColor(st);
 
@@ -1643,59 +1712,46 @@ export default function ResultsScreen() {
                                 onPress={() => {
                                   impact(Haptics.ImpactFeedbackStyle.Light);
                                   setSelectedMapStateId(st.id);
+                                  setActiveLgaState(st.name);
                                 }}
                               >
                                 {isSelected && (
                                   <Path
-                                    d={poly.path}
+                                    d={geom.path}
                                     fill="none"
-                                    stroke={colors.primaryLight}
-                                    strokeWidth={5}
-                                    strokeOpacity={0.6}
+                                    stroke="#34D399"
+                                    strokeWidth={6}
+                                    strokeOpacity={0.65}
                                   />
                                 )}
                                 <Path
-                                  d={poly.path}
+                                  d={geom.path}
                                   fill={fill}
-                                  fillOpacity={isSelected ? 0.95 : 0.78}
-                                  stroke={isSelected ? '#FFFFFF' : '#070C09'}
-                                  strokeWidth={isSelected ? 2.5 : 1.2}
+                                  fillOpacity={isSelected ? 0.96 : 0.82}
+                                  stroke={isSelected ? '#FFFFFF' : '#040B06'}
+                                  strokeWidth={isSelected ? 2.5 : 1.1}
+                                />
+                                {/* State Code Pill Plate */}
+                                <Rect
+                                  x={geom.labelX - 16}
+                                  y={geom.labelY - 9}
+                                  width={32}
+                                  height={18}
+                                  rx={4}
+                                  fill="#040B06DD"
+                                  stroke={isSelected ? '#FDE047' : '#FFFFFF20'}
+                                  strokeWidth={isSelected ? 1.5 : 0.6}
                                 />
                                 <SvgText
-                                  x={poly.labelX}
-                                  y={poly.labelY - 4}
-                                  fill="#FFFFFF"
-                                  fontSize="10"
+                                  x={geom.labelX}
+                                  y={geom.labelY + 4}
+                                  fill={isSelected ? '#FDE047' : '#FFFFFF'}
+                                  fontSize="9"
                                   fontWeight="bold"
                                   textAnchor="middle"
                                 >
-                                  {poly.code} · {poly.name}
+                                  {geom.code}
                                 </SvgText>
-                                <SvgText
-                                  x={poly.labelX}
-                                  y={poly.labelY + 9}
-                                  fill={isSelected ? '#FDE047' : '#FFFFFFCC'}
-                                  fontSize="8"
-                                  fontWeight="bold"
-                                  textAnchor="middle"
-                                >
-                                  {mapHeatMode === 'party'
-                                    ? `${st.leadingParty} (${st.leadingPct}%)`
-                                    : `${st.reportingPct}%`}
-                                </SvgText>
-                                {isSelected && (
-                                  <>
-                                    <Circle cx={poly.labelX} cy={poly.labelY - 14} r={4.5} fill="#FFFFFF" />
-                                    <Circle
-                                      cx={poly.labelX}
-                                      cy={poly.labelY - 14}
-                                      r={8.5}
-                                      stroke="#FFFFFF99"
-                                      strokeWidth={1.5}
-                                      fill="none"
-                                    />
-                                  </>
-                                )}
                               </G>
                             );
                           })}
@@ -1749,7 +1805,15 @@ export default function ResultsScreen() {
                   {/* Integrated Inspection HUD directly in Map Footer */}
                   {geoLevel === 'state' && selectedMapState && (
                     <View style={[styles.integratedHud, { backgroundColor: '#0D2619', borderColor: '#1B4D33' }]}>
-                      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                      <Pressable
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          setInspectModalUnit(selectedMapState);
+                        }}
+                        style={{ flex: 1, minWidth: 0, gap: 2 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Inspect telemetry for ${selectedMapState.name}`}
+                      >
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <View style={styles.liveDot} />
                           <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
@@ -1776,7 +1840,7 @@ export default function ResultsScreen() {
                         <ThemedText variant="label" color="#A3E6C2">
                           {selectedMapState.leadingCandidate} · {selectedMapState.baseCollated.toLocaleString()} of {selectedMapState.totalPus.toLocaleString()} PUs ({selectedMapState.reportingPct}%)
                         </ThemedText>
-                      </View>
+                      </Pressable>
                       <Button
                         label="Drill LGAs"
                         size="sm"
@@ -1792,7 +1856,15 @@ export default function ResultsScreen() {
 
                   {geoLevel === 'lga' && selectedMapLga && (
                     <View style={[styles.integratedHud, { backgroundColor: '#0D2619', borderColor: '#1B4D33' }]}>
-                      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                      <Pressable
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          setInspectModalUnit(selectedMapLga);
+                        }}
+                        style={{ flex: 1, minWidth: 0, gap: 2 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Inspect telemetry for ${selectedMapLga.name}`}
+                      >
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <View style={styles.liveDot} />
                           <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
@@ -1819,7 +1891,7 @@ export default function ResultsScreen() {
                         <ThemedText variant="label" color="#A3E6C2">
                           {selectedMapLga.leadingCandidate} · {selectedMapLga.baseCollated} of {selectedMapLga.totalPus} PUs ({selectedMapLga.reportingPct}%)
                         </ThemedText>
-                      </View>
+                      </Pressable>
                       <Button
                         label="Inspect PUs"
                         size="sm"
@@ -1890,6 +1962,193 @@ export default function ResultsScreen() {
             renderItem={renderGeoItem}
           />
         )}
+
+        {/* Tactical Unit Collation Inspection Modal (Full Interactive Telemetry - Parity with aquilaweb) */}
+        <Modal
+          visible={!!inspectModalUnit}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setInspectModalUnit(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setInspectModalUnit(null)} />
+            <View style={[styles.inspectModalContent, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              {inspectModalUnit && (
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.lg }}>
+                  {/* Header */}
+                  <View style={[styles.inspectModalHeader, { borderBottomColor: colors.borderSubtle }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flex: 1, minWidth: 0 }}>
+                      <View style={[styles.modalIconBadge, { backgroundColor: colors.primary + '20' }]}>
+                        <Ionicons
+                          name={'zone' in inspectModalUnit ? 'globe-outline' : 'location-outline'}
+                          size={18}
+                          color={colors.primary}
+                        />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <ThemedText variant="title" color="text" fontFamily="bold" numberOfLines={1}>
+                            {inspectModalUnit.name}
+                          </ThemedText>
+                          <View style={[styles.codeBadge, { backgroundColor: colors.surface }]}>
+                            <ThemedText variant="caption" color="textSecondary" fontFamily="bold">
+                              {'zone' in inspectModalUnit ? inspectModalUnit.code : inspectModalUnit.state}
+                            </ThemedText>
+                          </View>
+                        </View>
+                        <ThemedText variant="caption" color="textSecondary">
+                          {'zone' in inspectModalUnit
+                            ? `${inspectModalUnit.zone} · National Administrative Hub`
+                            : `${inspectModalUnit.state} State Electoral District`}
+                        </ThemedText>
+                      </View>
+                    </View>
+                    <Pressable
+                      onPress={() => setInspectModalUnit(null)}
+                      hitSlop={10}
+                      style={[styles.modalCloseBtn, { backgroundColor: colors.surface }]}
+                      accessibilityLabel="Close unit inspection modal"
+                    >
+                      <Ionicons name="close" size={18} color={colors.textSecondary} />
+                    </Pressable>
+                  </View>
+
+                  {/* Collation Progress Strip */}
+                  <View style={[styles.modalCollationCard, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <ThemedText variant="caption" color="textSecondary" fontFamily="bold">
+                        POLLING UNIT COLLATION
+                      </ThemedText>
+                      <ThemedText variant="body" color="primary" fontFamily="bold">
+                        {inspectModalUnit.reportingPct}% Complete
+                      </ThemedText>
+                    </View>
+                    <View style={[styles.modalProgressTrack, { backgroundColor: colors.borderSubtle }]}>
+                      <View
+                        style={[
+                          styles.modalProgressFill,
+                          {
+                            width: `${Math.min(100, inspectModalUnit.reportingPct)}%` as `${number}%`,
+                            backgroundColor: colors.primary,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <ThemedText variant="caption" color="textSecondary">
+                        {inspectModalUnit.baseCollated.toLocaleString()} of {inspectModalUnit.totalPus.toLocaleString()} PUs Collated
+                      </ThemedText>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
+                        <ThemedText variant="caption" color="primary" fontFamily="bold">
+                          Verified Returns
+                        </ThemedText>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Projected Leader Card */}
+                  {(() => {
+                    const partyCol = PARTY_COLORS[inspectModalUnit.leadingParty] ?? colors.primary;
+                    return (
+                      <View style={[styles.modalLeaderCard, { backgroundColor: partyCol + '15', borderColor: partyCol + '44' }]}>
+                        <View style={{ flex: 1 }}>
+                          <ThemedText variant="caption" color="textSecondary" fontFamily="bold">
+                            PROJECTED LEADER
+                          </ThemedText>
+                          <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: 2 }}>
+                            {inspectModalUnit.leadingCandidate}
+                          </ThemedText>
+                          <ThemedText variant="caption" color="textSecondary">
+                            Margin of Lead: <ThemedText variant="caption" color="text" fontFamily="bold">+{inspectModalUnit.margin}%</ThemedText>
+                          </ThemedText>
+                        </View>
+                        <View style={[styles.modalLeaderBadge, { backgroundColor: partyCol + '25', borderColor: partyCol }]}>
+                          <ThemedText variant="label" style={{ color: partyCol }} fontFamily="bold">
+                            {inspectModalUnit.leadingParty} ({inspectModalUnit.leadingPct}%)
+                          </ThemedText>
+                        </View>
+                      </View>
+                    );
+                  })()}
+
+                  {/* Candidate & Party Distribution */}
+                  <View style={{ marginTop: spacing.md, gap: spacing.xs }}>
+                    <ThemedText variant="label" color="textSecondary" fontFamily="bold">
+                      PARTY VOTE SHARES ({inspectModalUnit.totalVotes.toLocaleString()} TOTAL VOTES)
+                    </ThemedText>
+                    {inspectModalUnit.shares.map((share) => {
+                      const partyColor = PARTY_COLORS[share.party] ?? colors.text;
+                      return (
+                        <View
+                          key={share.party}
+                          style={[styles.modalShareRow, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}
+                        >
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <View style={[styles.partyDot, { backgroundColor: partyColor }]} />
+                              <ThemedText variant="body" color="text" fontFamily="bold">
+                                {share.party}
+                              </ThemedText>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <ThemedText variant="caption" color="textSecondary" fontFamily="medium">
+                                {share.votes.toLocaleString()} votes
+                              </ThemedText>
+                              <ThemedText variant="body" style={{ color: partyColor }} fontFamily="bold">
+                                {share.pct.toFixed(1)}%
+                              </ThemedText>
+                            </View>
+                          </View>
+                          <View style={[styles.modalShareTrack, { backgroundColor: colors.borderSubtle }]}>
+                            <View
+                              style={[
+                                styles.modalShareFill,
+                                {
+                                  width: `${Math.min(100, share.pct)}%` as `${number}%`,
+                                  backgroundColor: partyColor,
+                                },
+                              ]}
+                            />
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  {/* Modal Actions */}
+                  <View style={{ marginTop: spacing.md, gap: spacing.xs }}>
+                    {'zone' in inspectModalUnit && (
+                      <Button
+                        label={`Explore ${inspectModalUnit.name} LGAs`}
+                        variant="outline"
+                        leftIcon="map-outline"
+                        onPress={() => {
+                          const unitName = inspectModalUnit.name;
+                          setInspectModalUnit(null);
+                          handleDrillToState(unitName);
+                        }}
+                        fullWidth
+                      />
+                    )}
+                    <Button
+                      label={`Audit Polling Units in ${inspectModalUnit.name}`}
+                      variant="primary"
+                      leftIcon="shield-checkmark-outline"
+                      rightIcon="chevron-forward"
+                      onPress={() => {
+                        const unitName = inspectModalUnit.name;
+                        setInspectModalUnit(null);
+                        handleInspectLga(unitName);
+                      }}
+                      fullWidth
+                    />
+                  </View>
+                </ScrollView>
+              )}
+            </View>
+          </View>
+        </Modal>
       </View>
     </ScreenView>
   );
@@ -1907,7 +2166,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   tabBar: {
     flexDirection: 'row',
@@ -1964,6 +2222,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     marginTop: spacing.xs,
+    gap: spacing.xs,
   },
   itemFooter: {
     flexDirection: 'row',
@@ -1971,6 +2230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.xs,
     paddingTop: spacing.xs,
+    gap: spacing.xs,
   },
   mainViewSwitcher: {
     flexDirection: 'row',
@@ -2255,5 +2515,123 @@ const styles = StyleSheet.create({
   },
   rowActionBtn: {
     padding: 3,
+  },
+  tacticalSearchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  searchInputText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+    padding: 0,
+  },
+  telemetryStrip: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#142D1E',
+    marginBottom: 6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'flex-end',
+  },
+  inspectModalContent: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    maxHeight: '85%',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+  },
+  inspectModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    gap: spacing.xs,
+  },
+  modalIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  codeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+  },
+  modalCollationCard: {
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.sm,
+    gap: 6,
+  },
+  modalProgressTrack: {
+    height: 6,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  modalProgressFill: {
+    height: '100%',
+    borderRadius: radius.full,
+  },
+  modalLeaderCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  modalLeaderBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  modalShareRow: {
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: 4,
+  },
+  partyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+  },
+  modalShareTrack: {
+    height: 4,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  modalShareFill: {
+    height: '100%',
+    borderRadius: radius.full,
   },
 });

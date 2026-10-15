@@ -378,7 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   sevBadge: {
     flexDirection: 'row',
@@ -417,7 +416,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.04)',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   fieldAgentPill: {
     paddingHorizontal: 10,

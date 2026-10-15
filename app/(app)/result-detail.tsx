@@ -334,7 +334,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   statusPill: {
     flexDirection: 'row',
@@ -380,7 +379,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   candMeta: {
     flexDirection: 'row',

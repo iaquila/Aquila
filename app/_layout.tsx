@@ -16,6 +16,7 @@ import { ResultSubmission } from '@/features/auth/store';
 import { Asset } from 'expo-asset';
 import * as ScreenCapture from 'expo-screen-capture';
 import { fontMap } from '@/constants/fonts';
+import { FEATURES } from '@/constants/features';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import {
   ObserveRoot,
@@ -35,7 +36,8 @@ export const unstable_settings = {
 configureObserve();
 
 function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts(fontMap);
+  const [customFontsLoaded, fontError] = useFonts(FEATURES.ENABLE_CUSTOM_FONTS ? fontMap : {});
+  const fontsLoaded = !FEATURES.ENABLE_CUSTOM_FONTS || customFontsLoaded;
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const scheme = useColorScheme() ?? 'light';
   const rootBg = scheme === 'dark' ? '#070C09' : '#F8FAF9';

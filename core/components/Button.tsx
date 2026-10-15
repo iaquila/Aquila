@@ -61,9 +61,9 @@ export function Button({
   const variantStyles: Record<ButtonVariant, ViewStyle> = {
     primary: {
       backgroundColor: colors.primary,
-      ...Platform.select({
+      ...Platform.select<ViewStyle>({
         ios: shadows.md,
-        android: { ...shadows.md, elevation: 4 },
+        android: { elevation: 0 },
       }),
     },
     secondary: { backgroundColor: colors.primaryLight },
@@ -115,6 +115,7 @@ export function Button({
       {...rest}
     >
       <Animated.View
+        collapsable={false}
         style={[
           styles.button,
           { borderRadius: radius.full, minWidth: 0 },
@@ -131,15 +132,16 @@ export function Button({
           {renderIcon(leftIcon, textColor)}
           <ThemedText
             variant="label"
+            fontFamily="bold"
             numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.75}
+            adjustsFontSizeToFit={false}
+            ellipsizeMode="tail"
+            color={textColor}
             style={[
               styles.label,
               {
                 color: textColor,
                 fontSize: size === 'sm' ? (label.length > 13 ? 11 : 12) : size === 'lg' ? 15 : 13.5,
-                lineHeight: size === 'sm' ? 16 : size === 'lg' ? 20 : 18,
                 letterSpacing: size === 'sm' && label.length > 13 ? 0 : 0.2,
               },
             ]}
@@ -159,7 +161,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     minWidth: 0,
-    overflow: 'hidden',
   },
   row: {
     alignItems: 'center',

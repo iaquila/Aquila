@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xs,
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   left: {
     flex: 1,

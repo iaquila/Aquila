@@ -3,7 +3,7 @@ import Colors, { ColorScheme } from '@/constants/colors';
 import { Platform, PixelRatio, Text as RNText, StyleSheet, TextStyle, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ms } from '@/core/utils/ms';
-import { FONT_FAMILY } from '@/constants/fonts';
+import { getFontStyle, FontWeightVariant } from '@/constants/fonts';
 import { typography as typographyTokens } from '@/constants/tokens';
 
 const useScheme = (): ColorScheme => {
@@ -27,7 +27,7 @@ type ThemedTextProps = {
   uppercase?: boolean;
   tracking?: number;
   gradientColors?: readonly [string, string, ...string[]];
-  fontFamily?: 'regular' | 'medium' | 'bold';
+  fontFamily?: FontWeightVariant;
   minFontSize?: number;
   maxFontSize?: number;
 };
@@ -70,7 +70,7 @@ export function ThemedText({
   accessibilityLabel,
   accessibilityRole,
   numberOfLines,
-  ellipsizeMode = 'clip',
+  ellipsizeMode = 'tail',
   onPress,
   uppercase,
   tracking,
@@ -116,18 +116,21 @@ export function ThemedText({
             ? 1.4
             : 1.5;
 
-  const fontFamilyValue =
-    fontFamily === 'bold'
-      ? FONT_FAMILY.bold
-      : fontFamily === 'medium'
-        ? FONT_FAMILY.medium
-        : FONT_FAMILY.regular;
+  const fontStyle = getFontStyle(fontFamily);
+
+  const effectiveAdjustsFontSizeToFit =
+    adjustsFontSizeToFit !== undefined
+      ? adjustsFontSizeToFit
+      : numberOfLines === 1;
+
+  const effectiveMinFontScale =
+    minimumFontScale ?? (effectiveAdjustsFontSizeToFit ? 0.8 : undefined);
 
   const baseStyle: TextStyle = {
     color: textColor,
     fontSize,
-    lineHeight: scaledLineHeight,
-    fontFamily: fontFamilyValue,
+    lineHeight: effectiveAdjustsFontSizeToFit && Platform.OS === 'android' ? undefined : scaledLineHeight,
+    ...fontStyle,
     includeFontPadding: Platform.select({ android: false }),
   };
 
@@ -141,14 +144,6 @@ export function ThemedText({
   } else if (isHeading) {
     baseStyle.letterSpacing = -0.2;
   }
-
-  const effectiveAdjustsFontSizeToFit =
-    adjustsFontSizeToFit !== undefined
-      ? adjustsFontSizeToFit
-      : numberOfLines === 1;
-
-  const effectiveMinFontScale =
-    minimumFontScale ?? (effectiveAdjustsFontSizeToFit ? 0.8 : undefined);
 
   if (isGradient && gradientColors) {
     return (

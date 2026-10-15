@@ -54,8 +54,9 @@ export default function PartiesScreen() {
                 variant="caption"
                 color={activeTab === 'candidates' ? '#FFFFFF' : 'textSecondary'}
                 fontFamily={activeTab === 'candidates' ? 'bold' : 'medium'}
+                numberOfLines={1}
               >
-                Candidates & History ({candidates.length})
+                Candidates ({candidates.length})
               </ThemedText>
             </Pressable>
 
@@ -73,8 +74,9 @@ export default function PartiesScreen() {
                 variant="caption"
                 color={activeTab === 'parties' ? '#FFFFFF' : 'textSecondary'}
                 fontFamily={activeTab === 'parties' ? 'bold' : 'medium'}
+                numberOfLines={1}
               >
-                Registered Parties ({parties.length})
+                Parties ({parties.length})
               </ThemedText>
             </Pressable>
           </View>
@@ -120,14 +122,21 @@ export default function PartiesScreen() {
                         HISTORICAL PARTY TRACKER
                       </ThemedText>
                       {cand.partyHistory.map((h, i) => (
-                        <View key={i} style={styles.historyRow}>
-                          <Ionicons name="git-commit-outline" size={14} color={colors.primary} />
-                          <ThemedText variant="caption" color="text" fontFamily="medium" style={{ marginLeft: 6, flex: 1, minWidth: 0, paddingRight: spacing.xs }} accessibilityLabel={`${h.electionYear} ${h.partyAcronym}: ${h.votes.toLocaleString()} votes ${h.percentage}%`}>
-                            {h.electionYear} ({h.partyAcronym}): {h.votes.toLocaleString()} votes ({h.percentage}%)
-                          </ThemedText>
-                          <ThemedText variant="label" color="textSecondary" numberOfLines={1} style={{ flexShrink: 1, textAlign: 'right' }} accessibilityLabel={h.electionName}>
-                            {h.electionName}
-                          </ThemedText>
+                        <View key={i} style={styles.historyItem}>
+                          <View style={styles.historyTopLine}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                              <Ionicons name="git-commit-outline" size={14} color={colors.primary} />
+                              <Badge label={`${h.electionYear} · ${h.partyAcronym}`} color={colors.primary} size="sm" />
+                              <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ flex: 1 }}>
+                                {h.electionName}
+                              </ThemedText>
+                            </View>
+                          </View>
+                          <View style={{ marginLeft: 20, marginTop: 2 }}>
+                            <ThemedText variant="caption" color="text" fontFamily="bold">
+                              {h.votes.toLocaleString()} <ThemedText variant="label" color="textSecondary">votes ({h.percentage}%)</ThemedText>
+                            </ThemedText>
+                          </View>
                         </View>
                       ))}
                     </View>
@@ -258,13 +267,15 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    gap: 4,
+    gap: spacing.xs,
   },
-  historyRow: {
+  historyItem: {
+    paddingVertical: 3,
+  },
+  historyTopLine: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   partyItemRow: {
     flexDirection: 'row',

@@ -364,7 +364,7 @@ export default function ElectionsScreen() {
 
               {/* Major Competing Parties Badges */}
               <View style={[styles.cardFooter, { borderTopColor: colors.border + '50' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0, flexWrap: 'wrap' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
                   {MAJOR_PARTIES.slice(0, election.candidateCount >= 4 ? 4 : 3).map((p) => (
                     <Badge key={p.acronym} label={p.acronym} color={p.bg} size="sm" />
                   ))}
@@ -495,7 +495,6 @@ const styles = StyleSheet.create({
     borderTopWidth: border.thin,
     marginTop: spacing.xs,
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   partyPill: {
     paddingHorizontal: 6,

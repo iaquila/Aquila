@@ -519,7 +519,7 @@ export default function IncidentDetailScreen() {
           <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: 6 }}>
             CASE STATUS ACTION
           </ThemedText>
-          <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             {!isResolved && (
               <Button
                 label={isUnderReview ? 'Reviewing' : 'Start Review'}

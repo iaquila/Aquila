@@ -181,13 +181,21 @@ export function IncidentMarquee({ incidents, style }: Props) {
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.critical + '14', borderColor: colors.critical + '30' },
+        {
+          backgroundColor: scheme === 'dark' ? '#0D1A12' : '#F0FDF4',
+          borderColor: scheme === 'dark' ? '#1E3827' : '#DCFCE7',
+        },
         style,
       ]}
       accessibilityRole="none"
     >
       <View style={[styles.label, { backgroundColor: colors.critical }]}>
-        <ThemedText variant="caption" numberOfLines={1} style={{ color: '#fff', fontWeight: '800', letterSpacing: 0.5 }}>
+        <View style={styles.livePulseDot} />
+        <ThemedText
+          variant="caption"
+          numberOfLines={1}
+          style={{ color: '#FFFFFF', fontWeight: '800', letterSpacing: 0.5, fontSize: 10 }}
+        >
           LIVE
         </ThemedText>
       </View>
@@ -283,25 +291,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     overflow: 'hidden',
     paddingVertical: 4,
-    paddingHorizontal: spacing.xs,
-    gap: spacing.sm,
-    height: 32,
+    paddingHorizontal: spacing.sm,
+    gap: spacing.xs,
+    height: 38,
+    maxHeight: 38,
   },
   label: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.xs,
     flexShrink: 0,
-    zIndex: 1,
+    zIndex: 2,
+  },
+  livePulseDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#FFFFFF',
   },
   track: {
     flex: 1,
-    height: '100%',
+    height: 38,
     overflow: 'hidden',
     justifyContent: 'center',
+    marginLeft: 4,
   },
   tickerRow: {
     position: 'absolute',
@@ -311,6 +330,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'nowrap',
+    height: 38,
   },
   sequenceGroup: {
     flexDirection: 'row',

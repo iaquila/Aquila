@@ -457,8 +457,8 @@ export default function DashboardScreen() {
       </EntranceView>
       )}
 
-      {/* 4. AI Election Projection Engine (Audio Parts 6, 7, 8, 9 - Hidden for Polling Agent per spec) */}
-      {!isPollingAgent && (
+      {/* 4. AI Election Projection Engine (Officers only - Hidden for Field Agent and Polling Agent) */}
+      {isElectionOfficer && (
         <EntranceView delay={200}>
           <Card style={[styles.aiCard, { borderColor: colors.primary }]}>
           <View style={styles.aiHeaderRow}>
@@ -1016,7 +1016,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   orgTagRow: {
     flexDirection: 'row',
@@ -1101,7 +1100,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xs,
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   sectionHeaderLeft: {
     flex: 1,
@@ -1131,7 +1129,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   candLeft: {
     flexDirection: 'row',
@@ -1274,7 +1271,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   puStatusBadge: {
     flexDirection: 'row',
@@ -1292,7 +1288,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
     borderTopWidth: 1,
     gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   puActionBtn: {
     flexDirection: 'row',
