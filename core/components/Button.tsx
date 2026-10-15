@@ -14,9 +14,10 @@ import { DebouncedPressable } from './DebouncedPressable';
 import Colors from '@/constants/colors';
 import { ThemedText } from './ThemedText';
 import { Ionicons } from '@expo/vector-icons';
-import { radius, opacities, border, shadows } from '@/constants/tokens';
+import { radius, opacities, border, shadows, spacing, typography } from '@/constants/tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 type ButtonProps = {
   label: string;
@@ -27,11 +28,23 @@ type ButtonProps = {
   style?: ViewStyle;
   testID?: string;
   accessibilityLabel?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: ButtonSize;
   fullWidth?: boolean;
   leftIcon?: keyof typeof Ionicons.glyphMap;
   rightIcon?: keyof typeof Ionicons.glyphMap;
 } & Omit<PressableProps, 'children'>;
+
+const sizeStyles: Record<ButtonSize, ViewStyle> = {
+  sm: { paddingVertical: spacing['2xs'] + 2, paddingHorizontal: spacing.sm, minHeight: 34 },
+  md: { paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md, minHeight: 44 },
+  lg: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, minHeight: 50 },
+};
+
+const textSizeStyles: Record<ButtonSize, { fontSize: number; letterSpacing: number }> = {
+  sm: { fontSize: typography.label, letterSpacing: 0.2 },
+  md: { fontSize: typography.caption, letterSpacing: 0.25 },
+  lg: { fontSize: typography.body, letterSpacing: 0.3 },
+};
 
 export function Button({
   label,
@@ -51,12 +64,6 @@ export function Button({
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { scale, onPressIn: onScaleIn, onPressOut: onScaleOut } = usePressScale({ toValue: 0.97 });
-
-  const sizeStyles = {
-    sm: { paddingVertical: 6, paddingHorizontal: 6, minHeight: 34 },
-    md: { paddingVertical: 10, paddingHorizontal: 16, minHeight: 46 },
-    lg: { paddingVertical: 13, paddingHorizontal: 20, minHeight: 52 },
-  };
 
   const variantStyles: Record<ButtonVariant, ViewStyle> = {
     primary: {
@@ -131,7 +138,7 @@ export function Button({
         <View style={styles.row}>
           {renderIcon(leftIcon, textColor)}
           <ThemedText
-            variant="label"
+            variant={size === 'sm' ? 'label' : size === 'lg' ? 'body' : 'caption'}
             fontFamily="bold"
             numberOfLines={1}
             adjustsFontSizeToFit={false}
@@ -141,8 +148,8 @@ export function Button({
               styles.label,
               {
                 color: textColor,
-                fontSize: size === 'sm' ? (label.length > 13 ? 11 : 12) : size === 'lg' ? 15 : 13.5,
-                letterSpacing: size === 'sm' && label.length > 13 ? 0 : 0.2,
+                fontSize: textSizeStyles[size].fontSize,
+                letterSpacing: textSizeStyles[size].letterSpacing,
               },
             ]}
           >

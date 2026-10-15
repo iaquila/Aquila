@@ -97,9 +97,14 @@ export default function PartiesScreen() {
               return (
                 <Card key={cand.id} style={styles.itemCard}>
                   <View style={styles.candTopRow}>
-                    <View style={[styles.avatarWrap, { backgroundColor: pColor + '18' }]}>
-                      <ThemedText variant="title" style={{ color: pColor }} fontFamily="bold">
-                        {cand.partyAcronym.slice(0, 2)}
+                    <View style={[styles.avatarWrap, { backgroundColor: pColor + '18', borderColor: pColor + '33', borderWidth: 1 }]}>
+                      <ThemedText
+                        variant="caption"
+                        fontFamily="bold"
+                        numberOfLines={1}
+                        style={{ color: pColor, fontSize: 13, letterSpacing: 0.5, textAlign: 'center' }}
+                      >
+                        {cand.partyAcronym}
                       </ThemedText>
                     </View>
 
@@ -160,9 +165,14 @@ export default function PartiesScreen() {
               return (
                 <Card style={styles.itemCard}>
                   <View style={styles.partyItemRow}>
-                    <View style={[styles.partyIconWrap, { backgroundColor: pColor + '18' }]}>
-                      <ThemedText variant="title" style={{ color: pColor }} fontFamily="bold">
-                        {party.acronym.slice(0, 3)}
+                    <View style={[styles.partyIconWrap, { backgroundColor: pColor + '18', borderColor: pColor + '33', borderWidth: 1 }]}>
+                      <ThemedText
+                        variant="caption"
+                        fontFamily="bold"
+                        numberOfLines={1}
+                        style={{ color: pColor, fontSize: 13, letterSpacing: 0.5, textAlign: 'center' }}
+                      >
+                        {party.acronym}
                       </ThemedText>
                     </View>
                     <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm }}>
@@ -251,11 +261,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarWrap: {
-    width: 44,
+    width: 48,
     height: 44,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   partyTag: {
     paddingHorizontal: 8,
@@ -282,11 +293,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   partyIconWrap: {
-    width: 44,
+    width: 48,
     height: 44,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   activePill: {
     paddingHorizontal: 8,
