@@ -31,6 +31,8 @@ export const sizes = {
   avatar: 88,
   statCard: 160,
   rankBadge: 32,
+  tabBarClearance: 110,
+  modalClearance: 120,
 } as const;
 
 export const typography = {

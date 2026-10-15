@@ -5,7 +5,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Input, SkeletonCard } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
 import { useIncidentsStore } from '@/features/auth/store';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -89,7 +89,7 @@ export default function IncidentSearchScreen() {
                 <View style={styles.cardHeader}>
                   <View style={[styles.sevTag, { backgroundColor: sevCol + '16', borderColor: sevCol }]}>
                     <Ionicons name="warning" size={12} color={sevCol} />
-                    <ThemedText variant="label" style={{ color: sevCol, marginLeft: 4 }} fontFamily="bold">
+                    <ThemedText variant="label" style={{ color: sevCol, marginLeft: spacing['2xs'] }} fontFamily="bold">
                       {item.severity}
                     </ThemedText>
                   </View>
@@ -98,16 +98,16 @@ export default function IncidentSearchScreen() {
                   </ThemedText>
                 </View>
 
-                <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: 4 }}>
+                <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing['2xs'] }}>
                   {item.category.replace(/_/g, ' ')}
                 </ThemedText>
-                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                   {item.description}
                 </ThemedText>
 
                 <View style={styles.metaRow}>
                   <Ionicons name="location-outline" size={12} color={colors.primary} />
-                  <ThemedText variant="label" color="primary" style={{ marginLeft: 4 }}>
+                  <ThemedText variant="label" color="primary" style={{ marginLeft: spacing['2xs'] }}>
                     {item.electoralArea}
                   </ThemedText>
                 </View>
@@ -162,17 +162,17 @@ const styles = StyleSheet.create({
   sevTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.xs,
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(0,0,0,0.04)',
   },
 });

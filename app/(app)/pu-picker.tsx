@@ -3,7 +3,7 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Input, SkeletonCard } from '@/core/components';
 import { router, useLocalSearchParams } from 'expo-router';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   puIconBadge: {
-    width: 36,
-    height: 36,
+    width: sizes.rankBadge + spacing['2xs'],
+    height: sizes.rankBadge + spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, SkeletonCard } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -246,7 +246,7 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
           <ThemedText variant="body" color="text" fontFamily="bold">
             {item.pollingUnitName}
           </ThemedText>
-          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
             {isPublished ? 'Uploaded by observer' : 'Draft Return'} · {new Date(item.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </ThemedText>
         </View>
@@ -270,7 +270,7 @@ const ReturnCard = memo(function ReturnCard({ item, candMap, colors, impact }: R
             variant="label"
             fontFamily="bold"
             style={{
-              marginLeft: 4,
+              marginLeft: spacing['2xs'],
               color: isPublished ? colors.success : colors.warning,
             }}
           >
@@ -368,9 +368,9 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
       </View>
 
       {/* Main Info */}
-      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: spacing['3xs'] + border.thin }}>
         {/* Row 1: Name + Zone/State tag + Margin */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
           <ThemedText variant="body" color="text" fontFamily="bold">
             {name}
           </ThemedText>
@@ -381,7 +381,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
               </ThemedText>
             </View>
           )}
-          <View style={[styles.marginBadge, { backgroundColor: leadColor + '18', paddingVertical: 1, paddingHorizontal: 6 }]}>
+          <View style={[styles.marginBadge, { backgroundColor: leadColor + '18', paddingVertical: border.thin, paddingHorizontal: spacing['2xs'] + spacing['3xs'] }]}>
             <ThemedText variant="label" style={{ color: leadColor }} fontFamily="bold">
               +{margin}%
             </ThemedText>
@@ -389,8 +389,8 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
         </View>
 
         {/* Row 2: Candidate + Party pill + Subtitle */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={[styles.partyPill, { backgroundColor: leadColor, paddingVertical: 1, paddingHorizontal: 6 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
+          <View style={[styles.partyPill, { backgroundColor: leadColor, paddingVertical: border.thin, paddingHorizontal: spacing['2xs'] + spacing['3xs'] }]}>
             <ThemedText variant="label" color="#FFFFFF" fontFamily="bold">
               {leadingParty}
             </ThemedText>
@@ -416,7 +416,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
       </View>
 
       {/* Right: Reporting Badge & Action */}
-      <View style={{ alignItems: 'flex-end', justifyContent: 'center', gap: 6, flexShrink: 0 }}>
+      <View style={{ alignItems: 'flex-end', justifyContent: 'center', gap: spacing['2xs'] + spacing['3xs'], flexShrink: 0 }}>
         <View style={[styles.rowReportingBadge, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
           <ThemedText variant="label" color="primary" fontFamily="bold">
             {reportingPct}% PUs
@@ -425,7 +425,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
         {onAction && (
           <Pressable
             onPress={onAction}
-            hitSlop={8}
+            hitSlop={spacing.xs}
             style={styles.rowActionBtn}
           >
             <Ionicons name={actionIcon} size={15} color={colors.primary} />
@@ -1027,7 +1027,7 @@ export default function ResultsScreen() {
                   impact(Haptics.ImpactFeedbackStyle.Light);
                   setFilterLga(null);
                 }}
-                style={{ marginLeft: 6 }}
+                style={{ marginLeft: spacing['2xs'] + spacing['3xs'] }}
               >
                 <Ionicons name="close-circle" size={16} color={colors.primary} />
               </Pressable>
@@ -1070,7 +1070,7 @@ export default function ResultsScreen() {
                     activeTab === 'drafts' && [styles.activeTabBtn, { backgroundColor: colors.primary }],
                   ]}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
                     <ThemedText
                       variant="caption"
                       color={activeTab === 'drafts' ? '#FFFFFF' : 'textSecondary'}
@@ -1152,7 +1152,7 @@ export default function ResultsScreen() {
                         name="globe-outline"
                         size={13}
                         color={geoLevel === 'state' ? '#FFFFFF' : colors.textSecondary}
-                        style={{ marginRight: 4 }}
+                        style={{ marginRight: spacing['2xs'] }}
                       />
                       <ThemedText
                         variant="caption"
@@ -1178,7 +1178,7 @@ export default function ResultsScreen() {
                         name="location-outline"
                         size={13}
                         color={geoLevel === 'lga' ? '#FFFFFF' : colors.textSecondary}
-                        style={{ marginRight: 4 }}
+                        style={{ marginRight: spacing['2xs'] }}
                       />
                       <ThemedText
                         variant="caption"
@@ -1236,7 +1236,7 @@ export default function ResultsScreen() {
 
                 {/* Tactical Quick Search & Navigation Bar */}
                 <View style={[styles.tacticalSearchBar, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                  <Ionicons name="search" size={14} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                  <Ionicons name="search" size={14} color={colors.textSecondary} style={{ marginRight: spacing['2xs'] + spacing['3xs'] }} />
                   <TextInput
                     value={searchQuery}
                     onChangeText={(q) => {
@@ -1330,7 +1330,7 @@ export default function ResultsScreen() {
                         }}
                         style={[styles.stateSelectorChip, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
                       >
-                        <Ionicons name="close-circle" size={13} color={colors.textSecondary} style={{ marginRight: 3 }} />
+                        <Ionicons name="close-circle" size={13} color={colors.textSecondary} style={{ marginRight: spacing['3xs'] + border.thin }} />
                         <ThemedText variant="caption" color="textSecondary" fontFamily="medium">
                           Reset Filter
                         </ThemedText>
@@ -1341,7 +1341,7 @@ export default function ResultsScreen() {
 
                 {/* Secondary LGA Scoping Selector when in LGA View (Parity with aquilaweb) */}
                 {geoLevel === 'lga' && (
-                  <View style={[styles.stateSelectorContainer, { marginTop: 4 }]}>
+                  <View style={[styles.stateSelectorContainer, { marginTop: spacing['2xs'] }]}>
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -1385,7 +1385,7 @@ export default function ResultsScreen() {
                   {/* Map Header with Integrated Collation Telemetry */}
                   <View style={styles.mapCardHeader}>
                     <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
                         <View style={styles.liveDot} />
                         <ThemedText variant="caption" color="#A3E6C2" fontFamily="bold">
                           {geoLevel === 'state' ? 'FEDERAL PRESIDENTIAL COLLATION' : `${effectiveLgaState.toUpperCase()} DISTRICT COLLATION`}
@@ -1403,7 +1403,7 @@ export default function ResultsScreen() {
                       </ThemedText>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexShrink: 0 }}>
                       <View style={[styles.reportingPill, { backgroundColor: colors.primaryLight + '26', borderColor: colors.primaryLight + '44' }]}>
                         <ThemedText variant="caption" color="#34D399" fontFamily="bold">
                           {overallReportingPct}%
@@ -1414,7 +1414,7 @@ export default function ResultsScreen() {
                         style={[styles.satelliteBtn, { backgroundColor: colors.surfaceElevated + '99', borderColor: '#FFFFFF22' }]}
                         accessibilityLabel="Open satellite map"
                       >
-                        <Ionicons name="globe-outline" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
+                        <Ionicons name="globe-outline" size={13} color="#FFFFFF" style={{ marginRight: spacing['2xs'] }} />
                         <ThemedText variant="label" color="#FFFFFF" fontFamily="bold">
                           Satellite
                         </ThemedText>
@@ -1423,7 +1423,7 @@ export default function ResultsScreen() {
                   </View>
 
                   {/* Slim Collation Progress Track */}
-                  <View style={[styles.statusBarTrack, { backgroundColor: '#FFFFFF12', marginVertical: 4 }]}>
+                  <View style={[styles.statusBarTrack, { backgroundColor: '#FFFFFF12', marginVertical: spacing['2xs'] }]}>
                     <View
                       style={[
                         styles.statusBarFill,
@@ -1434,7 +1434,7 @@ export default function ResultsScreen() {
 
                   {/* Top Canvas Telemetry Strip (Parity with aquilaweb) */}
                   <View style={styles.telemetryStrip}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexShrink: 1 }}>
                       <View style={[styles.liveDot, { backgroundColor: colors.primary }]} />
                       <ThemedText variant="caption" color="#34D399" fontFamily="bold" numberOfLines={1}>
                         {geoLevel === 'state' ? '37 HUBS' : `${effectiveLgaState.toUpperCase()} LGAS`}
@@ -1444,7 +1444,7 @@ export default function ResultsScreen() {
                         {mapHeatMode === 'party' ? 'Lead Party' : 'Progress'}
                       </ThemedText>
                     </View>
-                    <ThemedText variant="caption" color="#34D39999" fontFamily="medium" style={{ flexShrink: 0, paddingLeft: 8 }}>
+                    <ThemedText variant="caption" color="#34D39999" fontFamily="medium" style={{ flexShrink: 0, paddingLeft: spacing.xs }}>
                       WGS84
                     </ThemedText>
                   </View>
@@ -1810,11 +1810,11 @@ export default function ResultsScreen() {
                           impact(Haptics.ImpactFeedbackStyle.Light);
                           setInspectModalUnit(selectedMapState);
                         }}
-                        style={{ flex: 1, minWidth: 0, gap: 2 }}
+                        style={{ flex: 1, minWidth: 0, gap: spacing['3xs'] }}
                         accessibilityRole="button"
                         accessibilityLabel={`Inspect telemetry for ${selectedMapState.name}`}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
                           <View style={styles.liveDot} />
                           <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
                             {selectedMapState.name} State ({selectedMapState.code})
@@ -1824,8 +1824,8 @@ export default function ResultsScreen() {
                               styles.partyPill,
                               {
                                 backgroundColor: PARTY_COLORS[selectedMapState.leadingParty] ?? colors.primary,
-                                paddingVertical: 1,
-                                paddingHorizontal: 6,
+                                paddingVertical: border.thin,
+                                paddingHorizontal: spacing['2xs'] + spacing['3xs'],
                               },
                             ]}
                           >
@@ -1861,11 +1861,11 @@ export default function ResultsScreen() {
                           impact(Haptics.ImpactFeedbackStyle.Light);
                           setInspectModalUnit(selectedMapLga);
                         }}
-                        style={{ flex: 1, minWidth: 0, gap: 2 }}
+                        style={{ flex: 1, minWidth: 0, gap: spacing['3xs'] }}
                         accessibilityRole="button"
                         accessibilityLabel={`Inspect telemetry for ${selectedMapLga.name}`}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
                           <View style={styles.liveDot} />
                           <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
                             {selectedMapLga.name} ({selectedMapLga.state})
@@ -1875,8 +1875,8 @@ export default function ResultsScreen() {
                               styles.partyPill,
                               {
                                 backgroundColor: PARTY_COLORS[selectedMapLga.leadingParty] ?? colors.primary,
-                                paddingVertical: 1,
-                                paddingHorizontal: 6,
+                                paddingVertical: border.thin,
+                                paddingHorizontal: spacing['2xs'] + spacing['3xs'],
                               },
                             ]}
                           >
@@ -1986,7 +1986,7 @@ export default function ResultsScreen() {
                         />
                       </View>
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
                           <ThemedText variant="title" color="text" fontFamily="bold" numberOfLines={1}>
                             {inspectModalUnit.name}
                           </ThemedText>
@@ -2005,7 +2005,7 @@ export default function ResultsScreen() {
                     </View>
                     <Pressable
                       onPress={() => setInspectModalUnit(null)}
-                      hitSlop={10}
+                      hitSlop={spacing.sm - spacing['3xs']}
                       style={[styles.modalCloseBtn, { backgroundColor: colors.surface }]}
                       accessibilityLabel="Close unit inspection modal"
                     >
@@ -2038,7 +2038,7 @@ export default function ResultsScreen() {
                       <ThemedText variant="caption" color="textSecondary">
                         {inspectModalUnit.baseCollated.toLocaleString()} of {inspectModalUnit.totalPus.toLocaleString()} PUs Collated
                       </ThemedText>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] }}>
                         <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
                         <ThemedText variant="caption" color="primary" fontFamily="bold">
                           Verified Returns
@@ -2056,7 +2056,7 @@ export default function ResultsScreen() {
                           <ThemedText variant="caption" color="textSecondary" fontFamily="bold">
                             PROJECTED LEADER
                           </ThemedText>
-                          <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: 2 }}>
+                          <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
                             {inspectModalUnit.leadingCandidate}
                           </ThemedText>
                           <ThemedText variant="caption" color="textSecondary">
@@ -2084,14 +2084,14 @@ export default function ResultsScreen() {
                           key={share.party}
                           style={[styles.modalShareRow, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}
                         >
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing['2xs'] }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
                               <View style={[styles.partyDot, { backgroundColor: partyColor }]} />
                               <ThemedText variant="body" color="text" fontFamily="bold">
                                 {share.party}
                               </ThemedText>
                             </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                               <ThemedText variant="caption" color="textSecondary" fontFamily="medium">
                                 {share.votes.toLocaleString()} votes
                               </ThemedText>
@@ -2171,13 +2171,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: spacing.md,
     marginVertical: spacing.xs,
-    padding: 4,
+    padding: spacing['2xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -2186,14 +2186,14 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   tabBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
   },
   listContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: 110,
+    paddingBottom: sizes.tabBarClearance,
   },
   itemCard: {
     padding: spacing.md,
@@ -2204,15 +2204,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: spacing.xs,
   },
   statusChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   leadStrip: {
     flexDirection: 'row',
@@ -2220,7 +2220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.xs,
     gap: spacing.xs,
   },
@@ -2237,16 +2237,16 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
-    padding: 3,
+    padding: spacing['3xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   mainViewBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 6,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.sm,
     overflow: 'hidden',
   },
@@ -2254,7 +2254,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: spacing['2xs'] + spacing['3xs'],
     minWidth: 0,
     flexShrink: 1,
   },
@@ -2266,13 +2266,13 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   statusBarTrack: {
-    height: 4,
+    height: spacing['2xs'],
     borderRadius: radius.full,
     overflow: 'hidden',
   },
@@ -2281,10 +2281,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   reportingPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   leadBanner: {
     flexDirection: 'row',
@@ -2292,24 +2292,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
-    gap: 8,
+    gap: spacing.xs,
   },
   partyPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.sm,
     flexShrink: 0,
   },
   marginBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
     flexShrink: 0,
   },
   stackedBarContainer: {
-    height: 8,
+    height: spacing.xs,
     borderRadius: radius.full,
     overflow: 'hidden',
   },
@@ -2327,25 +2327,25 @@ const styles = StyleSheet.create({
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing['2xs'],
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: spacing.xs,
+    height: spacing.xs,
+    borderRadius: radius.full,
   },
   inspectButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    marginTop: 2,
+    borderTopWidth: border.thin,
+    marginTop: spacing['3xs'],
   },
   mapContainerCard: {
     padding: spacing.md,
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
   },
   mapCardHeader: {
@@ -2357,10 +2357,10 @@ const styles = StyleSheet.create({
   satelliteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   svgWrapper: {
     alignItems: 'center',
@@ -2375,72 +2375,72 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: '#FFFFFF12',
   },
   legendPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: spacing['2xs'] + spacing['3xs'],
+    height: spacing['2xs'] + spacing['3xs'],
+    borderRadius: radius.full,
     backgroundColor: '#10B981',
   },
   zoneBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   clearFilterPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   stateSelectorContainer: {
-    paddingVertical: 2,
+    paddingVertical: spacing['3xs'],
   },
   stateSelectorScroll: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   stateSelectorChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   unifiedHeaderBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 4,
+    padding: spacing['2xs'],
     borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: 6,
+    borderWidth: border.thin,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   pillTrack: {
     flexDirection: 'row',
-    padding: 2,
+    padding: spacing['3xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
-    gap: 2,
+    borderWidth: border.thin,
+    gap: spacing['3xs'],
   },
   pillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 5,
-    paddingHorizontal: 8,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
+    paddingHorizontal: spacing.xs,
     borderRadius: radius.sm,
   },
   activePillBtn: {
@@ -2452,16 +2452,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.xs,
-    gap: 8,
+    gap: spacing.xs,
   },
   hudActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    gap: spacing['2xs'],
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
     flexShrink: 0,
   },
@@ -2475,46 +2475,46 @@ const styles = StyleSheet.create({
   },
   compactPartyFilterRow: {
     flexDirection: 'row',
-    gap: 4,
+    gap: spacing['2xs'],
   },
   compactFilterChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   leaderboardRow: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     gap: spacing.sm,
   },
   rowRankBox: {
-    width: 28,
-    height: 28,
+    width: sizes.rankBadge - spacing['2xs'],
+    height: sizes.rankBadge - spacing['2xs'],
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   miniStackedBar: {
-    height: 5,
+    height: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
     overflow: 'hidden',
     flexDirection: 'row',
     width: '100%',
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
   rowReportingBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   rowActionBtn: {
-    padding: 3,
+    padding: spacing['3xs'],
   },
   tacticalSearchBar: {
     flexDirection: 'row',
@@ -2549,7 +2549,7 @@ const styles = StyleSheet.create({
   inspectModalContent: {
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    borderWidth: 1,
+    borderWidth: border.thin,
     borderBottomWidth: 0,
     maxHeight: '85%',
     paddingHorizontal: spacing.md,
@@ -2560,37 +2560,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
+    borderBottomWidth: border.thin,
     gap: spacing.xs,
   },
   modalIconBadge: {
-    width: 36,
-    height: 36,
+    width: sizes.rankBadge + spacing['2xs'],
+    height: sizes.rankBadge + spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalCloseBtn: {
-    width: 32,
-    height: 32,
+    width: sizes.rankBadge,
+    height: sizes.rankBadge,
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   codeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
   },
   modalCollationCard: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.sm,
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   modalProgressTrack: {
-    height: 6,
+    height: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
     overflow: 'hidden',
   },
@@ -2604,29 +2604,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.sm,
     gap: spacing.sm,
   },
   modalLeaderBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   modalShareRow: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
-    gap: 4,
+    borderWidth: border.thin,
+    gap: spacing['2xs'],
   },
   partyDot: {
-    width: 8,
-    height: 8,
+    width: spacing.xs,
+    height: spacing.xs,
     borderRadius: radius.full,
   },
   modalShareTrack: {
-    height: 4,
+    height: spacing['2xs'],
     borderRadius: radius.full,
     overflow: 'hidden',
   },

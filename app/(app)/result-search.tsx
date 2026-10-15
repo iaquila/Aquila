@@ -5,7 +5,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, EmptyState, Card, Input, SkeletonCard } from '@/core/components';
 import { useResultsQuery } from '@/features/elections/hooks';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -80,7 +80,7 @@ export default function ResultSearchScreen() {
                   <ThemedText variant="body" color="text" fontFamily="bold">
                     {item.pollingUnitName}
                   </ThemedText>
-                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                     {item.totalVotesCast.toLocaleString()} votes cast · Accredited: {item.totalAccreditedVoters}
                   </ThemedText>
                 </View>
@@ -137,15 +137,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconBadge: {
-    width: 36,
-    height: 36,
+    width: sizes.rankBadge + spacing['2xs'],
+    height: sizes.rankBadge + spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statusChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
 });

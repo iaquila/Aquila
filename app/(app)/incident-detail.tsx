@@ -9,7 +9,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Input, Badge } from '@/core/components';
 import { useIncidentsQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useHaptics, useRefreshControl } from '@/core/hooks';
@@ -108,12 +108,12 @@ export default function IncidentDetailScreen() {
     return (
       <ScreenView scrollable={false} contentContainerStyle={styles.scrollContent}>
         {/* Hero Status Card Skeleton */}
-        <View style={[styles.heroCard, { backgroundColor: colors.surface, padding: spacing.md, gap: spacing.sm, borderWidth: 1, borderColor: colors.border }]}>
+        <View style={[styles.heroCard, { backgroundColor: colors.surface, padding: spacing.md, gap: spacing.sm, borderWidth: border.thin, borderColor: colors.border }]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Shimmer width={120} height={22} borderRadius={radius.full} />
             <Shimmer width={80} height={22} borderRadius={radius.full} />
           </View>
-          <Shimmer width="85%" height={24} borderRadius={radius.sm} style={{ marginTop: 6 }} />
+          <Shimmer width="85%" height={24} borderRadius={radius.sm} style={{ marginTop: spacing['2xs'] + spacing['3xs'] }} />
           <Shimmer width="60%" height={14} borderRadius={radius.sm} />
           <Shimmer width="40%" height={12} borderRadius={radius.sm} />
         </View>
@@ -159,7 +159,7 @@ export default function IncidentDetailScreen() {
         <View style={styles.heroTopRow}>
           <View style={[styles.categoryBadge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
             <Ionicons name={categoryIcon} size={14} color="#FFFFFF" />
-            <ThemedText variant="label" color="#FFFFFF" fontFamily="bold" style={{ marginLeft: 6 }}>
+            <ThemedText variant="label" color="#FFFFFF" fontFamily="bold" style={{ marginLeft: spacing['2xs'] + spacing['3xs'] }}>
               {incident.category.replace(/_/g, ' ')}
             </ThemedText>
           </View>
@@ -174,13 +174,13 @@ export default function IncidentDetailScreen() {
           {incident.category.replace(/_/g, ' ')}
         </ThemedText>
 
-        <ThemedText variant="caption" color="rgba(255, 255, 255, 0.85)" style={{ marginTop: 2 }}>
+        <ThemedText variant="caption" color="rgba(255, 255, 255, 0.85)" style={{ marginTop: spacing['3xs'] }}>
           {incident.electoralArea} · Reported {new Date(incident.reportedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(incident.reportedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </ThemedText>
 
         {/* Severity Indicator Strip */}
         <View style={styles.severityStrip}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
             <Ionicons name="warning" size={16} color="#FFFFFF" />
             <ThemedText variant="label" color="#FFFFFF" fontFamily="bold">
               {incident.severity} PRIORITY
@@ -190,10 +190,10 @@ export default function IncidentDetailScreen() {
           {incident.latitude && incident.longitude ? (
             <Pressable onPress={openMap} style={styles.gpsLink}>
               <Ionicons name="location-sharp" size={13} color="#FFFFFF" />
-              <ThemedText variant="label" color="#FFFFFF" fontFamily="medium" style={{ marginLeft: 4 }}>
+              <ThemedText variant="label" color="#FFFFFF" fontFamily="medium" style={{ marginLeft: spacing['2xs'] }}>
                 {incident.latitude.toFixed(4)}, {incident.longitude.toFixed(4)}
               </ThemedText>
-              <Ionicons name="open-outline" size={12} color="#FFFFFF" style={{ marginLeft: 2 }} />
+              <Ionicons name="open-outline" size={12} color="#FFFFFF" style={{ marginLeft: spacing['3xs'] }} />
             </Pressable>
           ) : null}
         </View>
@@ -215,7 +215,7 @@ export default function IncidentDetailScreen() {
         <View style={[styles.reporterRow, { borderTopColor: colors.borderSubtle }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Ionicons name="person-circle-outline" size={18} color={colors.textSecondary} />
-            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 6 }}>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'] }}>
               Filed by Field Operative · {incident.reportedBy}
             </ThemedText>
           </View>
@@ -234,7 +234,7 @@ export default function IncidentDetailScreen() {
         <View style={styles.infoGrid}>
           <View style={styles.infoCol}>
             <ThemedText variant="label" color="textMuted">ELECTORAL AREA</ThemedText>
-            <ThemedText variant="body" color="text" fontFamily="medium" style={{ marginTop: 2 }}>
+            <ThemedText variant="body" color="text" fontFamily="medium" style={{ marginTop: spacing['3xs'] }}>
               {incident.electoralArea}
             </ThemedText>
           </View>
@@ -242,17 +242,17 @@ export default function IncidentDetailScreen() {
           {puInfo ? (
             <View style={styles.infoCol}>
               <ThemedText variant="label" color="textMuted">OFFICIAL PU CODE</ThemedText>
-              <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: 2 }}>
+              <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
                 {puInfo.code}
               </ThemedText>
-              <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 1 }}>
+              <ThemedText variant="caption" color="textSecondary" style={{ marginTop: border.thin }}>
                 {puInfo.name}
               </ThemedText>
             </View>
           ) : (
             <View style={styles.infoCol}>
               <ThemedText variant="label" color="textMuted">LOCATION SCOPE</ThemedText>
-              <ThemedText variant="body" color="text" fontFamily="medium" style={{ marginTop: 2 }}>
+              <ThemedText variant="body" color="text" fontFamily="medium" style={{ marginTop: spacing['3xs'] }}>
                 Sector-Wide Incident
               </ThemedText>
             </View>
@@ -389,7 +389,7 @@ export default function IncidentDetailScreen() {
         ) : (
           <View style={styles.noEvidenceBox}>
             <Ionicons name="document-text-outline" size={24} color={colors.textMuted} />
-            <ThemedText variant="caption" color="textMuted" style={{ marginTop: 4, textAlign: 'center' }}>
+            <ThemedText variant="caption" color="textMuted" style={{ marginTop: spacing['2xs'], textAlign: 'center' }}>
               Verified textual incident dispatch. No secondary audio or photo media attached by field operative.
             </ThemedText>
           </View>
@@ -421,7 +421,7 @@ export default function IncidentDetailScreen() {
               <ThemedText variant="caption" color="textSecondary">
                 Operative transmission received with cryptographic timestamp.
               </ThemedText>
-              <ThemedText variant="label" color="textMuted" style={{ marginTop: 2 }}>
+              <ThemedText variant="label" color="textMuted" style={{ marginTop: spacing['3xs'] }}>
                 {new Date(incident.reportedAt).toLocaleTimeString()}
               </ThemedText>
             </View>
@@ -442,7 +442,7 @@ export default function IncidentDetailScreen() {
               <ThemedText variant="caption" color="textSecondary">
                 Assigned to Situation Room Election Director for threat verification.
               </ThemedText>
-              <ThemedText variant="label" color="textMuted" style={{ marginTop: 2 }}>
+              <ThemedText variant="label" color="textMuted" style={{ marginTop: spacing['3xs'] }}>
                 {isUnderReview || isResolved ? 'Active Investigation' : 'Queued for Triage'}
               </ThemedText>
             </View>
@@ -484,7 +484,7 @@ export default function IncidentDetailScreen() {
           </ThemedText>
 
           {/* Severity Adjustment */}
-          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginBottom: 6 }}>
+          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginBottom: spacing['2xs'] + spacing['3xs'] }}>
             ADJUST SEVERITY LEVEL
           </ThemedText>
           <View style={styles.severityToggles}>
@@ -516,7 +516,7 @@ export default function IncidentDetailScreen() {
           </View>
 
           {/* Officer Quick Actions */}
-          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: 6 }}>
+          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: spacing['2xs'] + spacing['3xs'] }}>
             CASE STATUS ACTION
           </ThemedText>
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
@@ -541,7 +541,7 @@ export default function IncidentDetailScreen() {
           </View>
 
           {/* Directives Input */}
-          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: 6 }}>
+          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: spacing['2xs'] + spacing['3xs'] }}>
             SITUATION ROOM DIRECTIVES & NOTES
           </ThemedText>
           <Input
@@ -705,7 +705,7 @@ function VideoEvidencePlayer({ uri, index, fileName }: { uri: string; index: num
       ) : (
         <View style={[styles.evidenceVideoThumb, { backgroundColor: colors.background }]}>
           <Ionicons name="videocam-outline" size={40} color={colors.primary} />
-          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 4 }}>
+          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['2xs'] }}>
             Simulated Video Evidence
           </ThemedText>
         </View>
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: 120,
+    paddingBottom: sizes.modalClearance,
   },
   centerContainer: {
     flex: 1,
@@ -751,13 +751,13 @@ const styles = StyleSheet.create({
   categoryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm - spacing['3xs'],
+    paddingVertical: spacing['2xs'] + border.thin,
     borderRadius: radius.full,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm - spacing['3xs'],
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
   severityStrip: {
@@ -766,15 +766,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
   gpsLink: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.sm,
   },
   sectionCard: {
@@ -797,18 +797,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   infoCol: {
-    paddingVertical: 4,
+    paddingVertical: spacing['2xs'],
   },
   evidenceItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   evidenceIconWrap: {
-    width: 36,
-    height: 36,
+    width: sizes.rankBadge + spacing['2xs'],
+    height: sizes.rankBadge + spacing['2xs'],
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -823,23 +823,23 @@ const styles = StyleSheet.create({
   },
   timelineRow: {
     flexDirection: 'row',
-    minHeight: 56,
+    minHeight: sizes.icon + spacing.xs,
   },
   timelineIconCol: {
     alignItems: 'center',
-    width: 28,
+    width: sizes.rankBadge - spacing['2xs'],
   },
   timelineNode: {
-    width: 22,
-    height: 22,
+    width: sizes.rankBadge - (spacing.sm - spacing['3xs']),
+    height: sizes.rankBadge - (spacing.sm - spacing['3xs']),
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   timelineLine: {
-    width: 2,
+    width: border.thick,
     flex: 1,
-    marginVertical: 2,
+    marginVertical: spacing['3xs'],
   },
   timelineContent: {
     flex: 1,
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
     borderWidth: border.thin,
     padding: spacing.sm,
     fontSize: typography.caption,
-    minHeight: 70,
+    minHeight: spacing.screen.headerHeight - spacing['3xs'],
     textAlignVertical: 'top',
   },
   evidenceMediaCard: {
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
   },
   evidenceImagePressable: {
     width: '100%',
-    height: 180,
+    height: sizes.statCard + spacing.screen.cardPadding,
     position: 'relative',
     backgroundColor: '#000000',
   },
@@ -883,18 +883,18 @@ const styles = StyleSheet.create({
   },
   evidenceExpandOverlay: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
+    bottom: spacing.xs,
+    right: spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.sm,
   },
   evidenceVideoThumb: {
     width: '100%',
-    height: 120,
+    height: sizes.modalClearance,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -909,8 +909,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
     justifyContent: 'space-between',
-    paddingTop: 50,
-    paddingBottom: 30,
+    paddingTop: spacing['2xl'] + spacing['3xs'],
+    paddingBottom: spacing.xl - spacing['3xs'],
     paddingHorizontal: spacing.md,
   },
   lightboxHeader: {
@@ -920,8 +920,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   lightboxCloseBtn: {
-    width: 38,
-    height: 38,
+    width: sizes.rankBadge + spacing.xs - spacing['3xs'],
+    height: sizes.rankBadge + spacing.xs - spacing['3xs'],
     borderRadius: radius.full,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
@@ -942,7 +942,7 @@ const styles = StyleSheet.create({
   },
   videoPlayerContainer: {
     width: '100%',
-    height: 220,
+    height: sizes.statCard + spacing['3xl'] - spacing['2xs'],
     backgroundColor: '#000000',
   },
   videoView: {
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
     borderWidth: border.thin,
     overflow: 'hidden',
     position: 'relative',
-    minHeight: 140,
+    minHeight: sizes.statCard - spacing.screen.cardPadding,
     justifyContent: 'center',
   },
   tacticalGridBackground: {
@@ -965,37 +965,37 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   radarCircleOuter: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    borderWidth: 1,
+    width: sizes.statCard - spacing.xl + spacing['3xs'],
+    height: sizes.statCard - spacing.xl + spacing['3xs'],
+    borderRadius: radius.full,
+    borderWidth: border.thin,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radarCircleInner: {
-    width: 65,
-    height: 65,
-    borderRadius: 32.5,
-    borderWidth: 1,
+    width: (sizes.statCard - spacing.xl + spacing['3xs']) / 2,
+    height: (sizes.statCard - spacing.xl + spacing['3xs']) / 2,
+    borderRadius: radius.full,
+    borderWidth: border.thin,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radarCenterPulse: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: spacing.sm - spacing['3xs'],
+    height: spacing.sm - spacing['3xs'],
+    borderRadius: radius.full,
   },
   crosshairH: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 1,
+    height: border.thin,
   },
   crosshairV: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    width: 1,
+    width: border.thin,
   },
   tacticalMapOverlay: {
     padding: spacing.sm,
@@ -1007,10 +1007,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#10B98118',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'] + border.thin,
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
     borderColor: '#10B98140',
   },
   tacticalBottomBar: {
@@ -1018,6 +1018,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
   },
 });

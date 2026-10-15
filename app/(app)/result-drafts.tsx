@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, EmptyState, Button, Card } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import Colors from '@/constants/colors';
@@ -203,8 +203,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerIconWrap: {
-    width: 44,
-    height: 44,
+    width: sizes.icon - spacing['2xs'],
+    height: sizes.icon - spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -220,8 +220,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   draftBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
   draftMetaRow: {
@@ -231,8 +231,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   restrictedIcon: {
-    width: 56,
-    height: 56,
+    width: sizes.icon + spacing.xs,
+    height: sizes.icon + spacing.xs,
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginVertical: spacing.sm,
   },
   statCol: {

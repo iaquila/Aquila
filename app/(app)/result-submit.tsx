@@ -4,7 +4,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Button, Input, Card } from '@/core/components';
 import { useResultsStore, useAuthStore, ResultSubmission } from '@/features/auth/store';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { spacing, shadows, radius } from '@/constants/tokens';
+import { spacing, shadows, radius, border } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useDeviceLocation } from '@/core/hooks/useDeviceLocation';
@@ -286,7 +286,7 @@ export default function SubmitResultScreen() {
             <ThemedText variant="caption" color="textSecondary">
               PU Code: {selectedPuId || 'PU/24/08/01/001'} {user?.role === 'POLLING_AGENT' ? '· Sole Assigned Station' : ''}
             </ThemedText>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'], marginTop: spacing['2xs'] }}>
               <Ionicons name="navigate-circle" size={13} color={colors.primary} />
               <ThemedText variant="label" color="primary" fontFamily="medium">
                 GPS Lock: {deviceCoords ? `${deviceCoords.latitude.toFixed(4)}, ${deviceCoords.longitude.toFixed(4)}` : '6.6001, 3.3502 (Verified)'}
@@ -513,9 +513,9 @@ const styles = StyleSheet.create({
     ...shadows.md,
   },
   restrictedIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: spacing['3xl'],
+    height: spacing['3xl'],
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   candVoteBox: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   candVoteHeader: {
     flexDirection: 'row',
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.md,
   },
   bottomActions: {
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.sm,
   },
 });

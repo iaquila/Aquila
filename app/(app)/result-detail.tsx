@@ -5,7 +5,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Badge } from '@/core/components';
 import { useResultsQuery, useCandidatesQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useRefreshControl } from '@/core/hooks';
@@ -69,9 +69,9 @@ export default function ResultDetailScreen() {
     return (
       <ScreenView scrollable={false} contentContainerStyle={styles.scrollContent}>
         {/* Header Hero Card Skeleton */}
-        <View style={[styles.heroCard, { backgroundColor: colors.surface, padding: spacing.md, gap: spacing.sm, borderWidth: 1, borderColor: colors.border }]}>
+        <View style={[styles.heroCard, { backgroundColor: colors.surface, padding: spacing.md, gap: spacing.sm, borderWidth: border.thin, borderColor: colors.border }]}>
           <Shimmer width={150} height={12} borderRadius={radius.sm} />
-          <Shimmer width="80%" height={24} borderRadius={radius.sm} style={{ marginTop: 4 }} />
+          <Shimmer width="80%" height={24} borderRadius={radius.sm} style={{ marginTop: spacing['2xs'] }} />
           <Shimmer width="50%" height={14} borderRadius={radius.sm} />
           <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm }}>
             <Shimmer width="45%" height={32} borderRadius={radius.sm} />
@@ -118,10 +118,10 @@ export default function ResultDetailScreen() {
             <ThemedText variant="label" color="#A3E6C2" fontFamily="bold">
               OFFICIAL POLLING UNIT RETURN
             </ThemedText>
-            <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: 2 }}>
+            <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
               {result.pollingUnitName}
             </ThemedText>
-            <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: 2 }}>
+            <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: spacing['3xs'] }}>
               {puInfo?.code ?? 'PU Code Verified'} · {puInfo?.lgaName ?? 'Ikeja'}, {puInfo?.stateName ?? 'Lagos'}
             </ThemedText>
           </View>
@@ -273,27 +273,27 @@ export default function ResultDetailScreen() {
         <View style={styles.custodyList}>
           <View style={styles.custodyRow}>
             <Ionicons name="time-outline" size={16} color={colors.primary} />
-            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 6, flex: 1 }}>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
               Submitted: {new Date(result.submittedAt).toLocaleTimeString()} · {new Date(result.submittedAt).toLocaleDateString()}
             </ThemedText>
           </View>
           <View style={styles.custodyRow}>
             <Ionicons name="person-outline" size={16} color={colors.primary} />
-            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 6, flex: 1 }}>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
               Recorded By: Field Agent ({result.submittedBy})
             </ThemedText>
           </View>
           {result.latitude && result.longitude ? (
             <View style={styles.custodyRow}>
               <Ionicons name="location-outline" size={16} color={colors.primary} />
-              <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 6, flex: 1 }}>
+              <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
                 GPS Coordinates: {result.latitude.toFixed(5)}, {result.longitude.toFixed(5)}
               </ThemedText>
             </View>
           ) : null}
           <View style={styles.custodyRow}>
             <Ionicons name="close-circle-outline" size={16} color={colors.critical} />
-            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: 6, flex: 1 }}>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
               Rejected / Spoiled Ballots: {result.rejectedVotes} votes
             </ThemedText>
           </View>
@@ -338,8 +338,8 @@ const styles = StyleSheet.create({
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
     flexShrink: 0,
   },
@@ -349,15 +349,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(255,255,255,0.15)',
   },
   auditItem: {
     flex: 1,
   },
   auditDivider: {
-    width: 1,
-    height: 24,
+    width: border.thin,
+    height: spacing.lg,
     backgroundColor: 'rgba(255,255,255,0.15)',
     marginHorizontal: spacing.xs,
   },
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   candidateRow: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   candHeader: {
     flexDirection: 'row',
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   candRankBadge: {
-    width: 26,
-    height: 26,
+    width: sizes.rankBadge - spacing.xs + spacing['3xs'],
+    height: sizes.rankBadge - spacing.xs + spacing['3xs'],
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -396,30 +396,30 @@ const styles = StyleSheet.create({
   partyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
   partyPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
   },
   progressBarTrack: {
-    height: 6,
-    borderRadius: 3,
+    height: spacing['2xs'] + spacing['3xs'],
+    borderRadius: radius.full,
     marginTop: spacing.xs,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: radius.full,
   },
   inecComparisonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
+    marginTop: spacing['2xs'] + spacing['3xs'],
+    paddingTop: spacing['2xs'] + spacing['3xs'],
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(0,0,0,0.04)',
   },
   matchPill: {

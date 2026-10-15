@@ -3,7 +3,7 @@ import { StyleSheet, View, Pressable, ScrollView } from 'react-native';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, Input, Shimmer } from '@/core/components';
 import { Ionicons } from '@expo/vector-icons';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import {
@@ -45,10 +45,10 @@ export default function LocationsScreen() {
         <ThemedText variant="label" color="#A3E6C2" fontFamily="bold">
           ELECTORAL GEOGRAPHY & HIERARCHY
         </ThemedText>
-        <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: 2 }}>
+        <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
           Electoral Location Engine
         </ThemedText>
-        <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: 2 }}>
+        <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: spacing['3xs'] }}>
           National directory of 36 States, FCT, 774 LGAs, and 176,846 Polling Units
         </ThemedText>
 
@@ -193,7 +193,7 @@ export default function LocationsScreen() {
             <ThemedText variant="body" color="text" fontFamily="bold">
               {selectedState.name} State Administration
             </ThemedText>
-            <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
               Zone: South-West · Preloaded with {stateLgas.length} sample LGAs & {pollingUnits.length} PUs
             </ThemedText>
 
@@ -201,7 +201,7 @@ export default function LocationsScreen() {
               {stateLgas.slice(0, 4).map((lga) => (
                 <View key={lga.id} style={[styles.lgaItem, { borderColor: colors.border }]}>
                   <Ionicons name="location" size={14} color={colors.primary} />
-                  <ThemedText variant="caption" color="text" fontFamily="medium" style={{ marginLeft: 6, flex: 1, minWidth: 0, paddingRight: spacing.xs }} accessibilityLabel={`${lga.name} Council Area, ${selectedState.name} State`}>
+                  <ThemedText variant="caption" color="text" fontFamily="medium" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1, minWidth: 0, paddingRight: spacing.xs }} accessibilityLabel={`${lga.name} Council Area, ${selectedState.name} State`}>
                     {lga.name} Council Area · {selectedState.name} State
                   </ThemedText>
                   <ThemedText variant="label" color="primary" style={{ flexShrink: 0 }}>Active</ThemedText>
@@ -231,15 +231,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(255,255,255,0.15)',
   },
   statCol: {
     flex: 1,
   },
   statDivider: {
-    width: 1,
-    height: 24,
+    width: border.thin,
+    height: spacing.lg,
     backgroundColor: 'rgba(255,255,255,0.15)',
     marginHorizontal: spacing.xs,
   },
@@ -253,35 +253,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   typeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
   },
   stateChipsScroll: {
-    gap: 6,
-    paddingVertical: 2,
+    gap: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
   },
   stateChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   stateDetailBox: {
     marginTop: spacing.md,
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   lgaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.xs,
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
     gap: spacing.xs,
   },

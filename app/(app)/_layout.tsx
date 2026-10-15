@@ -14,7 +14,6 @@ function pushOptions(title: string, scheme: 'light' | 'dark') {
     headerTintColor: colors.text,
     headerTitleStyle: {
       fontWeight: '600' as const,
-      fontSize: 17,
       color: colors.text,
     },
     ...(Platform.OS === 'ios'

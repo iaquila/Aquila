@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, Shimmer, SkeletonCard, Badge, SectionHeader } from '@/core/components';
 import { useResultsQuery, useCandidatesQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
@@ -68,9 +68,9 @@ export default function ResultCollationScreen() {
     return (
       <ScreenView scrollable={false} contentContainerStyle={styles.scrollContent}>
         {/* Collation Hero Skeleton */}
-        <View style={[styles.heroCard, { backgroundColor: colors.surface, padding: spacing.md, gap: spacing.sm, borderWidth: 1, borderColor: colors.border }]}>
+        <View style={[styles.heroCard, { backgroundColor: colors.surface, padding: spacing.md, gap: spacing.sm, borderWidth: border.thin, borderColor: colors.border }]}>
           <Shimmer width={180} height={12} borderRadius={radius.sm} />
-          <Shimmer width="70%" height={24} borderRadius={radius.sm} style={{ marginTop: 4 }} />
+          <Shimmer width="70%" height={24} borderRadius={radius.sm} style={{ marginTop: spacing['2xs'] }} />
           <Shimmer width="45%" height={14} borderRadius={radius.sm} />
           <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.md }}>
             <Shimmer width="30%" height={36} borderRadius={radius.sm} />
@@ -110,7 +110,7 @@ export default function ResultCollationScreen() {
                 NATIONAL COLLATION ROOM · UPLOADED BY OBSERVER
               </ThemedText>
             </View>
-            <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: 4 }}>
+            <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing['2xs'] }}>
               Presidential Election
             </ThemedText>
             <ThemedText variant="caption" color="#D1FAE5">
@@ -238,7 +238,7 @@ export default function ResultCollationScreen() {
                 <ThemedText variant="body" color="text" fontFamily="bold">
                   {r.pollingUnitName}
                 </ThemedText>
-                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                   {r.totalVotesCast.toLocaleString()} votes cast · Accredited: {r.totalAccreditedVoters.toLocaleString()}
                 </ThemedText>
               </View>
@@ -277,12 +277,12 @@ const styles = StyleSheet.create({
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: spacing.xs,
+    height: spacing.xs,
+    borderRadius: radius.full,
     backgroundColor: '#34D399',
   },
   statsStrip: {
@@ -291,15 +291,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(255,255,255,0.15)',
   },
   statItem: {
     flex: 1,
   },
   statDivider: {
-    width: 1,
-    height: 24,
+    width: border.thin,
+    height: spacing.lg,
     backgroundColor: 'rgba(255,255,255,0.15)',
     marginHorizontal: spacing.xs,
   },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   candRow: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   candHeader: {
     flexDirection: 'row',
@@ -332,8 +332,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   rankBox: {
-    width: 26,
-    height: 26,
+    width: sizes.rankBadge - spacing.xs + spacing['3xs'],
+    height: sizes.rankBadge - spacing.xs + spacing['3xs'],
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -341,22 +341,22 @@ const styles = StyleSheet.create({
   partyBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
   partyPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
   },
   progressBarTrack: {
-    height: 6,
-    borderRadius: 3,
+    height: spacing['2xs'] + spacing['3xs'],
+    borderRadius: radius.full,
     marginTop: spacing.xs,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: radius.full,
   },
   puLogItem: {
     flexDirection: 'row',
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
     gap: spacing.xs,
   },
@@ -376,8 +376,8 @@ const styles = StyleSheet.create({
   verifiedPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
 });

@@ -4,7 +4,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, SkeletonCard, Badge } from '@/core/components';
 import { Ionicons } from '@expo/vector-icons';
 import { usePartiesQuery, useCandidatesQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows, border } from '@/constants/tokens';
+import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -123,13 +123,13 @@ export default function PartiesScreen() {
                   {/* Historical Party Transition Timeline (Audio Part 2) */}
                   {cand.partyHistory?.length ? (
                     <View style={[styles.historyBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                      <ThemedText variant="label" color="textMuted" fontFamily="bold" style={{ marginBottom: 4 }}>
+                      <ThemedText variant="label" color="textMuted" fontFamily="bold" style={{ marginBottom: spacing['2xs'] }}>
                         HISTORICAL PARTY TRACKER
                       </ThemedText>
                       {cand.partyHistory.map((h, i) => (
                         <View key={i} style={styles.historyItem}>
                           <View style={styles.historyTopLine}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flex: 1, minWidth: 0 }}>
                               <Ionicons name="git-commit-outline" size={14} color={colors.primary} />
                               <Badge label={`${h.electionYear} · ${h.partyAcronym}`} color={colors.primary} size="sm" />
                               <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ flex: 1 }}>
@@ -137,7 +137,7 @@ export default function PartiesScreen() {
                               </ThemedText>
                             </View>
                           </View>
-                          <View style={{ marginLeft: 20, marginTop: 2 }}>
+                          <View style={{ marginLeft: spacing.screen.padding, marginTop: spacing['3xs'] }}>
                             <ThemedText variant="caption" color="text" fontFamily="bold">
                               {h.votes.toLocaleString()} <ThemedText variant="label" color="textSecondary">votes ({h.percentage}%)</ThemedText>
                             </ThemedText>
@@ -261,8 +261,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarWrap: {
-    width: 48,
-    height: 44,
+    width: sizes.icon,
+    height: sizes.icon - spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -293,8 +293,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   partyIconWrap: {
-    width: 48,
-    height: 44,
+    width: sizes.icon,
+    height: sizes.icon - spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

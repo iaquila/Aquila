@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, EmptyState, SkeletonCard, Card, Input, Badge, SectionHeader } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -200,20 +200,20 @@ export default function ElectionsScreen() {
           <ThemedText variant="body" color="text" fontFamily="bold">
             {activeCycle.name}
           </ThemedText>
-          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
             {activeCycle.description}
           </ThemedText>
 
           <View style={[styles.cycleMetaRow, { borderTopColor: colors.border + '50' }]}>
             <View style={styles.cycleMetaItem}>
               <ThemedText variant="caption" color="textMuted">Operational Window</ThemedText>
-              <ThemedText variant="label" color="text" fontFamily="medium" style={{ marginTop: 2 }}>
+              <ThemedText variant="label" color="text" fontFamily="medium" style={{ marginTop: spacing['3xs'] }}>
                 {activeCycle.startDate} → {activeCycle.endDate}
               </ThemedText>
             </View>
             <View style={[styles.cycleMetaItem, { alignItems: 'flex-end' }]}>
               <ThemedText variant="caption" color="textMuted">Cycle Contests</ThemedText>
-              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginTop: 2 }}>
+              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
                 {elections.filter((e) => e.cycleId === activeCycle.id).length} Contests
               </ThemedText>
             </View>
@@ -274,7 +274,7 @@ export default function ElectionsScreen() {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Ionicons name="people-circle-outline" size={15} color={colors.primary} />
-            <ThemedText variant="caption" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: 6 }}>
+            <ThemedText variant="caption" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: spacing['2xs'] + spacing['3xs'] }}>
               Political Parties
             </ThemedText>
             <Ionicons name="chevron-forward" size={12} color={colors.textMuted} />
@@ -291,7 +291,7 @@ export default function ElectionsScreen() {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Ionicons name="map-outline" size={15} color={colors.primary} />
-            <ThemedText variant="caption" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: 6 }}>
+            <ThemedText variant="caption" color="text" fontFamily="medium" style={{ flex: 1, marginLeft: spacing['2xs'] + spacing['3xs'] }}>
               Electoral Hierarchy
             </ThemedText>
             <Ionicons name="chevron-forward" size={12} color={colors.textMuted} />
@@ -373,7 +373,7 @@ export default function ElectionsScreen() {
                   </ThemedText>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['3xs'], flexShrink: 0 }}>
                   <ThemedText variant="caption" color="primary" fontFamily="bold">
                     View Slate
                   </ThemedText>
@@ -391,19 +391,19 @@ export default function ElectionsScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: Platform.OS === 'web' ? 76 : spacing.xs,
-    paddingBottom: 110,
+    paddingTop: Platform.OS === 'web' ? spacing.screen.headerHeight + spacing['2xs'] : spacing.xs,
+    paddingBottom: sizes.tabBarClearance,
     gap: spacing.md,
   },
   tabBar: {
     flexDirection: 'row',
-    padding: 4,
+    padding: spacing['2xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
+    paddingVertical: spacing.xs,
     borderRadius: radius.md,
     borderWidth: border.thin,
   },
@@ -471,13 +471,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   titleIndicator: {
-    width: 4,
-    height: 16,
+    width: spacing['2xs'],
+    height: spacing.md,
     borderRadius: radius.full,
   },
   electionIcon: {
-    width: 42,
-    height: 42,
+    width: sizes.icon - (spacing['2xs'] + spacing['3xs']),
+    height: sizes.icon - (spacing['2xs'] + spacing['3xs']),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -497,10 +497,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   partyPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
 });
 

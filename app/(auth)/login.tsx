@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Keyboard } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText, Input, Button, Card } from '@/core/components';
-import { spacing, radius, shadows, typography } from '@/constants/tokens';
+import { spacing, radius, shadows, typography, border, sizes } from '@/constants/tokens';
 import { useLoginMutation } from '@/features/auth/hooks';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -149,7 +149,7 @@ export default function LoginScreen() {
               {error ? (
                 <View style={[styles.errorBanner, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
                   <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
-                  <ThemedText variant="caption" color="error" style={{ marginLeft: 6, flex: 1 }}>
+                  <ThemedText variant="caption" color="error" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
                     {error}
                   </ThemedText>
                 </View>
@@ -201,7 +201,7 @@ export default function LoginScreen() {
 
             {/* Government Non-Affiliation Disclaimer */}
             <View style={styles.disclaimerBox}>
-              <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" style={{ marginTop: 1 }} />
+              <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" />
               <ThemedText variant="micro" color="#A3B8AC" style={{ flex: 1 }}>
                 <ThemedText variant="micro" color="#FFFFFF" fontFamily="bold">iAQUILA</ThemedText> is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
               </ThemedText>
@@ -227,10 +227,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   logoBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    borderWidth: 1.5,
+    width: sizes.avatar - spacing.xs,
+    height: sizes.avatar - spacing.xs,
+    borderRadius: radius.lg,
+    borderWidth: border.thick,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(13, 99, 56, 0.35)',
@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
     }),
   },
   logoImage: {
-    width: 58,
-    height: 58,
+    width: sizes.icon + spacing.xs + spacing['3xs'],
+    height: sizes.icon + spacing.xs + spacing['3xs'],
   },
   brandTitle: {
     letterSpacing: 3,
@@ -264,25 +264,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginBottom: spacing.sm,
   },
   demoSection: {
     marginTop: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(0,0,0,0.06)',
   },
   disclaimerBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: spacing.xs,
     marginTop: spacing.md,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 10,
+    paddingVertical: spacing.sm - spacing['3xs'],
     borderRadius: radius.md,
     backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 1,
+    borderWidth: border.thin,
     borderColor: 'rgba(163, 184, 172, 0.25)',
   },
 });

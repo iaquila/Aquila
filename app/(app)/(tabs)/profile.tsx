@@ -9,7 +9,7 @@ import { ThemedText, Card, Button, DebouncedPressable } from '@/core/components'
 import { useAuthStore } from '@/features/auth/store';
 import { useLogoutMutation } from '@/features/auth/hooks';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows, border } from '@/constants/tokens';
+import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { LEGAL_URLS } from '@/constants/legal';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: 110,
+    paddingBottom: sizes.tabBarClearance,
     gap: spacing.md,
   },
   profileHero: {
@@ -385,8 +385,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarBadge: {
-    width: 72,
-    height: 72,
+    width: sizes.avatar - spacing.md,
+    height: sizes.avatar - spacing.md,
     borderRadius: radius.lg,
     borderWidth: border.thick,
     alignItems: 'center',
@@ -394,8 +394,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(13, 99, 56, 0.4)',
   },
   avatarImg: {
-    width: 52,
-    height: 52,
+    width: sizes.icon + spacing['2xs'],
+    height: sizes.icon + spacing['2xs'],
   },
   roleChip: {
     paddingHorizontal: spacing.sm,
@@ -414,8 +414,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   orgIconWrap: {
-    width: 44,
-    height: 44,
+    width: sizes.icon - spacing['2xs'],
+    height: sizes.icon - spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   moduleIconWrap: {
-    width: 32,
-    height: 32,
+    width: sizes.rankBadge,
+    height: sizes.rankBadge,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',

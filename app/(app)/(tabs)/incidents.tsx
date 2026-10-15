@@ -6,7 +6,7 @@ import { ThemedText, EmptyState, Button, Card, SkeletonCard, Badge } from '@/cor
 import { useIncidentsStore, useAuthStore, IncidentReport } from '@/features/auth/store';
 import { SEVERITY_COLORS } from '@/constants/incidents';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows } from '@/constants/tokens';
+import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -78,7 +78,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOffice
       <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing.xs }}>
         {item.category.replace(/_/g, ' ')}
       </ThemedText>
-      <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+      <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
         {item.description}
       </ThemedText>
 
@@ -86,7 +86,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOffice
       <View style={styles.metaRow}>
         <View style={styles.metaItem}>
           <Ionicons name="location-outline" size={13} color={colors.primary} />
-          <ThemedText variant="label" color="primary" fontFamily="medium" style={{ marginLeft: 4 }}>
+          <ThemedText variant="label" color="primary" fontFamily="medium" style={{ marginLeft: spacing['2xs'] }}>
             {item.electoralArea}
           </ThemedText>
         </View>
@@ -94,7 +94,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOffice
         {item.latitude && item.longitude ? (
           <View style={styles.metaItem}>
             <Ionicons name="navigate-outline" size={12} color={colors.textMuted} />
-            <ThemedText variant="label" color="textMuted" style={{ marginLeft: 4 }}>
+            <ThemedText variant="label" color="textMuted" style={{ marginLeft: spacing['2xs'] }}>
               {item.latitude.toFixed(3)}, {item.longitude.toFixed(3)}
             </ThemedText>
           </View>
@@ -103,7 +103,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOffice
         {item.mediaUrls?.length ? (
           <View style={styles.metaItem}>
             <Ionicons name="camera-outline" size={12} color={colors.accentDark} />
-            <ThemedText variant="label" color="accent" style={{ marginLeft: 4 }}>
+            <ThemedText variant="label" color="accent" style={{ marginLeft: spacing['2xs'] }}>
               {item.mediaUrls.length} live evidence
             </ThemedText>
           </View>
@@ -336,13 +336,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: spacing.md,
     marginVertical: spacing.xs,
-    padding: 3,
+    padding: spacing['3xs'],
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   statusToggleBtn: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -355,18 +355,18 @@ const styles = StyleSheet.create({
   },
   catScrollContent: {
     paddingHorizontal: spacing.md,
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   catChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   listContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: 110,
+    paddingBottom: sizes.tabBarClearance,
   },
   incidentCard: {
     padding: spacing.md,
@@ -382,15 +382,15 @@ const styles = StyleSheet.create({
   sevBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
     flexShrink: 0,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
     flexShrink: 0,
   },
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.xs,
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(0,0,0,0.04)',
   },
   metaItem: {
@@ -413,13 +413,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.sm,
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(0,0,0,0.04)',
     gap: spacing.xs,
   },
   fieldAgentPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm - spacing['3xs'],
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
 });

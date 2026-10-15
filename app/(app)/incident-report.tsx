@@ -7,7 +7,7 @@ import { ThemedText, Input, Button, Card } from '@/core/components';
 import { IncidentReport } from '@/features/auth/store';
 import { useIncidentsStore, useAuthStore } from '@/features/auth/store';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { spacing, shadows, radius } from '@/constants/tokens';
+import { spacing, shadows, radius, border, sizes } from '@/constants/tokens';
 import { IncidentCategory, IncidentSeverity } from '@/types';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
@@ -377,19 +377,19 @@ export default function ReportIncidentScreen() {
         Incident Location Scope
       </ThemedText>
       {selectedPuId || selectedPuName ? (
-            <Card style={[shadows.sm, { marginBottom: spacing.md, borderColor: colors.primary, borderWidth: 1, backgroundColor: colors.primary + '0C' }]}>
+            <Card style={[shadows.sm, { marginBottom: spacing.md, borderColor: colors.primary, borderWidth: border.thin, backgroundColor: colors.primary + '0C' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flex: 1, minWidth: 0, marginRight: spacing.xs }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
                     <Ionicons name="location" size={15} color={colors.primary} />
                     <ThemedText variant="caption" color="primary" fontFamily="bold">
                       POLLING UNIT INCIDENT
                     </ThemedText>
                   </View>
-                  <ThemedText variant="body" fontFamily="bold" style={{ marginTop: 2 }}>
+                  <ThemedText variant="body" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
                     {selectedPuName}
                   </ThemedText>
-                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                     Operational Sector: {electoralArea || 'Ikeja LGA · Lagos State'}
                   </ThemedText>
                 </View>
@@ -423,12 +423,12 @@ export default function ReportIncidentScreen() {
                 onPress={() => router.push({ pathname: ROUTES.PU_PICKER, params: { mode: 'incident', ...(electionId ? { electionId } : {}) } })}
                 leftIcon="location-outline"
               />
-              <ThemedText variant="caption" color="textMuted" style={{ marginHorizontal: 2, marginTop: spacing.xs }}>
+              <ThemedText variant="caption" color="textMuted" style={{ marginHorizontal: spacing['3xs'], marginTop: spacing.xs }}>
                 Or report an area-wide incident (collation center, highway in-transit, or general sector):
               </ThemedText>
 
               {/* Quick Area-Wide Suggestion Chips */}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['2xs'] + spacing['3xs'], marginVertical: spacing['2xs'] }}>
                 {AREA_PRESETS.map((preset) => {
                   const active = electoralArea === preset;
                   return (
@@ -504,13 +504,13 @@ export default function ReportIncidentScreen() {
                         accessibilityLabel={item.name}
                       >
                         <View style={{ flex: 1, minWidth: 0 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'] }}>
                             <ThemedText variant="body" fontFamily="bold" numberOfLines={1} style={{ flex: 1 }}>
                               {item.name}
                             </ThemedText>
                             <Badge label={item.type} size="sm" variant="neutral" />
                           </View>
-                          <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ marginTop: 2 }}>
+                          <ThemedText variant="caption" color="textSecondary" numberOfLines={1} style={{ marginTop: spacing['3xs'] }}>
                             {item.qualification}
                           </ThemedText>
                         </View>
@@ -560,7 +560,7 @@ export default function ReportIncidentScreen() {
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
-            containerStyle={{ minHeight: 120 }}
+            containerStyle={{ minHeight: sizes.modalClearance }}
           />
 
           <ThemedText variant="label" style={{ marginTop: spacing.lg, marginBottom: spacing.sm }}>
@@ -568,8 +568,8 @@ export default function ReportIncidentScreen() {
           </ThemedText>
 
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Button label="Live Photo" variant="outline" size="sm" onPress={handleTakePhoto} leftIcon="camera" style={{ minWidth: 100 }} />
-            <Button label="Live Video" variant="outline" size="sm" onPress={handleRecordVideo} leftIcon="videocam" style={{ minWidth: 100 }} />
+            <Button label="Live Photo" variant="outline" size="sm" onPress={handleTakePhoto} leftIcon="camera" style={{ minWidth: sizes.avatar + spacing.sm }} />
+            <Button label="Live Video" variant="outline" size="sm" onPress={handleRecordVideo} leftIcon="videocam" style={{ minWidth: sizes.avatar + spacing.sm }} />
           </View>
 
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -579,10 +579,10 @@ export default function ReportIncidentScreen() {
               size="sm"
               onPress={isRecording ? stopRecording : startRecording}
               leftIcon={isRecording ? 'stop-circle' : 'mic'}
-               style={{ minWidth: 120 }}
+              style={{ minWidth: sizes.modalClearance }}
             />
             {isRecording ? (
-              <ThemedText variant="caption" color="error" style={{ minWidth: 60, textAlign: 'center' }}>
+              <ThemedText variant="caption" color="error" style={{ minWidth: spacing.xxl + spacing.sm, textAlign: 'center' }}>
                 {formatDuration(recordingDuration)}
                 {FEATURES.ENABLE_STEALTH_RECORDING && audioChunks.length > 0 ? ` · ${audioChunks.length} chunk${audioChunks.length !== 1 ? 's' : ''} saved` : ''}
               </ThemedText>
@@ -597,7 +597,7 @@ export default function ReportIncidentScreen() {
             ) : null}
           </View>
           {FEATURES.ENABLE_STEALTH_RECORDING && (
-            <Card style={[{ backgroundColor: colors.warningSubtle, borderColor: colors.warning + '30', borderWidth: 1, marginBottom: spacing.md }]}>
+            <Card style={[{ backgroundColor: colors.warningSubtle, borderColor: colors.warning + '30', borderWidth: border.thin, marginBottom: spacing.md }]}>
               <ThemedText variant="caption" style={{ color: colors.textSecondary }}>
                 Foreground audio only. Keep app foregrounded with screen on; recording stops if app backgrounds or screen locks. Each 2-min chunk is geotagged — review device lock-screen behavior on your target devices before field use.
               </ThemedText>
@@ -632,9 +632,9 @@ export default function ReportIncidentScreen() {
                       style={{
                         backgroundColor: colors.surface,
                         borderColor: colors.border,
-                        borderWidth: 1,
+                        borderWidth: border.thin,
                         borderRadius: radius.md,
-                        paddingVertical: 6,
+                        paddingVertical: spacing['2xs'] + spacing['3xs'],
                         paddingHorizontal: spacing.sm,
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -642,13 +642,13 @@ export default function ReportIncidentScreen() {
                       }}
                     >
                       <Ionicons name="attach" size={14} color={colors.primary} />
-                      <ThemedText variant="caption" color="text" numberOfLines={1} style={{ maxWidth: 120 }} accessibilityLabel={filename || `file-${idx + 1}`}>
+                      <ThemedText variant="caption" color="text" numberOfLines={1} style={{ maxWidth: sizes.modalClearance }} accessibilityLabel={filename || `file-${idx + 1}`}>
                         {filename || `file-${idx + 1}`}
                       </ThemedText>
                       <Pressable
                         hitSlop={8}
                         onPress={() => handleRemoveMedia(uri)}
-                        style={{ marginLeft: 2 }}
+                        style={{ marginLeft: spacing['3xs'] }}
                       >
                         <Ionicons name="close-circle" size={16} color={colors.textMuted} />
                       </Pressable>
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: border.thin,
     padding: spacing.md,
   },
   heroRow: {
@@ -684,21 +684,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroIconBadge: {
-    width: 44,
-    height: 44,
+    width: sizes.icon - spacing['2xs'],
+    height: sizes.icon - spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   suggestionChip: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   suggestionsDropdown: {
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
     marginTop: spacing.xs,
     ...shadows.md,
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 10,
+    paddingVertical: spacing.sm - spacing['3xs'],
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

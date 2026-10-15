@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Badge } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
-import { spacing, shadows, radius } from '@/constants/tokens';
+import { spacing, shadows, radius, border, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useElectionDetailQuery, useCandidatesQuery } from '@/features/elections/hooks';
@@ -32,10 +32,10 @@ export default function ElectionDetailScreen() {
     return (
       <ScreenView scrollable={false} contentContainerStyle={styles.listContent}>
         {/* Electoral Contest Hero Skeleton */}
-        <View style={[styles.headerCard, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}>
+        <View style={[styles.headerCard, { backgroundColor: colors.surface, borderWidth: border.thin, borderColor: colors.border }]}>
           <Shimmer width={120} height={12} borderRadius={radius.sm} />
-          <Shimmer width="75%" height={24} borderRadius={radius.sm} style={{ marginTop: 6 }} />
-          <Shimmer width="45%" height={14} borderRadius={radius.sm} style={{ marginTop: 6 }} />
+          <Shimmer width="75%" height={24} borderRadius={radius.sm} style={{ marginTop: spacing['2xs'] + spacing['3xs'] }} />
+          <Shimmer width="45%" height={14} borderRadius={radius.sm} style={{ marginTop: spacing['2xs'] + spacing['3xs'] }} />
           <View style={[styles.dateTag, { borderColor: colors.border, marginTop: spacing.md }]}>
             <Shimmer width="60%" height={12} borderRadius={radius.sm} />
           </View>
@@ -82,10 +82,10 @@ export default function ElectionDetailScreen() {
         <ThemedText variant="label" color="#A3E6C2" fontFamily="bold">
           ELECTORAL CONTEST
         </ThemedText>
-        <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: 2 }}>
+        <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
           {election.position}
         </ThemedText>
-        <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: 2 }}>
+        <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: spacing['3xs'] }}>
           {election.electoralArea} · {election.electoralAreaType}
         </ThemedText>
         <View style={styles.dateTag}>
@@ -115,7 +115,7 @@ export default function ElectionDetailScreen() {
                   </ThemedText>
                 </View>
                 <View style={{ flex: 1, minWidth: 0, marginLeft: spacing.sm, paddingRight: spacing.xs }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
                     <ThemedText variant="body" color="text" fontFamily="bold">
                       {c.fullName}
                     </ThemedText>
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   dateTag: {
     marginTop: spacing.sm,
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(255,255,255,0.15)',
   },
   candidatesHeaderRow: {
@@ -195,24 +195,24 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   avatarBox: {
-    width: 36,
-    height: 36,
+    width: sizes.rankBadge + spacing['2xs'],
+    height: sizes.rankBadge + spacing['2xs'],
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
     flexShrink: 0,
   },
   partyPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   footerActions: {
     gap: spacing.sm,

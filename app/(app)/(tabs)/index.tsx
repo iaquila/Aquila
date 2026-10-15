@@ -6,7 +6,7 @@ import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableTex
 import { EntranceView } from '@/core/components/EntranceView';
 import { useAuthStore, useResultsStore } from '@/features/auth/store';
 import { ROUTES } from '@/constants/routes';
-import { spacing, radius, shadows, border, typography } from '@/constants/tokens';
+import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useElectionsQuery, useIncidentsQuery, useCandidatesQuery, useResultsQuery, useAIProjectionQuery, useLocationSearchQuery } from '@/features/elections/hooks';
@@ -201,7 +201,7 @@ export default function DashboardScreen() {
         {/* Situation Console Header Skeleton */}
         <View style={[styles.consoleHeader, { backgroundColor: colors.surface, borderColor: colors.border, padding: spacing.md, gap: spacing.sm }]}>
           <Shimmer width={180} height={12} borderRadius={radius.sm} />
-          <Shimmer width="60%" height={24} borderRadius={radius.sm} style={{ marginTop: 4 }} />
+          <Shimmer width="60%" height={24} borderRadius={radius.sm} style={{ marginTop: spacing['2xs'] }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md }}>
             <Shimmer width="28%" height={32} borderRadius={radius.sm} />
             <Shimmer width="28%" height={32} borderRadius={radius.sm} />
@@ -230,7 +230,7 @@ export default function DashboardScreen() {
       <EntranceView delay={50}>
         <View style={[styles.consoleHeader, { borderColor: colors.border }]}>
           <View>
-            <View style={[styles.orgTagRow, { flex: 1, minWidth: 0, marginBottom: 2, marginRight: 0 }]}>
+            <View style={[styles.orgTagRow, { flex: 1, minWidth: 0, marginBottom: spacing['3xs'], marginRight: 0 }]}>
               <View style={[styles.orgDot, { backgroundColor: colors.primary, flexShrink: 0 }]} />
               <ThemedText variant="label" color="primary" fontFamily="bold" style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={user?.organizationName ?? 'iAQUILA Situation Room'}>
                 {user?.organizationName ?? 'iAQUILA SITUATION ROOM'}
@@ -239,7 +239,7 @@ export default function DashboardScreen() {
 
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginTop: 2 }}>
+                <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
                   Presidential Collation
                 </ThemedText>
               </View>
@@ -339,7 +339,7 @@ export default function DashboardScreen() {
                 winningCandidate ? (
                   <View style={[styles.winnerBadge, { backgroundColor: colors.primarySubtle }]}>
                     <Ionicons name="trophy" size={12} color={colors.primary} />
-                    <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginLeft: 4 }}>
+                    <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginLeft: spacing['2xs'] }}>
                       Leading
                     </ThemedText>
                   </View>
@@ -350,7 +350,7 @@ export default function DashboardScreen() {
           {/* Candidate score rows (Audio Part 2: Agent's affiliated candidate pinned at the top) */}
           <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
             {myCandidate && (
-              <View style={[styles.candidateRowCard, { borderColor: colors.primary, borderWidth: 1.5 }]}>
+              <View style={[styles.candidateRowCard, { borderColor: colors.primary, borderWidth: border.thick }]}>
                 <View style={styles.candHeader}>
                   <View style={styles.candLeft}>
                     <View style={[styles.rankTag, { backgroundColor: colors.primary }]}>
@@ -359,7 +359,7 @@ export default function DashboardScreen() {
                       </ThemedText>
                     </View>
                     <View style={{ marginLeft: spacing.xs, flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
                         <ThemedText variant="body" color="text" fontFamily="bold">
                           {myCandidate.fullName}
                         </ThemedText>
@@ -416,7 +416,7 @@ export default function DashboardScreen() {
                         </ThemedText>
                       </View>
                       <View style={{ marginLeft: spacing.xs, flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
                           <ThemedText variant="body" color="text" fontFamily="bold">
                             {cand.fullName}
                           </ThemedText>
@@ -486,7 +486,7 @@ export default function DashboardScreen() {
           </View>
 
           {/* Candidate Switcher Chips */}
-          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.sm, marginBottom: 4 }}>
+          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.sm, marginBottom: spacing['2xs'] }}>
             SELECT CANDIDATE TO PROJECT
           </ThemedText>
           <View style={styles.candChipsRow}>
@@ -520,7 +520,7 @@ export default function DashboardScreen() {
           </View>
 
           {/* Historical Baseline Dataset Tabs (Audio Part 9: 0: 2023, 1: 2019, 2: Combined) */}
-          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.sm, marginBottom: 4 }}>
+          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.sm, marginBottom: spacing['2xs'] }}>
             HISTORICAL BASELINE DATASET
           </ThemedText>
           <View style={styles.datasetTabs}>
@@ -559,7 +559,7 @@ export default function DashboardScreen() {
 
           {/* Location Scope Search & Dropdown Autocomplete (Audio Part 8) */}
           <View style={{ marginTop: spacing.sm, zIndex: 10 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing['2xs'] + spacing['3xs'] }}>
               <ThemedText variant="label" color="textSecondary" fontFamily="bold">
                 GEOGRAPHIC PROJECTION SCOPE
               </ThemedText>
@@ -606,8 +606,8 @@ export default function DashboardScreen() {
                     setLocationSearchQuery('');
                     setShowLocationDropdown(false);
                   }}
-                  hitSlop={8}
-                  style={{ padding: 4 }}
+                  hitSlop={spacing.xs}
+                  style={{ padding: spacing['2xs'] }}
                 >
                   <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
                 </Pressable>
@@ -629,14 +629,14 @@ export default function DashboardScreen() {
                 setLocationSearchQuery('');
                 setShowLocationDropdown(false);
               }}
-              containerStyle={{ marginBottom: 4 }}
+              containerStyle={{ marginBottom: spacing['2xs'] }}
             />
 
             {/* Dropdown Results Box */}
             {showLocationDropdown && (
               <View style={[styles.locDropdown, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
                 {!locationSearchQuery.trim() && (
-                  <View style={{ paddingHorizontal: spacing.sm, paddingVertical: 6, backgroundColor: colors.borderSubtle }}>
+                  <View style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing['2xs'] + spacing['3xs'], backgroundColor: colors.borderSubtle }}>
                     <ThemedText variant="label" color="textSecondary" fontFamily="bold">
                       FEATURED / POPULAR SCOPES
                     </ThemedText>
@@ -674,7 +674,7 @@ export default function DashboardScreen() {
                         <ThemedText variant="body" color="text" fontFamily="bold">
                           {item.name}
                         </ThemedText>
-                        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                           {item.qualification}
                         </ThemedText>
                       </View>
@@ -692,7 +692,7 @@ export default function DashboardScreen() {
               {/* Location Scope Banner */}
               <View style={[styles.scopeBanner, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}>
                 <Ionicons name="location" size={14} color={colors.primary} />
-                <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, marginLeft: 4 }}>
+                <ThemedText variant="caption" color="textSecondary" style={{ flex: 1, marginLeft: spacing['2xs'] }}>
                   Scope: <ThemedText variant="caption" color="text" fontFamily="bold">{projection.locationScope}</ThemedText>
                 </ThemedText>
               </View>
@@ -714,7 +714,7 @@ export default function DashboardScreen() {
 
               <View style={[styles.insightBox, { backgroundColor: colors.primarySubtle + '40', borderColor: colors.primary + '25' }]}>
                 <Ionicons name="analytics-outline" size={16} color={colors.primary} />
-                <View style={{ flex: 1, marginLeft: 6 }}>
+                <View style={{ flex: 1, marginLeft: spacing['2xs'] + spacing['3xs'] }}>
                   <ExpandableText variant="caption" color="text" collapsedLines={3}>
                     {projection.keyInsights[0] ?? ''}
                   </ExpandableText>
@@ -724,7 +724,7 @@ export default function DashboardScreen() {
               {/* Mandatory AI Disclaimer (Audio Part 8) */}
               <View style={styles.disclaimerRow}>
                 <Ionicons name="information-circle-outline" size={14} color={colors.textMuted} />
-                <ThemedText variant="label" color="textMuted" style={{ flex: 1, marginLeft: 4 }}>
+                <ThemedText variant="label" color="textMuted" style={{ flex: 1, marginLeft: spacing['2xs'] }}>
                   {projection.disclaimer}
                 </ThemedText>
               </View>
@@ -796,7 +796,7 @@ export default function DashboardScreen() {
                       <ThemedText variant="body" color="text" fontFamily="bold">
                         {pu.name}
                       </ThemedText>
-                      <ThemedText variant="caption" color="textSecondary" style={{ marginTop: 2 }}>
+                      <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                         {pu.code} · {pu.lga}, {pu.state}
                       </ThemedText>
                     </View>
@@ -998,13 +998,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: 110,
+    paddingBottom: sizes.tabBarClearance,
     gap: spacing.md,
   },
   consoleHeader: {
     padding: spacing.md,
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: border.thin,
     backgroundColor: 'rgba(13, 99, 56, 0.04)',
     ...Platform.select<object>({
       ios: shadows.sm,
@@ -1020,27 +1020,27 @@ const styles = StyleSheet.create({
   orgTagRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   orgDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: spacing.xs,
+    height: spacing.xs,
+    borderRadius: radius.full,
   },
   pulseBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm - spacing['3xs'],
+    paddingVertical: spacing['2xs'] + border.thin,
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
     flexShrink: 0,
   },
   pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
+    width: spacing.xs,
+    height: spacing.xs,
+    borderRadius: radius.full,
+    marginRight: spacing['2xs'] + spacing['3xs'],
   },
   tickerStatsRow: {
     flexDirection: 'row',
@@ -1048,22 +1048,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.md,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     borderTopColor: 'rgba(0,0,0,0.06)',
   },
   tickerStatItem: {
     flex: 1,
   },
   statDivider: {
-    width: 1,
-    height: 28,
+    width: border.thin,
+    height: sizes.rankBadge - spacing['2xs'],
     backgroundColor: 'rgba(0,0,0,0.08)',
     marginHorizontal: spacing.xs,
   },
   draftAlertCard: {
     padding: spacing.md,
     borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderWidth: border.thick,
     ...shadows.md,
   },
   draftAlertContent: {
@@ -1071,8 +1071,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   draftAlertIcon: {
-    width: 40,
-    height: 40,
+    width: sizes.rankBadge + spacing.xs,
+    height: sizes.rankBadge + spacing.xs,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1081,10 +1081,10 @@ const styles = StyleSheet.create({
   actionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.full,
-    gap: 4,
+    gap: spacing['2xs'],
   },
   sectionContainer: {
     marginBottom: spacing.xs,
@@ -1109,20 +1109,20 @@ const styles = StyleSheet.create({
   },
   viewAllBtn: {
     flexShrink: 0,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
+    paddingVertical: spacing['2xs'],
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
   },
   winnerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
   candidateRowCard: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   candHeader: {
     flexDirection: 'row',
@@ -1138,8 +1138,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   rankTag: {
-    width: 28,
-    height: 28,
+    width: sizes.rankBadge - spacing['2xs'],
+    height: sizes.rankBadge - spacing['2xs'],
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1147,27 +1147,27 @@ const styles = StyleSheet.create({
   partyBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: spacing['3xs'],
   },
   partyPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
   },
   progressBarTrack: {
-    height: 6,
-    borderRadius: 3,
+    height: spacing['2xs'] + spacing['3xs'],
+    borderRadius: radius.full,
     marginTop: spacing.xs,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: radius.full,
   },
   aiCard: {
     padding: spacing.md,
     borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderWidth: border.thick,
     ...shadows.md,
   },
   aiHeaderRow: {
@@ -1184,8 +1184,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
   },
   aiIconBadge: {
-    width: 32,
-    height: 32,
+    width: sizes.rankBadge,
+    height: sizes.rankBadge,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1194,53 +1194,53 @@ const styles = StyleSheet.create({
   probBadge: {
     flexShrink: 0,
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
   },
   candChipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   candChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   datasetTabs: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: spacing['2xs'] + spacing['3xs'],
   },
   datasetTab: {
     flex: 1,
-    minWidth: 90,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    minWidth: sizes.avatar + spacing['3xs'],
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
+    paddingHorizontal: spacing['2xs'],
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   myCandidatePill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
   },
   winnerMiniPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + border.thin,
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.full,
   },
   aiMetricsBox: {
     marginTop: spacing.md,
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
   },
   aiMetricRow: {
     flexDirection: 'row',
@@ -1252,7 +1252,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.sm,
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginTop: spacing.xs,
   },
   disclaimerRow: {
@@ -1263,7 +1263,7 @@ const styles = StyleSheet.create({
   puCard: {
     padding: spacing.sm,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     overflow: 'hidden',
   },
   puTopRow: {
@@ -1275,8 +1275,8 @@ const styles = StyleSheet.create({
   puStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
     flexShrink: 0,
   },
@@ -1286,16 +1286,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.xs,
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
+    borderTopWidth: border.thin,
     gap: spacing.xs,
   },
   puActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm - spacing['3xs'],
+    paddingVertical: spacing['2xs'],
     borderRadius: radius.full,
-    gap: 2,
+    gap: spacing['3xs'],
     flexShrink: 0,
   },
   quickGrid: {
@@ -1309,12 +1309,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.md,
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: border.thin,
     ...shadows.sm,
   },
   quickIconWrap: {
-    width: 44,
-    height: 44,
+    width: sizes.icon - spacing['2xs'],
+    height: sizes.icon - spacing['2xs'],
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1327,7 +1327,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginBottom: spacing.xs,
   },
   locSearchInputBox: {
@@ -1355,21 +1355,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs + 2,
-    borderBottomWidth: 1,
+    paddingVertical: spacing.xs + spacing['3xs'],
+    borderBottomWidth: border.thin,
   },
   locTypeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
+    paddingVertical: spacing['3xs'],
     borderRadius: radius.xs,
   },
   scopeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.sm,
-    borderWidth: 1,
+    borderWidth: border.thin,
     marginBottom: spacing.xs,
   },
 });
