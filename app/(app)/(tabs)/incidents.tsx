@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, EmptyState, Button, Card, SkeletonCard, Badge } from '@/core/components';
 import { useIncidentsStore, useAuthStore, IncidentReport } from '@/features/auth/store';
-import { SEVERITY_COLORS } from '@/constants/incidents';
+import { getSeverityColor } from '@/constants/incidents';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
@@ -28,6 +28,7 @@ const CATEGORY_FILTERS = [
 type IncidentCardProps = {
   item: IncidentReport;
   colors: (typeof Colors)['light'];
+  scheme: 'light' | 'dark';
   isElectionOfficer: boolean;
   impact: ReturnType<typeof useHaptics>['impact'];
   onUpdateStatus: (id: string, status: 'UNDER_REVIEW' | 'RESOLVED') => void;
@@ -35,13 +36,13 @@ type IncidentCardProps = {
 
 // Memoized row: FlatList re-renders every row on each parent render unless
 // rows are memo/Pure (VirtualizedList slow-update warning).
-const IncidentCard = memo(function IncidentCard({ item, colors, isElectionOfficer, impact, onUpdateStatus }: IncidentCardProps) {
+const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElectionOfficer, impact, onUpdateStatus }: IncidentCardProps) {
   const isCritical = item.severity === 'CRITICAL';
   const isHigh = item.severity === 'HIGH';
   const isResolved = item.status === 'RESOLVED';
   const isReviewing = item.status === 'UNDER_REVIEW' || item.status === 'SUBMITTED';
 
-  const sevColor = SEVERITY_COLORS[item.severity] ?? colors.warning;
+  const sevColor = getSeverityColor(item.severity, scheme);
 
   return (
     <Card
@@ -195,11 +196,12 @@ export default function IncidentsScreen() {
     <IncidentCard
       item={item}
       colors={colors}
+      scheme={scheme}
       isElectionOfficer={isElectionOfficer}
       impact={impact}
       onUpdateStatus={handleUpdateStatus}
     />
-  ), [colors, handleUpdateStatus, impact, isElectionOfficer]);
+  ), [colors, scheme, handleUpdateStatus, impact, isElectionOfficer]);
 
   return (
     <ScreenView scrollable={false} noScrollPadding>

@@ -54,11 +54,11 @@ export function Badge({
   } else {
     switch (variant) {
       case 'success':
-        textColor = colors.success;
+        textColor = scheme === 'light' ? '#047857' : colors.success;
         bg = colors.successSubtle;
         break;
       case 'warning':
-        textColor = colors.warning;
+        textColor = scheme === 'light' ? '#B45309' : colors.warning;
         bg = colors.warningSubtle;
         break;
       case 'error':

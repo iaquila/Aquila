@@ -19,7 +19,7 @@ import { IncidentStatus, IncidentSeverity } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { SEVERITY_COLORS, CATEGORY_ICONS } from '@/constants/incidents';
+import { getSeverityColor, CATEGORY_ICONS } from '@/constants/incidents';
 
 export default function IncidentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -481,7 +481,7 @@ export default function IncidentDetailScreen() {
           <View style={styles.severityToggles}>
             {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const).map((sev) => {
               const active = incident.severity === sev;
-              const sColor = SEVERITY_COLORS[sev] ?? colors.warning;
+              const sColor = getSeverityColor(sev, scheme);
               return (
                 <Pressable
                   key={sev}
