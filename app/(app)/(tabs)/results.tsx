@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { StyleSheet, View, Pressable, FlatList, ScrollView, TextInput, Modal } from 'react-native';
-import { router } from 'expo-router';
+import { StyleSheet, View, Pressable, FlatList, ScrollView, TextInput, Modal, Keyboard } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, Button, SkeletonCard } from '@/core/components';
 import { ROUTES } from '@/constants/routes';
@@ -300,7 +300,7 @@ const CollationLeaderboardRow = memo(function CollationLeaderboardRow({
 export default function ResultsScreen() {
   const { user } = useAuthStore();
   const { data: apiResults = [], isLoading: loading, refetch: refetchResults } = useResultsQuery();
-  const { submissions } = useResultsStore();
+  const { submissions, consumeTargetNavigationState } = useResultsStore();
   const { data: candidates = [] } = useCandidatesQuery('e1');
   const { refreshControl } = useRefreshControl(loading, refetchResults);
   const scheme = useColorScheme() ?? 'light';
@@ -793,6 +793,18 @@ export default function ResultsScreen() {
       );
     },
     [geoLevel, selectedMapStateId, selectedMapLgaId, colors, impact, handleFocusMapState, handleDrillToState, handleInspectLga, setInspectModalUnit]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const targetState = consumeTargetNavigationState();
+      if (targetState) {
+        handleFocusMapState(targetState);
+      }
+      return () => {
+        Keyboard.dismiss();
+      };
+    }, [consumeTargetNavigationState, handleFocusMapState])
   );
 
   return (

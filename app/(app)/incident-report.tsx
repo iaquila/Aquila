@@ -60,7 +60,7 @@ export default function ReportIncidentScreen() {
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
   const { data: locationSuggestions = [], isLoading: isLocationsLoading } = useLocationSearchQuery(electoralArea);
-  const { impact } = useHaptics();
+  const { impact, notification } = useHaptics();
 
   const isRecordingRef = useRef(false);
   isRecordingRef.current = isRecording;
@@ -291,6 +291,7 @@ export default function ReportIncidentScreen() {
     }
 
     if (!desc) {
+      notification(Haptics.NotificationFeedbackType.Warning);
       Alert.alert(
         'Description Required',
         'Please describe what occurred at the polling unit, or capture live audio/photo evidence.'
@@ -316,6 +317,7 @@ export default function ReportIncidentScreen() {
     };
     addIncident(incident);
     setSubmitting(false);
+    notification(Haptics.NotificationFeedbackType.Success);
     Alert.alert(
       'Incident Dispatched',
       'Incident report transmitted successfully to the iAQUILA Incident Control Room.',

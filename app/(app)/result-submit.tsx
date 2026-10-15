@@ -184,11 +184,13 @@ export default function SubmitResultScreen() {
     const accCount = parseInt(accredited ?? '0', 10) || 0;
 
     if (accCount === 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       Alert.alert('Accredited Voters Required', 'Please enter the total accredited voter count from BVAS.');
       return;
     }
 
     if (totalCast > accCount) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       Alert.alert(
         'Over-Voting Warning',
         `Total ballots (${totalCast}) exceeds accredited voters (${accCount}). Do you still wish to submit for collation audit?`,

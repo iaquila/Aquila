@@ -264,16 +264,20 @@ export const useElectionsStore = create<ElectionsState>()(
 
 interface ResultsState {
   submissions: ResultSubmission[];
+  targetNavigationState: string | null;
   setSubmissions: (submissions: ResultSubmission[]) => void;
   addSubmission: (submission: ResultSubmission) => void;
   updateSubmission: (id: string, data: Partial<ResultSubmission>) => void;
   removeSubmission: (id: string) => void;
+  setTargetNavigationState: (state: string | null) => void;
+  consumeTargetNavigationState: () => string | null;
 }
 
 export const useResultsStore = create<ResultsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       submissions: [],
+      targetNavigationState: null,
       setSubmissions: (submissions) => set({ submissions }),
       addSubmission: (submission) =>
         set((s) => ({ submissions: [...s.submissions, submission] })),
@@ -285,10 +289,19 @@ export const useResultsStore = create<ResultsState>()(
         set((s) => ({
           submissions: s.submissions.filter((r) => r.id !== id),
         })),
+      setTargetNavigationState: (targetNavigationState) => set({ targetNavigationState }),
+      consumeTargetNavigationState: () => {
+        const current = get().targetNavigationState;
+        if (current) {
+          set({ targetNavigationState: null });
+        }
+        return current;
+      },
     }),
     {
       name: 'aquila-results',
       storage: createJSONStorage(() => createMMKVStorage()),
+      partialize: (state) => ({ submissions: state.submissions }),
     }
   )
 );
