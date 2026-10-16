@@ -2413,6 +2413,7 @@ const styles = StyleSheet.create({
     padding: spacing['2xs'],
     borderRadius: radius.lg,
     borderWidth: border.thin,
+    flexWrap: 'wrap',
     gap: spacing['2xs'] + spacing['3xs'],
   },
   pillTrack: {
@@ -2426,7 +2427,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing['2xs'] + spacing['3xs'],
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: spacing['2xs'] + spacing['3xs'],
     borderRadius: radius.sm,
   },
   activePillBtn: {

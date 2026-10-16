@@ -80,7 +80,7 @@ export default function LocationsScreen() {
         </ThemedText>
 
         <Input
-          placeholder="Search e.g. 'Ikoyi', 'Kaduna', 'Alausa'..."
+          placeholder="Search unit, ward, or LGA..."
           value={searchQuery}
           onChangeText={setSearchQuery}
           leftIcon="search-outline"
