@@ -25,6 +25,8 @@ import {
   useObserve,
   reportObserveError,
 } from '@/core/utils/observe';
+import { useUpdateCheck } from '@/core/hooks/useUpdateCheck';
+import { UpdateModal } from '@/core/components/UpdateModal';
 
 SplashScreen.preventAutoHideAsync();
 enableScreens();
@@ -128,6 +130,7 @@ function RootLayoutNav() {
   const segments = useSegments();
   const navigationState = useRootNavigationState();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { shouldShow, manifest, check, handleDismiss } = useUpdateCheck();
   const [isNavigationReady, setIsNavigationReady] = useState(false);
   const lastTargetRef = useRef<string | null>(null);
   const seededRef = useRef(false);
@@ -138,6 +141,12 @@ function RootLayoutNav() {
       setIsNavigationReady(true);
     }
   }, [navigationState?.key]);
+
+  // App-version / mandatory-update check. Runs once navigation is ready.
+  useEffect(() => {
+    if (!isNavigationReady) return;
+    check();
+  }, [isNavigationReady, check]);
 
   // safety: if navigationState never resolves (Expo Go + NativeTabs), force ready after 1s
   useEffect(() => {
@@ -365,6 +374,14 @@ function RootLayoutNav() {
     >
       <Stack.Screen name="(auth)" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="(app)" options={{ headerShown: false, gestureEnabled: false }} />
+
+      {shouldShow && manifest && (
+        <UpdateModal
+          visible={shouldShow}
+          manifest={manifest}
+          onDismiss={handleDismiss}
+        />
+      )}
     </Stack>
   );
 }
