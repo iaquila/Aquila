@@ -1,6 +1,6 @@
 import { enableScreens } from 'react-native-screens';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
@@ -146,6 +146,17 @@ function RootLayoutNav() {
   useEffect(() => {
     if (!isNavigationReady) return;
     check();
+  }, [isNavigationReady, check]);
+
+  // Re-check for a new mandatory update when the app returns to the foreground
+  // (warm foreground from recents, not a cold start).
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && isNavigationReady) {
+        check();
+      }
+    });
+    return () => subscription.remove();
   }, [isNavigationReady, check]);
 
   // safety: if navigationState never resolves (Expo Go + NativeTabs), force ready after 1s

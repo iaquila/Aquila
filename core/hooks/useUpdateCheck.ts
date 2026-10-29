@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useCallback, useState } from 'react';
 import { checkForUpdate, dismissUpdate, type VersionManifest } from '@/core/services/versionService';
 
@@ -10,6 +11,7 @@ export interface UseUpdateCheckReturn {
 }
 
 export function useUpdateCheck(): UseUpdateCheckReturn {
+  const currentVersion = Constants.expoConfig?.version ?? '';
   const [shouldShow, setShouldShow] = useState<boolean>(false);
   const [manifest, setManifest] = useState<VersionManifest | null>(null);
   const [checking, setChecking] = useState<boolean>(false);
@@ -27,10 +29,10 @@ export function useUpdateCheck(): UseUpdateCheckReturn {
 
   const handleDismiss = useCallback(async () => {
     if (!manifest) return;
-    await dismissUpdate(manifest.minRequiredVersion);
+    await dismissUpdate(currentVersion);
     setShouldShow(false);
     setManifest(null);
-  }, [manifest]);
+  }, [manifest, currentVersion]);
 
   return { shouldShow, manifest, checking, check, handleDismiss };
 }

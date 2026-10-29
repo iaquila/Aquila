@@ -12,7 +12,26 @@ export interface VersionManifest {
 
 const storage = createMMKVStorage();
 const DISMISSED_VERSION_KEY = 'aquila_update_dismissed_version';
+const DISMISS_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 days before re-showing after dismiss
 const FETCH_TIMEOUT_MS = 8000;
+
+type DismissRecord = { version: string; dismissedAt: number };
+
+function parseDismissedRecord(raw: string | null): DismissRecord | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.version === 'string' && typeof parsed.dismissedAt === 'number') {
+      return parsed;
+    }
+    if (typeof parsed === 'string') {
+      return { version: parsed, dismissedAt: Date.now() };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export function compareVersions(a: string, b: string): number {
   const pa = (a || '0').split('.').map((s) => Number(s) || 0);
@@ -37,7 +56,7 @@ function fallbackManifest(): VersionManifest {
   };
 }
 
-async function fetchManifestWithTimeout(): Promise<VersionManifest> {
+async function fetchRawManifest(): Promise<VersionManifest> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -54,11 +73,23 @@ async function fetchManifestWithTimeout(): Promise<VersionManifest> {
       iosStoreUrl: data.iosStoreUrl ?? fallbackManifest().iosStoreUrl,
       androidStoreUrl: data.androidStoreUrl ?? fallbackManifest().androidStoreUrl,
     };
-  } catch {
-    return fallbackManifest();
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function fetchManifestWithRetries(): Promise<VersionManifest> {
+  const maxAttempts = 3;
+  const baseDelayMs = 1000;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fetchRawManifest();
+    } catch {
+      if (attempt === maxAttempts) break;
+      await new Promise((resolve) => setTimeout(resolve, baseDelayMs * attempt));
+    }
+  }
+  return fallbackManifest();
 }
 
 export async function checkForUpdate(): Promise<{
@@ -68,16 +99,16 @@ export async function checkForUpdate(): Promise<{
   const currentVersion = Constants.expoConfig?.version;
   if (!currentVersion) return { shouldShow: false, manifest: null };
 
-  const dismissed = await storage.getItem(DISMISSED_VERSION_KEY);
-  if (dismissed === currentVersion) {
+  const dismissed = parseDismissedRecord(await storage.getItem(DISMISSED_VERSION_KEY));
+  if (dismissed?.version === currentVersion && Date.now() - dismissed.dismissedAt < DISMISS_TTL_MS) {
     return { shouldShow: false, manifest: null };
   }
 
-  const manifest = await fetchManifestWithTimeout();
+  const manifest = await fetchManifestWithRetries();
   const shouldShow = compareVersions(currentVersion, manifest.minRequiredVersion) < 0;
   return { shouldShow, manifest: shouldShow ? manifest : null };
 }
 
 export async function dismissUpdate(version: string): Promise<void> {
-  await storage.setItem(DISMISSED_VERSION_KEY, version);
+  await storage.setItem(DISMISSED_VERSION_KEY, JSON.stringify({ version, dismissedAt: Date.now() }));
 }
