@@ -12,7 +12,7 @@ export interface VersionManifest {
 
 const storage = createMMKVStorage();
 const DISMISSED_VERSION_KEY = 'aquila_update_dismissed_version';
-const DISMISS_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 days before re-showing after dismiss
+const DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days before re-showing after dismiss
 const FETCH_TIMEOUT_MS = 8000;
 
 type DismissRecord = { version: string; dismissedAt: number };
