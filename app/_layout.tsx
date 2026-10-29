@@ -364,16 +364,18 @@ function RootLayoutNav() {
   const rootBg = Colors[scheme].background;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: rootBg },
-        animation: 'fade',
-        gestureEnabled: false,
-      }}
-    >
-      <Stack.Screen name="(auth)" options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="(app)" options={{ headerShown: false, gestureEnabled: false }} />
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: rootBg },
+          animation: 'fade',
+          gestureEnabled: false,
+        }}
+      >
+        <Stack.Screen name="(auth)" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false, gestureEnabled: false }} />
+      </Stack>
 
       {shouldShow && manifest && (
         <UpdateModal
@@ -382,7 +384,7 @@ function RootLayoutNav() {
           onDismiss={handleDismiss}
         />
       )}
-    </Stack>
+    </>
   );
 }
 

@@ -13,7 +13,7 @@ import { useHaptics } from '@/core/hooks/useHaptics';
 import { ThemedText } from '@/core/components/ThemedText';
 import { Button } from '@/core/components/Button';
 import Colors from '@/constants/colors';
-import { radius, spacing, typography } from '@/constants/tokens';
+import { radius, spacing } from '@/constants/tokens';
 
 export interface UpdateModalProps {
   visible: boolean;

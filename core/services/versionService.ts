@@ -41,7 +41,7 @@ async function fetchManifestWithTimeout(): Promise<VersionManifest> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(APP_UPDATE.REMOTE_MANIFEST_URL, {
+    const response = await globalThis.fetch(APP_UPDATE.REMOTE_MANIFEST_URL, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
