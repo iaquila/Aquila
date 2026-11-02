@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, Platform } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge, SectionHeader } from '@/core/components';
@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ASSIGNED_DEMO_PUS } from '@/constants/elections';
+import { ROLE_LABELS } from '@/constants/roles';
+import { FEATURES } from '@/constants/features';
 
 
 export default function DashboardScreen() {
@@ -33,6 +35,14 @@ export default function DashboardScreen() {
   const { submissions } = useResultsStore();
   const { impact } = useHaptics();
 
+  const isElectionOfficer = user?.role === 'ELECTION_OFFICER';
+  const isPollingAgent = user?.role === 'POLLING_AGENT';
+  const isAgent = isPollingAgent || user?.role === 'FIELD_AGENT';
+
+  // Agents see their own identity instead of the Situation Room brand.
+  const headerIdentityLabel =
+    user?.role && isAgent ? ROLE_LABELS[user.role] : (user?.organizationName ?? 'iAQUILA Situation Room');
+
   // Active drafts count from persistent store (Audio Part 3)
   const draftSubmissions = useMemo(() => {
     return submissions.filter((s) => s.status === 'DRAFT');
@@ -44,6 +54,7 @@ export default function DashboardScreen() {
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<{ id: string; name: string; qualification: string } | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [scoreSource, setScoreSource] = useState<'OBSERVED' | 'INEC'>('OBSERVED');
   const currentDataSwitch = true;
 
   const { data: searchResults = [], isLoading: searchingLocations } = useLocationSearchQuery(locationSearchQuery);
@@ -56,7 +67,8 @@ export default function DashboardScreen() {
     locationText: selectedLocation ? `${selectedLocation.name}, ${selectedLocation.qualification}` : undefined,
   });
 
-  // Simulated Live Pulse (Audio Part 6: simulated live incoming data pulsing every 12s across all values)
+  // Simulated Live Pulse (Audio Part 6): aggregated incoming field data is an Election Officer concern.
+  // Field and Polling Unit Agents only ever see values tied to their own submitted returns, so theirs never tick.
   const [pulseBonusVotes, setPulseBonusVotes] = useState<Record<string, number>>({
     cand1: 0, // CPA
     cand2: 0, // DPP
@@ -64,15 +76,11 @@ export default function DashboardScreen() {
     cand4: 0, // PPNF
   });
   const [livePulsePUs, setLivePulsePUs] = useState(725);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.35, duration: 280, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
-      ]).start();
+    if (!isElectionOfficer) return;
 
+    const timer = setInterval(() => {
       const incVotes = Math.floor(Math.random() * 55) + 30; // 30-85 new votes incoming
       const incPUs = Math.random() > 0.45 ? 1 : 0;
 
@@ -92,16 +100,13 @@ export default function DashboardScreen() {
       setLivePulsePUs((prev) => prev + incPUs);
     }, 12000);
     return () => clearInterval(timer);
-  }, [pulseAnim]);
+  }, [isElectionOfficer]);
 
   const { refreshControl } = useRefreshControl(
     electionsLoading || incidentsLoading,
     () => Promise.all([refetchElections(), refetchIncidents(), refetchResults()])
   );
   useForegroundRefresh([['elections', 'list'], ['incidents', 'list'], ['results', 'list']], 5 * 60 * 1000);
-
-  const isElectionOfficer = user?.role === 'ELECTION_OFFICER';
-  const isPollingAgent = user?.role === 'POLLING_AGENT';
 
   // Combine remote published results with persistent local submissions (live link)
   const liveResults = useMemo(() => {
@@ -115,7 +120,8 @@ export default function DashboardScreen() {
   const candidateScores = useMemo(() => {
     const totals: Record<string, number> = {};
     liveResults.forEach((r) => {
-      Object.entries(r.candidateVotes).forEach(([candId, v]) => {
+      const source = scoreSource === 'INEC' ? r.candidateVotesInec : r.candidateVotes;
+      Object.entries(source ?? {}).forEach(([candId, v]) => {
         const val = typeof v === 'number' ? v : 0;
         totals[candId] = (totals[candId] ?? 0) + val;
       });
@@ -131,8 +137,9 @@ export default function DashboardScreen() {
     const list = candidates.map((c) => {
       const dbVotes = totals[c.id];
       const base = dbVotes !== undefined ? dbVotes : (baseMap[c.id] ?? 500);
-      const votes = base + (pulseBonusVotes[c.id] ?? 0);
-      return { ...c, votes };
+      // The live pulse belongs to the Situation Room. Agents never inherit increments from an officer session.
+      const bonus = isElectionOfficer ? (pulseBonusVotes[c.id] ?? 0) : 0;
+      return { ...c, votes: base + bonus };
     });
 
     const grandTotal = list.reduce((acc, c) => acc + c.votes, 0);
@@ -143,7 +150,7 @@ export default function DashboardScreen() {
         pct: grandTotal > 0 ? (c.votes / grandTotal) * 100 : 25,
       }))
       .sort((a, b) => b.votes - a.votes);
-  }, [candidates, liveResults, pulseBonusVotes]);
+  }, [candidates, liveResults, pulseBonusVotes, scoreSource, isElectionOfficer]);
 
   const grandTotalVotes = useMemo(() => {
     return candidateScores.reduce((acc, c) => acc + c.votes, 0);
@@ -151,7 +158,6 @@ export default function DashboardScreen() {
 
   // Audio Part 2: Show candidate agent is tied to first (default Nassiru Bawa / PL if unspecified)
   const myCandidateId = user?.watchCandidateId ?? 'cand3';
-  const winningCandidate = candidateScores[0];
   const myCandidate = candidateScores.find((c) => c.id === myCandidateId) ?? candidateScores[0];
   const myCandidateRank = candidateScores.findIndex((c) => c.id === myCandidate?.id) + 1;
   if ((electionsLoading || resultsLoading) && liveResults.length === 0) {
@@ -191,39 +197,18 @@ export default function DashboardScreen() {
           <View>
             <View style={[styles.orgTagRow, { flex: 1, minWidth: 0, marginBottom: spacing['3xs'], marginRight: 0 }]}>
               <View style={[styles.orgDot, { backgroundColor: colors.primary, flexShrink: 0 }]} />
-              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={user?.organizationName ?? 'iAQUILA Situation Room'}>
-                {user?.organizationName ?? 'iAQUILA SITUATION ROOM'}
+              <ThemedText variant="label" color="primary" fontFamily="bold" style={{ flexShrink: 1, textTransform: 'none' }} accessibilityLabel={headerIdentityLabel}>
+                {headerIdentityLabel}
               </ThemedText>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
-                  Presidential Collation
-                </ThemedText>
-              </View>
-
-              {/* Live Pulse Indicator Badge (Hidden for Election Officer) */}
-              {!isElectionOfficer && (
-                <View style={[styles.pulseBadge, { backgroundColor: colors.primarySubtle, borderColor: colors.primary + '33' }]}>
-                  <Animated.View
-                    style={[
-                      styles.pulseDot,
-                      {
-                        backgroundColor: colors.primary,
-                        transform: [{ scale: pulseAnim }],
-                      },
-                    ]}
-                  />
-                  <ThemedText variant="label" color="primary" fontFamily="bold">
-                    LIVE PULSE
-                  </ThemedText>
-                </View>
-              )}
-            </View>
+            <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
+              Presidential Election
+            </ThemedText>
           </View>
 
-          {/* Real-time Ticker stats */}
+          {/* Real-time Ticker stats (aggregated national feed - Election Officer only) */}
+          {isElectionOfficer && (
           <View style={styles.tickerStatsRow}>
             <View style={styles.tickerStatItem}>
               <ThemedText variant="caption" color="textMuted">REPORTING PUS</ThemedText>
@@ -238,18 +223,8 @@ export default function DashboardScreen() {
                 {grandTotalVotes.toLocaleString()}
               </ThemedText>
             </View>
-            {!isElectionOfficer && (
-              <>
-                <View style={styles.statDivider} />
-                <View style={styles.tickerStatItem}>
-                  <ThemedText variant="caption" color="textMuted">STATUS</ThemedText>
-                  <ThemedText variant="h3" color="warning" fontFamily="bold">
-                    ACTIVE
-                  </ThemedText>
-                </View>
-              </>
-            )}
           </View>
+          )}
         </View>
       </EntranceView>
 
@@ -293,18 +268,36 @@ export default function DashboardScreen() {
           <Card style={styles.sectionCard}>
             <SectionHeader
               title="Snapshot Performance"
-              subtitle="Live top candidates ranked by verified vote tally"
-              action={
-                winningCandidate ? (
-                  <View style={[styles.winnerBadge, { backgroundColor: colors.primarySubtle }]}>
-                    <Ionicons name="trophy" size={12} color={colors.primary} />
-                    <ThemedText variant="label" color="primary" fontFamily="bold" style={{ marginLeft: spacing['2xs'] }}>
-                      Leading
-                    </ThemedText>
-                  </View>
-                ) : null
-              }
+              subtitle={isAgent ? 'Top candidates ranked by verified vote tally' : 'Live top candidates ranked by verified vote tally'}
             />
+
+            {/* Situation Room only: compare our field returns against what INEC declared */}
+            {isElectionOfficer && FEATURES.ENABLE_INEC_OBSERVED_TOGGLE && (
+              <View style={[styles.scoreSourceToggle, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                {([
+                  { id: 'OBSERVED' as const, label: 'Our Returns' },
+                  { id: 'INEC' as const, label: 'INEC Declared' },
+                ]).map((option) => {
+                  const active = scoreSource === option.id;
+                  return (
+                    <Pressable
+                      key={option.id}
+                      onPress={() => {
+                        impact(Haptics.ImpactFeedbackStyle.Light);
+                        setScoreSource(option.id);
+                      }}
+                      style={[styles.scoreSourceItem, active && { backgroundColor: colors.primary }]}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                    >
+                      <ThemedText variant="caption" color={active ? '#FFFFFF' : 'textSecondary'} fontFamily="bold">
+                        {option.label}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
 
           {/* Candidate score rows (Audio Part 2: Agent's affiliated candidate pinned at the top) */}
           <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
@@ -760,18 +753,21 @@ export default function DashboardScreen() {
                       </ThemedText>
                     </View>
 
-                    <Badge
-                      label={isPub ? 'PUBLISHED' : isDraft ? 'DRAFT' : 'PENDING'}
-                      variant={isPub ? 'success' : isDraft ? 'warning' : 'neutral'}
-                      size="sm"
-                      icon={
-                        <Ionicons
-                          name={isPub ? 'checkmark-circle' : isDraft ? 'time' : 'radio-button-off'}
-                          size={12}
-                          color={isPub ? colors.success : isDraft ? colors.warning : colors.textMuted}
-                        />
-                      }
-                    />
+                    {/* Unreported units carry no status badge - the Submit CTA and caption already say it */}
+                    {(isPub || isDraft) && (
+                      <Badge
+                        label={isPub ? 'PUBLISHED' : 'DRAFT'}
+                        variant={isPub ? 'success' : 'warning'}
+                        size="sm"
+                        icon={
+                          <Ionicons
+                            name={isPub ? 'checkmark-circle' : 'time'}
+                            size={12}
+                            color={isPub ? colors.success : colors.warning}
+                          />
+                        }
+                      />
+                    )}
                   </View>
 
                   <View style={[styles.puBottomRow, { borderTopColor: colors.borderSubtle }]}>
@@ -781,7 +777,7 @@ export default function DashboardScreen() {
                           ? `${pu.votes} Votes tallied (${pu.accredited} accredited)`
                           : isDraft
                             ? 'Draft saved in local store'
-                            : 'Awaiting accredited ballot entry'}
+                            : 'No ballot return submitted yet'}
                       </ThemedText>
                     </View>
 
@@ -876,6 +872,8 @@ export default function DashboardScreen() {
             </Card>
           </View>
 
+          {/* Collation & Locations are Situation Room surfaces - not part of the field agent workflow */}
+          {isElectionOfficer && (
           <View style={styles.quickRow}>
             <Card
               pressable
@@ -915,6 +913,7 @@ export default function DashboardScreen() {
               </ThemedText>
             </Card>
           </View>
+          )}
         </View>
       </EntranceView>
 
@@ -986,21 +985,6 @@ const styles = StyleSheet.create({
     height: spacing.xs,
     borderRadius: radius.full,
   },
-  pulseBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm - spacing['3xs'],
-    paddingVertical: spacing['2xs'] + border.thin,
-    borderRadius: radius.full,
-    borderWidth: border.thin,
-    flexShrink: 0,
-  },
-  pulseDot: {
-    width: spacing.xs,
-    height: spacing.xs,
-    borderRadius: radius.full,
-    marginRight: spacing['2xs'] + spacing['3xs'],
-  },
   tickerStatsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1053,6 +1037,20 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     ...shadows.sm,
   },
+  scoreSourceToggle: {
+    flexDirection: 'row',
+    padding: spacing['3xs'],
+    borderRadius: radius.full,
+    borderWidth: border.thin,
+    marginTop: spacing.sm,
+  },
+  scoreSourceItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
+    borderRadius: radius.full,
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1070,13 +1068,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     paddingVertical: spacing['2xs'],
     paddingHorizontal: spacing['2xs'] + spacing['3xs'],
-  },
-  winnerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing['2xs'],
-    borderRadius: radius.full,
   },
   candidateRowCard: {
     padding: spacing.sm,

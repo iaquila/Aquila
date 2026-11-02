@@ -289,9 +289,17 @@ export default function ResultDetailScreen() {
           <View style={styles.custodyRow}>
             <Ionicons name="close-circle-outline" size={16} color={colors.critical} />
             <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
-              Rejected / Spoiled Ballots: {result.rejectedVotes} votes
+              Rejected / Spoiled Ballots: {result.rejectedVotes} observed · {result.rejectedVotesInec} INEC
             </ThemedText>
           </View>
+          {result.cancelledVotes !== undefined || result.cancelledVotesInec !== undefined ? (
+            <View style={styles.custodyRow}>
+              <Ionicons name="ban-outline" size={16} color={colors.warning} />
+              <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
+                Cancelled Ballots: {result.cancelledVotes ?? 0} observed · {result.cancelledVotesInec ?? 0} INEC
+              </ThemedText>
+            </View>
+          ) : null}
         </View>
       </Card>
 

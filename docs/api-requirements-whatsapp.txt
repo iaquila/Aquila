@@ -1,0 +1,308 @@
+*iAQUILA MOBILE — BACKEND API REQUIREMENTS*
+
+━━━━━━━━━━━━━━━━━━━━
+
+*1. GENERAL RULES*
+
+• Lists are paginated: page + limit (default 20, max 100). Polling units must not be returned unpaginated
+• The app polls live data every 15 seconds (elections, results, incidents), AI projection every 60s, location search every 30s, plus a foreground refresh. Endpoints should be cheap and cache-friendly
+
+━━━━━━━━━━━━━━━━━━━━
+
+*2. ROLES AND ACCESS*
+
+Three roles. The token carries the role, and the server must enforce it. The app also hides features per role, but that is presentation, not security.
+
+• POLLING_AGENT
+  Can: record and publish results for their single assigned PU; report incidents at that PU
+  Cannot: see other PUs' drafts; triage incidents
+
+• FIELD_AGENT
+  Can: record and publish results for multiple assigned PUs; report incidents; see nationwide results
+  Cannot: triage incidents
+
+• ELECTION_OFFICER
+  Can: monitor all results, collation and audit; triage incidents (status and severity); request AI projections
+  Cannot: create result returns or report field incidents
+
+Responses should be scoped to the caller. For example, GET /results for a POLLING_AGENT returns only their PU, while an ELECTION_OFFICER gets everything.
+
+━━━━━━━━━━━━━━━━━━━━
+
+*3. AUTH AND SESSION*
+
+*POST /auth/login*
+Request: { email, password }
+Response: { token, user }
+
+The user object must include:
+• id, email, name
+• role (see roles above)
+• organizationId, organizationName
+• assignedLocations (array of polling unit IDs)
+• watchCandidateId (optional; the candidate this agent follows)
+
+The app has no organization picker. The organization belongs to the account.
+
+*POST /auth/logout*
+Invalidates the token. No body. 204 is fine.
+
+*GET /auth/me*
+Returns the same user object. Used on cold start to refresh role and assignments.
+
+━━━━━━━━━━━━━━━━━━━━
+
+*4. PROFILE AND FIELD ASSIGNMENTS*
+
+*GET /users/me/assignments*
+Dashboard shows the agent's assigned polling units with live status. Currently hard-coded in the app.
+
+Each item needs:
+• id, code, name, lga, state
+• status: PUBLISHED | DRAFT | PENDING
+• votes, accredited
+
+*PATCH /users/me*
+Optional but expected. Persists watchCandidateId and selectedPollingUnitId.
+Request: { watchCandidateId, selectedPollingUnitId }
+
+━━━━━━━━━━━━━━━━━━━━
+
+*5. ELECTIONS CATALOGUE*
+
+• GET /election-cycles
+• GET /elections?cycleId=&status=
+• GET /elections/:id
+• GET /positions
+
+Election fields:
+id, cycleId, position, electoralArea, electoralAreaType, electionDate, status, candidateCount
+
+candidateCount is shown in the list, so please include it.
+Status: DRAFT | SCHEDULED | ACTIVE | COMPLETED | ARCHIVED
+
+━━━━━━━━━━━━━━━━━━━━
+
+*6. CANDIDATES AND PARTIES*
+
+• GET /elections/:id/candidates
+• GET /parties
+• GET /candidates/:id/history (optional, if too much to embed)
+
+Candidate fields:
+id, candidateNumber, electionId, partyId, partyName, partyAcronym, fullName, shortName, runningMate, photoUrl, status (ACTIVE | WITHDRAWN)
+
+partyHistory powers the historical performance screen:
+{ electionYear, electionName, partyAcronym, partyName, votes, percentage }
+
+PoliticalParty: { id, name, acronym, code, logoUrl, status }
+
+━━━━━━━━━━━━━━━━━━━━
+
+*7. ELECTORAL GEOGRAPHY*
+
+• GET /locations/states
+• GET /locations/states/:stateId/lgas
+• GET /locations/lgas/:lgaId/wards
+• GET /locations/wards/:wardId/polling-units
+• GET /polling-units?stateId=&lgaId=&wardId=
+• GET /polling-units/:id
+• GET /locations/senatorial-districts?stateId=
+• GET /locations/constituencies?stateId=
+• GET /locations/search?q=
+
+*GET /locations/search* is the autocomplete endpoint. It must search across PU, ward, LGA, senatorial district and state. With an empty q, return a few sensible suggestions.
+
+Each result needs:
+• id, name, type, qualification
+• type: PU | WARD | LGA | SENATORIAL | STATE
+• qualification: e.g. "Ikeja, Lagos State"
+• parent IDs (stateId, lgaId) where relevant
+
+The app displays "name" and "qualification" exactly as returned.
+
+PollingUnit fields:
+id, name, code, wardId, wardName, lgaId, lgaName, stateId, stateName, latitude, longitude, status (ACTIVE | INACTIVE)
+
+All of these are displayed somewhere in the app.
+
+━━━━━━━━━━━━━━━━━━━━
+
+*8. RESULTS (CAPTURE AND PUBLICATION)*
+
+A result is one polling unit's ballot return for one election, entered twice: the agent's Observed counts and the Uploaded Record (EC8A) counts, plus rejected ballots and BVAS accredited voters.
+
+*Writes*
+• POST /results — create draft
+• PATCH /results/:id — update draft
+• POST /results/:id/publish — publish
+• DELETE /results/:id — discard draft
+
+Request body:
+{
+  electionId, pollingUnitId,
+  candidateVotes: { candidateId: number },
+  candidateVotesInec: { candidateId: number },
+  rejectedVotes, rejectedVotesInec,
+  totalAccreditedVoters, totalVotesCast,
+  latitude, longitude
+}
+
+Important:
+• candidateVotes and candidateVotesInec are dictionaries keyed by candidate ID, not arrays
+• submittedAt and submittedBy are set by the server
+• Validate server-side: totalVotesCast should equal the sum of candidate votes plus rejected; flag or reject when it exceeds totalAccreditedVoters. The app warns about over-voting, but it must also be enforced on the server
+• A PATCH on a PUBLISHED result should be rejected, or require an explicit correction endpoint
+
+*Reads*
+• GET /results?electionId=&status=&pollingUnitId= (role-scoped)
+• GET /results/drafts (the caller's drafts)
+• GET /results/:id
+
+The detail screen compares observed vs uploaded counts per candidate to show a Matched / Discrepancy badge. Both dictionaries must be returned.
+
+━━━━━━━━━━━━━━━━━━━━
+
+*9. AGGREGATES — CURRENTLY COMPUTED ON THE PHONE*
+
+This is the biggest piece of fake data. The results screen builds a nationwide state and LGA heatmap from a hard-coded baseline file. The server should own this.
+
+*GET /results/summary?electionId=&level=state|lga&stateId=&party=*
+
+Each row needs:
+• id, name, state
+• zone, code, lgaCount (for state-level rows)
+• totalPus, collated, totalVotes
+• reportingPct
+• leadingParty, leadingCandidate, leadingPct, margin
+• shares: [ { party, votes, pct } ]
+
+Also return overall totals:
+{ totalPus, collated, reportingPct }
+
+*GET /results/live-pulse?electionId=*
+Today this is a random 12-second timer in the app. It should become real incoming data.
+Response: { reportingPus, totalVotesTallied, status, candidateStandings }
+
+*GET /results/candidate-standings?electionId=*
+Each item: { candidateId, fullName, partyAcronym, votes, pct }
+
+If easier, the app can reuse live-pulse for this and we drop the separate endpoint.
+
+━━━━━━━━━━━━━━━━━━━━
+
+*10. INCIDENTS*
+
+Field agents report incidents (violence, vote buying, BVAS failure, etc.) with GPS, category, severity, description and live-captured media. Officers triage them from the situation room.
+
+• GET /incidents?electionId=&status=&category=&severity=
+• GET /incidents/:id
+• POST /incidents
+• PATCH /incidents/:id (officer only)
+• POST /incidents/:id/notes
+
+*Create request:*
+{
+  electionId, pollingUnitId (optional),
+  electoralArea, category, severity, description,
+  latitude, longitude, mediaUrls: []
+}
+
+status starts at SUBMITTED. reportedBy and reportedAt are set by the server.
+
+*Triage update:*
+{ status, severity }
+
+Allowed transitions:
+SUBMITTED → UNDER_REVIEW → RESOLVED
+RESOLVED → UNDER_REVIEW (reopen)
+The app exposes exactly these.
+
+*Officer note:*
+{ note }
+
+The detail screen renders a chain-of-custody timeline (logged → triage → resolution) from timestamps. Returning statusHistory would make this accurate instead of inferred.
+
+*Incident fields:*
+id, electionId, pollingUnitId, electoralArea, category, severity, status, description, latitude, longitude, mediaUrls, reportedBy, reportedAt
+
+━━━━━━━━━━━━━━━━━━━━
+
+*11. MEDIA UPLOAD*
+
+Media is live-capture only. There is intentionally no gallery upload. The app records:
+• Photos (camera)
+• Videos, max 60 seconds
+• Audio memos in 2-minute chunks, max 5 per incident, each geotagged
+
+Each file needs uploading and a durable URL returned. Either:
+• POST /media/upload (multipart) → { url }
+• or POST /media/presign → client uploads directly, then references the URL
+
+For audio chunks we can send: { durationSec, chunkIndex, latitude, longitude }
+
+Please confirm size limits and accepted types (image/jpeg, video/mp4, audio/m4a).
+
+━━━━━━━━━━━━━━━━━━━━
+
+*12. AI PROJECTION*
+
+*POST /elections/:electionId/ai-projection*
+
+This is a server-side simulation. The app currently contains hard-coded candidate profiles and arithmetic that must be replaced by real model output.
+
+Request:
+{
+  candidateId,
+  currentData: boolean,
+  pastData: 0 | 1 | 2,
+  locationId (optional),
+  locationText (optional)
+}
+
+pastData: 0 = 2023 baseline, 1 = 2019 baseline, 2 = combined.
+Omit location for a national projection.
+
+Response must include:
+• candidateId, candidateName, partyAcronym
+• projectedVoteShare, projectedVotes
+• winProbability, confidenceScore
+• leadingMargin, swingDelta
+• historicalBaselineYear, historicalParty
+• locationScope
+• keyInsights (array of strings)
+• disclaimer
+
+The disclaimer is mandatory and shown verbatim:
+"This projection is based on available data and AI simulation. It may not be 100% accurate."
+
+The screen refreshes this every 60 seconds while visible.
+
+━━━━━━━━━━━━━━━━━━━━
+
+*13. ENUMS*
+
+UserRole:
+ELECTION_OFFICER | POLLING_AGENT | FIELD_AGENT
+
+ElectionStatus:
+DRAFT | SCHEDULED | ACTIVE | COMPLETED | ARCHIVED
+
+ResultStatus:
+DRAFT | SUBMITTED | PUBLISHED | CORRECTED
+(The app currently creates only DRAFT and PUBLISHED; the rest are reserved)
+
+IncidentStatus:
+DRAFT | SUBMITTED | UNDER_REVIEW | RESOLVED | CLOSED
+
+IncidentSeverity:
+LOW | MEDIUM | HIGH | CRITICAL
+
+IncidentCategory:
+VIOLENCE | BALLOT_SNATCHING | VOTE_BUYING | VOTER_INTIMIDATION | OVER_VOTING | UNDER_AGE_VOTING | PU_NOT_OPEN | LATE_OFFICIALS | LATE_MATERIALS | EQUIPMENT_FAILURE | BVAS_FAILURE | SECURITY_INCIDENT | PROTEST | WEATHER_DISRUPTION | OTHER
+
+PollingUnit status:
+ACTIVE | INACTIVE
+
+━━━━━━━━━━━━━━━━━━━━
+

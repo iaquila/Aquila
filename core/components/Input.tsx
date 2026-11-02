@@ -28,6 +28,7 @@ type InputProps = {
   containerStyle?: ViewStyle;
   testID?: string;
   description?: string;
+  readOnly?: boolean;
 } & RNTextInputProps;
 
 export const Input = forwardRef<RNTextInput, InputProps>(({
@@ -42,6 +43,8 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
   containerStyle,
   testID,
   description,
+  readOnly,
+  editable,
   ...rest
 }: InputProps, ref) => {
   const scheme = useColorScheme() ?? 'light';
@@ -50,6 +53,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
   const internalRef = useRef<RNTextInput>(null);
 
   const inputRef = (ref as React.Ref<RNTextInput>) ?? internalRef;
+  const isReadOnly = !!readOnly;
   const rightIconName = secureToggle
     ? (visible ? 'eye-off' : 'eye')
     : rightIcon;
@@ -99,7 +103,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: isReadOnly ? colors.surfaceElevated : colors.surface,
             borderColor: animatedBorderColor as unknown as string,
             borderRadius: radius.md,
             shadowColor: colors.primary,
@@ -121,9 +125,9 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
           ref={inputRef}
           style={[
             styles.input,
-            { color: colors.text },
+            { color: isReadOnly ? colors.textMuted : colors.text },
             hasLeftIcon && styles.inputWithLeftIcon,
-            hasRightIcon && styles.inputWithRightIcon,
+            (hasRightIcon || isReadOnly) && styles.inputWithRightIcon,
             Platform.OS === 'android' && { textAlignVertical: rest.multiline ? 'top' : 'center', paddingVertical: spacing.md },
           ]}
           placeholderTextColor={colors.textMuted}
@@ -131,8 +135,17 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
           onBlur={() => setFocused(false)}
           testID={testID}
           maxFontSizeMultiplier={1.3}
+          editable={isReadOnly ? false : editable}
           {...rest}
         />
+        {isReadOnly && (
+          <Ionicons
+            name="lock-closed"
+            size={16}
+            color={colors.textMuted}
+            style={styles.rightIcon}
+          />
+        )}
         {hasRightIcon && (
           <Pressable
             onPress={handleRightPress}

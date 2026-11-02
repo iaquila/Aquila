@@ -8,8 +8,10 @@ import { spacing, shadows, radius, border } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useDeviceLocation } from '@/core/hooks/useDeviceLocation';
-import { useCandidatesQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
+import { useCandidatesQuery, usePollingUnitsQuery, useResultsQuery } from '@/features/elections/hooks';
 import { ROUTES } from '@/constants/routes';
+import { ASSIGNED_DEMO_PUS } from '@/constants/elections';
+import { FEATURES } from '@/constants/features';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -39,17 +41,40 @@ export default function SubmitResultScreen() {
   const resolvedElectionId = electionId ?? 'e1';
   const { data: candidates = [] } = useCandidatesQuery(resolvedElectionId);
   const { data: allPollingUnits = [] } = usePollingUnitsQuery();
+  const { data: allResults = [] } = useResultsQuery();
   const { user } = useAuthStore();
   const { submissions, addSubmission, updateSubmission } = useResultsStore();
 
   const existingDraft = draftId ? submissions.find((s) => s.id === draftId) : null;
 
-  const [selectedPuId, setSelectedPuId] = useState(existingDraft?.pollingUnitId ?? preselectedPuId ?? '');
-  const [selectedPuName, setSelectedPuName] = useState(existingDraft?.pollingUnitName ?? preselectedPuName ?? '');
+  const isPollingAgent = user?.role === 'POLLING_AGENT';
+  // Until an INEC feed exists the agent types the recorded figures; once it lands this flips to false
+  // and the fields render as locked values sourced from the uploaded record.
+  const inecReadOnly = !FEATURES.ENABLE_INEC_MANUAL_ENTRY;
+  const assignedPuId = user?.assignedLocations?.[0];
+  const assignedPu = assignedPuId ? ASSIGNED_DEMO_PUS.find((pu) => pu.id === assignedPuId) : undefined;
+
+  const [selectedPuId, setSelectedPuId] = useState(
+    existingDraft?.pollingUnitId ?? preselectedPuId ?? assignedPu?.id ?? ''
+  );
+  const [selectedPuName, setSelectedPuName] = useState(
+    existingDraft?.pollingUnitName ?? preselectedPuName ?? assignedPu?.name ?? ''
+  );
+
+  // A Polling Unit Agent reports from their single assigned station - the unit is never selectable.
   const [votes, setVotes] = useState<Record<string, VoteInput>>({});
   const [rejectedInec, setRejectedInec] = useState(existingDraft?.rejectedVotesInec ? String(existingDraft.rejectedVotesInec) : '');
   const [rejectedObs, setRejectedObs] = useState(existingDraft?.rejectedVotes ? String(existingDraft.rejectedVotes) : '');
   const [accredited, setAccredited] = useState(existingDraft?.totalAccreditedVoters ? String(existingDraft.totalAccreditedVoters) : '');
+  const [accreditedInec, setAccreditedInec] = useState(
+    existingDraft?.accreditedVotersInec ? String(existingDraft.accreditedVotersInec) : ''
+  );
+  const [cancelledInec, setCancelledInec] = useState(
+    existingDraft?.cancelledVotesInec ? String(existingDraft.cancelledVotesInec) : ''
+  );
+  const [cancelledObs, setCancelledObs] = useState(
+    existingDraft?.cancelledVotes ? String(existingDraft.cancelledVotes) : ''
+  );
   const [submitting, setSubmitting] = useState(false);
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
 
@@ -65,6 +90,12 @@ export default function SubmitResultScreen() {
     });
     if (rejectedObs) {
       setRejectedInec(rejectedObs);
+    }
+    if (accredited) {
+      setAccreditedInec(accredited);
+    }
+    if (cancelledObs) {
+      setCancelledInec(cancelledObs);
     }
   };
 
@@ -85,7 +116,8 @@ export default function SubmitResultScreen() {
   useFocusEffect(
     useCallback(() => {
       const picked = useAuthStore.getState().consumeTransientPickerPU();
-      if (picked) {
+      const role = useAuthStore.getState().user?.role;
+      if (picked && role !== 'POLLING_AGENT') {
         setSelectedPuId(picked.id);
         setSelectedPuName(picked.name);
       }
@@ -99,15 +131,21 @@ export default function SubmitResultScreen() {
     if (preselectedPuId) {
       setSelectedPuId(preselectedPuId);
       if (preselectedPuName) setSelectedPuName(preselectedPuName);
-    } else if (user?.role === 'POLLING_AGENT' && user.assignedLocations?.length && !selectedPuId) {
-      setSelectedPuId(user.assignedLocations[0]!);
+    } else if (isPollingAgent && assignedPu) {
+      setSelectedPuId(assignedPu.id);
+      setSelectedPuName(assignedPu.name);
     }
-  }, [preselectedPuId, preselectedPuName, user?.role, user?.assignedLocations, selectedPuId]);
+  }, [preselectedPuId, preselectedPuName, isPollingAgent, assignedPu]);
+
+  // A Polling Unit Agent reports from their single assigned station - the unit is never selectable.
+  const effectivePuId = isPollingAgent && assignedPu ? assignedPu.id : selectedPuId;
+  const resolvedPuCode = ASSIGNED_DEMO_PUS.find((pu) => pu.id === effectivePuId)?.code;
 
   const resolvedPuName =
+    (isPollingAgent ? assignedPu?.name : undefined) ||
     selectedPuName ||
     allPollingUnits.find((p) => p.id === selectedPuId)?.name ||
-    'PU 001 · Alausa Secretariat';
+    'Unassigned Polling Unit';
 
   const handleVoteChange = (candidateId: string, field: 'inec' | 'observed', value: string) => {
     setVotes((prev) => ({
@@ -119,18 +157,53 @@ export default function SubmitResultScreen() {
     }));
   };
 
-  const computeTotal = () => {
-    let total = 0;
-    candidates.forEach((c) => {
-      const observed = parseInt(votes[c.id]?.observed ?? '0', 10);
-      if (!isNaN(observed)) total += observed;
-    });
-    total += parseInt(rejectedObs ?? '0', 10) || 0;
-    return total;
-  };
+  // Ballot accounting: observed field count vs what INEC's uploaded record says.
+  // Valid votes are the sum of candidate votes - never entered separately, so the figures always reconcile.
+  // The INEC column is sourced from the uploaded record for this unit when it is locked; otherwise the
+  // agent's typed figures win. Same store shape a real INEC feed will deliver.
+  const inecRecord = allResults.find((r) => r.pollingUnitId === effectivePuId);
+  const inecSource = inecReadOnly ? inecRecord : undefined;
+
+  const inecVoteInput = (candidateId: string) =>
+    inecSource
+      ? String(inecSource.candidateVotesInec?.[candidateId] ?? '')
+      : (votes[candidateId]?.inec ?? '');
+
+  const observedVoteTotal = candidates.reduce(
+    (acc, c) => acc + (parseInt(votes[c.id]?.observed ?? '0', 10) || 0),
+    0
+  );
+  const inecVoteTotal = candidates.reduce(
+    (acc, c) => acc + (parseInt(inecVoteInput(c.id) || '0', 10) || 0),
+    0
+  );
+
+  const accreditedObserved = parseInt(accredited || '0', 10) || 0;
+  const accreditedInecValue = inecSource
+    ? (inecSource.accreditedVotersInec ?? inecSource.totalAccreditedVoters)
+    : parseInt(accreditedInec || '0', 10) || 0;
+  const rejectedObserved = parseInt(rejectedObs || '0', 10) || 0;
+  const rejectedInecValue = inecSource
+    ? (inecSource.rejectedVotesInec ?? 0)
+    : parseInt(rejectedInec || '0', 10) || 0;
+  const cancelledObserved = parseInt(cancelledObs || '0', 10) || 0;
+  const cancelledInecValue = inecSource
+    ? (inecSource.cancelledVotesInec ?? 0)
+    : parseInt(cancelledInec || '0', 10) || 0;
+
+  // Cancelled ballots never enter the box, so they stay out of the cast total.
+  const ballotsCastObserved = observedVoteTotal + rejectedObserved;
+  const ballotsCastInec = inecVoteTotal + rejectedInecValue;
+  // Accredited voters whose ballots never surfaced (took the ballot and left).
+  const unaccountedObserved =
+    accreditedObserved - (observedVoteTotal + rejectedObserved + cancelledObserved);
+
+  const exceedsAccredited = accreditedObserved > 0 && ballotsCastObserved > accreditedObserved;
+  const accreditationOverdrawn = accreditedObserved > 0 && unaccountedObserved < 0;
+  const ballotIntegrityOk = !exceedsAccredited && !accreditationOverdrawn;
 
   const handleSaveDraft = async () => {
-    if (!selectedPuId) {
+    if (!effectivePuId) {
       Alert.alert('Polling Unit Required', 'Please select a polling unit first.');
       return;
     }
@@ -140,7 +213,7 @@ export default function SubmitResultScreen() {
 
     candidates.forEach((c) => {
       const vObs = parseInt(votes[c.id]?.observed ?? '0', 10);
-      const vInec = parseInt(votes[c.id]?.inec ?? '0', 10);
+      const vInec = parseInt(inecVoteInput(c.id) || '0', 10);
       candidateVotes[c.id] = isNaN(vObs) ? 0 : vObs;
       candidateVotesInec[c.id] = isNaN(vInec) ? 0 : vInec;
     });
@@ -148,14 +221,17 @@ export default function SubmitResultScreen() {
     const payload: ResultSubmission = {
       id: draftId ?? `draft-${Date.now()}`,
       electionId: resolvedElectionId,
-      pollingUnitId: selectedPuId,
+      pollingUnitId: effectivePuId,
       pollingUnitName: resolvedPuName,
       candidateVotes,
       candidateVotesInec,
-      rejectedVotes: parseInt(rejectedObs ?? '0', 10) || 0,
-      rejectedVotesInec: parseInt(rejectedInec ?? '0', 10) || 0,
-      totalAccreditedVoters: parseInt(accredited ?? '0', 10) || 0,
-      totalVotesCast: computeTotal(),
+      rejectedVotes: rejectedObserved,
+      rejectedVotesInec: rejectedInecValue,
+      totalAccreditedVoters: accreditedObserved,
+      accreditedVotersInec: accreditedInecValue,
+      cancelledVotes: cancelledObserved,
+      cancelledVotesInec: cancelledInecValue,
+      totalVotesCast: ballotsCastObserved,
       status: 'DRAFT',
       latitude: deviceCoords?.latitude ?? 6.600,
       longitude: deviceCoords?.longitude ?? 3.350,
@@ -175,13 +251,13 @@ export default function SubmitResultScreen() {
   };
 
   const handlePublish = async () => {
-    if (!selectedPuId) {
+    if (!effectivePuId) {
       Alert.alert('Polling Unit Required', 'Please select a polling unit before publishing.');
       return;
     }
 
-    const totalCast = computeTotal();
-    const accCount = parseInt(accredited ?? '0', 10) || 0;
+    const totalCast = ballotsCastObserved;
+    const accCount = accreditedObserved;
 
     if (accCount === 0) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -212,7 +288,7 @@ export default function SubmitResultScreen() {
 
     candidates.forEach((c) => {
       const vObs = parseInt(votes[c.id]?.observed ?? '0', 10);
-      const vInec = parseInt(votes[c.id]?.inec ?? '0', 10);
+      const vInec = parseInt(inecVoteInput(c.id) || '0', 10);
       candidateVotes[c.id] = isNaN(vObs) ? 0 : vObs;
       candidateVotesInec[c.id] = isNaN(vInec) ? 0 : vInec;
     });
@@ -220,14 +296,17 @@ export default function SubmitResultScreen() {
     const payload: ResultSubmission = {
       id: draftId ?? `r-${Date.now()}`,
       electionId: resolvedElectionId,
-      pollingUnitId: selectedPuId,
+      pollingUnitId: effectivePuId,
       pollingUnitName: resolvedPuName,
       candidateVotes,
       candidateVotesInec,
-      rejectedVotes: parseInt(rejectedObs ?? '0', 10) || 0,
-      rejectedVotesInec: parseInt(rejectedInec ?? '0', 10) || 0,
-      totalAccreditedVoters: parseInt(accredited ?? '0', 10) || 0,
-      totalVotesCast: computeTotal(),
+      rejectedVotes: rejectedObserved,
+      rejectedVotesInec: rejectedInecValue,
+      totalAccreditedVoters: accreditedObserved,
+      accreditedVotersInec: accreditedInecValue,
+      cancelledVotes: cancelledObserved,
+      cancelledVotesInec: cancelledInecValue,
+      totalVotesCast: ballotsCastObserved,
       status: 'PUBLISHED',
       latitude: deviceCoords?.latitude ?? 6.600,
       longitude: deviceCoords?.longitude ?? 3.350,
@@ -286,7 +365,7 @@ export default function SubmitResultScreen() {
               {resolvedPuName}
             </ThemedText>
             <ThemedText variant="caption" color="textSecondary">
-              PU Code: {selectedPuId || 'PU/24/08/01/001'} {user?.role === 'POLLING_AGENT' ? '· Sole Assigned Station' : ''}
+              PU Code: {resolvedPuCode ?? (effectivePuId || 'Not set')} {isPollingAgent ? '· Sole Assigned Station' : ''}
             </ThemedText>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'], marginTop: spacing['2xs'] }}>
               <Ionicons name="navigate-circle" size={13} color={colors.primary} />
@@ -295,7 +374,7 @@ export default function SubmitResultScreen() {
               </ThemedText>
             </View>
           </View>
-          {user?.role !== 'POLLING_AGENT' && (
+          {!isPollingAgent && (
             <Button
               label="Change"
               variant="outline"
@@ -306,24 +385,52 @@ export default function SubmitResultScreen() {
         </View>
       </Card>
 
-      {/* Accreditation Counts */}
+      {/* Ballot accounting: observed field count vs the INEC uploaded record */}
       <Card style={styles.sectionCard}>
-        <ThemedText variant="label" color="textMuted" fontFamily="bold" style={{ marginBottom: spacing.xs }}>
-          BVAS ACCREDITATION & REJECTED BALLOTS
+        <ThemedText variant="label" color="textMuted" fontFamily="bold">
+          BALLOT ACCOUNTING
         </ThemedText>
-        <Input
-          label="BVAS Accredited Voters Count"
-          placeholder="e.g. 600"
-          value={accredited}
-          onChangeText={setAccredited}
-          keyboardType="number-pad"
-          leftIcon="people-outline"
-          containerStyle={{ marginBottom: spacing.sm }}
-        />
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          <View style={{ flex: 1 }}>
+        <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.sm }}>
+          Left is what your agent observed, right is what INEC recorded.
+        </ThemedText>
+
+        <View style={styles.pairHeaderRow}>
+          <ThemedText variant="label" color="textMuted" fontFamily="bold" style={styles.pairCol}>
+            OBSERVED
+          </ThemedText>
+          <ThemedText variant="label" color="textMuted" fontFamily="bold" style={styles.pairCol}>
+            INEC RECORD
+          </ThemedText>
+        </View>
+
+        <View style={styles.pairRow}>
+          <View style={styles.pairCol}>
             <Input
-              label="Rejected (Observed)"
+              label="Accredited"
+              placeholder="e.g. 600"
+              value={accredited}
+              onChangeText={setAccredited}
+              keyboardType="number-pad"
+              leftIcon="people-outline"
+            />
+          </View>
+          <View style={styles.pairCol}>
+            <Input
+              label="Accredited"
+              placeholder="0"
+              value={inecSource ? String(accreditedInecValue) : accreditedInec}
+              onChangeText={setAccreditedInec}
+              readOnly={inecReadOnly}
+              keyboardType="number-pad"
+              leftIcon="people-outline"
+            />
+          </View>
+        </View>
+
+        <View style={styles.pairRow}>
+          <View style={styles.pairCol}>
+            <Input
+              label="Rejected"
               placeholder="0"
               value={rejectedObs}
               onChangeText={setRejectedObs}
@@ -331,15 +438,104 @@ export default function SubmitResultScreen() {
               leftIcon="close-circle-outline"
             />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={styles.pairCol}>
             <Input
-              label="Rejected (Uploaded Record)"
+              label="Rejected"
               placeholder="0"
-              value={rejectedInec}
+              value={inecSource ? String(rejectedInecValue) : rejectedInec}
               onChangeText={setRejectedInec}
+              readOnly={inecReadOnly}
               keyboardType="number-pad"
-              leftIcon="document-text-outline"
+              leftIcon="close-circle-outline"
             />
+          </View>
+        </View>
+
+        <View style={styles.pairRow}>
+          <View style={styles.pairCol}>
+            <Input
+              label="Cancelled"
+              placeholder="0"
+              value={cancelledObs}
+              onChangeText={setCancelledObs}
+              keyboardType="number-pad"
+              leftIcon="ban-outline"
+            />
+          </View>
+          <View style={styles.pairCol}>
+            <Input
+              label="Cancelled"
+              placeholder="0"
+              value={inecSource ? String(cancelledInecValue) : cancelledInec}
+              onChangeText={setCancelledInec}
+              readOnly={inecReadOnly}
+              keyboardType="number-pad"
+              leftIcon="ban-outline"
+            />
+          </View>
+        </View>
+
+        {inecReadOnly && (
+          <View style={styles.inecSourceRow}>
+            <Ionicons
+              name={inecRecord ? 'cloud-done-outline' : 'cloud-upload-outline'}
+              size={14}
+              color={colors.textMuted}
+            />
+            <ThemedText variant="caption" color="textMuted" style={{ flex: 1, marginLeft: spacing['2xs'] }}>
+              {inecRecord
+                ? 'INEC column sourced from the uploaded record for this unit.'
+                : 'Awaiting INEC upload for this unit.'}
+            </ThemedText>
+          </View>
+        )}
+
+        {/* Derived figures - never typed, so the arithmetic always reconciles */}
+        <View style={[styles.reconcileBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+          <View style={styles.reconcileRow}>
+            <ThemedText variant="label" color="textMuted" fontFamily="bold" style={{ flex: 1 }}>
+              DERIVED
+            </ThemedText>
+            <ThemedText variant="label" color="textMuted" fontFamily="bold" style={styles.reconcileValue}>
+              OBSERVED
+            </ThemedText>
+            <ThemedText variant="label" color="textMuted" fontFamily="bold" style={styles.reconcileValue}>
+              INEC
+            </ThemedText>
+          </View>
+
+          {[
+            { label: 'Valid votes (sum of candidates)', observed: observedVoteTotal, inec: inecVoteTotal },
+            { label: 'Total ballots cast', observed: ballotsCastObserved, inec: ballotsCastInec },
+          ].map((row) => (
+            <View key={row.label} style={[styles.reconcileRow, { borderTopColor: colors.borderSubtle }]}>
+              <ThemedText variant="caption" color="textSecondary" style={{ flex: 1 }}>
+                {row.label}
+              </ThemedText>
+              <ThemedText variant="body" color="text" fontFamily="bold" style={styles.reconcileValue}>
+                {row.observed.toLocaleString()}
+              </ThemedText>
+              <ThemedText variant="body" color="primary" fontFamily="bold" style={styles.reconcileValue}>
+                {row.inec.toLocaleString()}
+              </ThemedText>
+            </View>
+          ))}
+
+          <View style={[styles.reconcileRow, { borderTopColor: colors.borderSubtle }]}>
+            <ThemedText variant="caption" color="textSecondary" style={{ flex: 1 }}>
+              Accredited, no ballot cast
+            </ThemedText>
+            <ThemedText
+              variant="body"
+              color={unaccountedObserved < 0 ? 'critical' : 'text'}
+              fontFamily="bold"
+              style={styles.reconcileValue}
+            >
+              {unaccountedObserved.toLocaleString()}
+            </ThemedText>
+            <ThemedText variant="body" color="textMuted" fontFamily="bold" style={styles.reconcileValue}>
+              —
+            </ThemedText>
           </View>
         </View>
       </Card>
@@ -352,22 +548,24 @@ export default function SubmitResultScreen() {
               Candidate Ballots Tally
             </ThemedText>
             <ThemedText variant="caption" color="textSecondary">
-              Enter count for each candidate per announced polling unit uploaded record
+              Observed votes per candidate, and what INEC recorded for the same unit
             </ThemedText>
           </View>
-          <Button
-            label="Match INEC"
-            variant="outline"
-            size="sm"
-            leftIcon="copy-outline"
-            onPress={handleAutoMatchInec}
-          />
+          {!inecReadOnly && (
+            <Button
+              label="Match INEC"
+              variant="outline"
+              size="sm"
+              leftIcon="copy-outline"
+              onPress={handleAutoMatchInec}
+            />
+          )}
         </View>
 
         <View style={{ gap: spacing.sm }}>
           {candidates.map((cand) => {
             const obsVal = votes[cand.id]?.observed ?? '';
-            const inecVal = votes[cand.id]?.inec ?? '';
+            const inecVal = inecVoteInput(cand.id);
 
             return (
               <View key={cand.id} style={[styles.candVoteBox, { borderColor: colors.border }]}>
@@ -385,7 +583,7 @@ export default function SubmitResultScreen() {
                 <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
                   <View style={{ flex: 1 }}>
                     <Input
-                      label="Observed Count"
+                      label="Observed"
                       placeholder="0"
                       value={obsVal}
                       onChangeText={(val) => handleVoteChange(cand.id, 'observed', val)}
@@ -395,10 +593,11 @@ export default function SubmitResultScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Input
-                      label="Uploaded Record Count"
+                      label="INEC Record"
                       placeholder="0"
                       value={inecVal}
                       onChangeText={(val) => handleVoteChange(cand.id, 'inec', val)}
+                      readOnly={inecReadOnly}
                       keyboardType="number-pad"
                       leftIcon="checkmark-done-outline"
                     />
@@ -415,54 +614,37 @@ export default function SubmitResultScreen() {
             Total Ballots Counted:
           </ThemedText>
           <ThemedText variant="title" color="primary" fontFamily="bold">
-            {computeTotal().toLocaleString()} votes
+            {ballotsCastObserved.toLocaleString()} votes
           </ThemedText>
         </View>
 
-        {/* Real-time Over-Voting Integrity Banner */}
-        {parseInt(accredited || '0', 10) > 0 && (
+        {/* Real-time integrity banner: over-voting and accreditation reconciliation */}
+        {accreditedObserved > 0 && (
           <View
             style={[
               styles.validationBanner,
               {
-                backgroundColor:
-                  computeTotal() > parseInt(accredited || '0', 10)
-                    ? colors.criticalSubtle
-                    : colors.successSubtle,
-                borderColor:
-                  computeTotal() > parseInt(accredited || '0', 10)
-                    ? colors.critical
-                    : colors.success,
+                backgroundColor: ballotIntegrityOk ? colors.successSubtle : colors.criticalSubtle,
+                borderColor: ballotIntegrityOk ? colors.success : colors.critical,
               },
             ]}
           >
             <Ionicons
-              name={
-                computeTotal() > parseInt(accredited || '0', 10)
-                  ? 'alert-circle'
-                  : 'checkmark-circle'
-              }
+              name={ballotIntegrityOk ? 'checkmark-circle' : 'alert-circle'}
               size={18}
-              color={
-                computeTotal() > parseInt(accredited || '0', 10)
-                  ? colors.critical
-                  : colors.success
-              }
+              color={ballotIntegrityOk ? colors.success : colors.critical}
             />
             <View style={{ flex: 1, marginLeft: spacing.xs }}>
               <ThemedText
                 variant="label"
                 fontFamily="bold"
-                style={{
-                  color:
-                    computeTotal() > parseInt(accredited || '0', 10)
-                      ? colors.critical
-                      : colors.success,
-                }}
+                style={{ color: ballotIntegrityOk ? colors.success : colors.critical }}
               >
-                {computeTotal() > parseInt(accredited || '0', 10)
-                  ? `OVER-VOTING DETECTED: Total ballots (${computeTotal()}) exceeds accredited voters (${parseInt(accredited || '0', 10)})`
-                  : `BALLOT COUNT VERIFIED: ${computeTotal()} / ${parseInt(accredited || '0', 10)} accredited (${((computeTotal() / parseInt(accredited || '0', 10)) * 100).toFixed(1)}% Turnout)`}
+                {exceedsAccredited
+                  ? `Over-voting: ${ballotsCastObserved} cast exceeds ${accreditedObserved} accredited`
+                  : accreditationOverdrawn
+                    ? `Mismatch: valid, rejected and cancelled exceed ${accreditedObserved} accredited`
+                    : `${ballotsCastObserved} cast · ${observedVoteTotal} valid · ${rejectedObserved} rejected · ${cancelledObserved} cancelled`}
               </ThemedText>
             </View>
           </View>
@@ -525,6 +707,41 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     ...shadows.sm,
+  },
+  pairRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  pairCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  pairHeaderRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing['3xs'],
+  },
+  inecSourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  reconcileBox: {
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: border.thin,
+  },
+  reconcileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing['2xs'] + spacing['3xs'],
+    borderTopWidth: border.thin,
+  },
+  reconcileValue: {
+    width: spacing['3xl'] + spacing.md,
+    textAlign: 'right',
   },
   puDisplayRow: {
     flexDirection: 'row',

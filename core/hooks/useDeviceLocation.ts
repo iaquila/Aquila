@@ -45,7 +45,8 @@ export function useDeviceLocation(fallbackCoords?: { latitude: number; longitude
         return fallbackCoords;
       }
     } catch (e) {
-      if (__DEV__) console.warn('[location] getCurrentPosition failed, using fallback', e);
+      // Handled fallback, not a fault: log instead of warn so no LogBox banner covers the UI during demos.
+      if (__DEV__) console.log('[location] getCurrentPosition failed, using fallback', e);
       if (fallbackCoords) {
         setCoordinates({
           latitude: fallbackCoords.latitude,

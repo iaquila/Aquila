@@ -11,6 +11,7 @@ import { useLogoutMutation } from '@/features/auth/hooks';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { LEGAL_URLS } from '@/constants/legal';
+import { ROLE_LABELS } from '@/constants/roles';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import Colors from '@/constants/colors';
@@ -26,12 +27,6 @@ export default function ProfileTabScreen() {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   useStatusBar({ barStyle: 'light' });
-
-  const roleLabels: Record<UserRole, string> = {
-    ELECTION_OFFICER: 'Election Officer',
-    POLLING_AGENT: 'Polling Unit Agent',
-    FIELD_AGENT: 'Field Agent',
-  };
 
   const [screenCaptureBlocked, setScreenCaptureBlocked] = useState(false);
 
@@ -62,7 +57,7 @@ export default function ProfileTabScreen() {
       email,
       name: email.split('@')[0] ?? email,
     });
-    Alert.alert('Role Switched', `Active session updated to ${roleLabels[newRole]}.`);
+    Alert.alert('Role Switched', `Active session updated to ${ROLE_LABELS[newRole]}.`);
   };
 
   const handleLogout = () => {
@@ -104,7 +99,7 @@ export default function ProfileTabScreen() {
 
           <View style={[styles.roleChip, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
             <ThemedText variant="label" color="#34D399" fontFamily="bold">
-              {user?.role ? roleLabels[user.role] : 'Field Agent'}
+              {user?.role ? ROLE_LABELS[user.role] : 'Field Agent'}
             </ThemedText>
           </View>
 

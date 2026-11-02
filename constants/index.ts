@@ -6,4 +6,5 @@ export * from './legal';
 export * from './parties';
 export * from './incidents';
 export * from './elections';
+export * from './roles';
 

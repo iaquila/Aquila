@@ -149,3 +149,36 @@
 
 
 
+  * Field & Polling Unit Agent Dashboard Separation (pre-presentation pass):
+    - Situation Room Identity Removed From Agent Header: `index.tsx` first card now renders the agent's own role as its identity line (`Field Agent` / `Polling Unit Agent`) via the new SSOT `ROLE_LABELS` (`constants/roles.ts`). `ELECTION_OFFICER` keeps the organization name. `profile.tsx` now consumes the same constant instead of a local duplicate map.
+    - Reporting PU / Votes Tallied Ticker: The second row of the first card (`REPORTING PUS` / `TOTAL VOTES TALLIED` / `STATUS`) is now rendered for `ELECTION_OFFICER` only. Its dead `STATUS: ACTIVE` branch (only ever shown to non-officers) was deleted.
+    - Live Value Simulation Disabled For Agents: The 12s `pulseBonusVotes` / `livePulsePUs` interval now early-returns unless the viewer is an Election Officer, so agent dashboards no longer drift on their own. The animated `LIVE PULSE` badge was removed (it was officer-hidden and would have advertised live data on a now-static screen). `Animated`/`useRef` imports and `pulseBadge`/`pulseDot` styles dropped.
+    - Snapshot Performance: Removed the header `Leading` trophy badge (duplicated by the per-row `LEADING` pill and `#1` rank tag). Subtitle drops the word "Live" for agents since their tally is static.
+    - Quick Actions: `Collation Room` and `Locations` cards are gated to `ELECTION_OFFICER`; agents keep only `Enter Results` + `Report Incident`.
+    - Assigned Polling Units Status Badge: Removed the ambiguous `PENDING` badge for units with no return. Only `PUBLISHED` / `DRAFT` badges render; the caption now reads "No ballot return submitted yet". Demo set still carries 3 PUs (Published / Draft / Unreported).
+    - Polling Unit Agent Station Lock: `result-submit.tsx` resolves the agent's station from `assignedLocations[0]` against `ASSIGNED_DEMO_PUS` and derives `effectivePuId`, which now drives validation and both save/publish payloads. `Change` is hidden for `POLLING_AGENT`, the transient picker result is consumed but ignored for that role, and the PU code renders the real unit code instead of a raw id or hardcoded fallback.
+    - Invariants: `npx tsc --noEmit` clean, `npx eslint .` clean (zero warnings), `npx expo export --platform android` bundles successfully.
+  * Dashboard Copy & Situation Room Toggle Scaffolding:
+    - Header Rename: Dashboard hero changed from `Presidential Collation` to `Presidential Election`. Other "Collation Room" surfaces left intact (domain term, not a typo).
+    - `FEATURES.ENABLE_INEC_OBSERVED_TOGGLE` (default `false`): Officer-only segmented control in Snapshot Performance switching aggregation between `candidateVotes` (our returns) and `candidateVotesInec` (INEC declared). Verified live on Waydroid with the flag on, then restored to `false` for the demo.
+    - Pulse Isolation Hardening: `candidateScores` now applies `pulseBonusVotes` only when `isElectionOfficer`, so switching officer → agent mid-session no longer leaves inherited live increments frozen on the agent dashboard.
+    - Demo Safety: `useDeviceLocation` fallback path downgraded `console.warn` → `console.log`; the yellow LogBox banner was covering UI on Waydroid where GPS is unavailable.
+    - Runtime Verified on Waydroid (`192.168.240.112:5555`): Field Agent, Polling Unit Agent, and Election Officer dashboards + the locked submit screen all screencapped clean.
+  * Ballot Accounting: Observed vs INEC (result entry):
+    - `ResultSubmission` gained `accreditedVotersInec`, `cancelledVotes`, `cancelledVotesInec` (optional, so seeded/legacy returns stay valid).
+    - `result-submit.tsx` accreditation card rebuilt as a paired ledger: Accredited / Rejected / Cancelled each entered twice under `OBSERVED` and `INEC RECORD` column headers. Long "(Observed)/(INEC)" suffixes dropped because they wrapped and knocked the input boxes out of alignment.
+    - Valid votes are now derived (`Σ candidate observed` / `Σ candidate INEC`) instead of being a loose typed number, and total ballots cast is derived as valid + rejected. A read-only DERIVED panel shows Valid, Total cast, and "Accredited, no ballot cast" (accredited − valid − rejected − cancelled). This is the arithmetic the recording flagged: 100 accredited, 81 valid, 5 rejected → 86 cast, 14 never voted.
+    - Integrity banner now distinguishes over-voting (cast > accredited) from an accreditation mismatch (valid + rejected + cancelled > accredited) and otherwise prints the cast/valid/rejected/cancelled breakdown.
+    - `Match INEC` now mirrors accredited and cancelled as well as rejected and per-candidate counts.
+    - PU code resolves from `ASSIGNED_DEMO_PUS` for every role, not just polling agents (was falling back to the raw id `pu-s25-lga-1-1`).
+    - `result-detail.tsx`: rejected row shows observed · INEC, and a cancelled row renders when the return carries cancellation data.
+    - Invariants: `npx tsc --noEmit` + `npx eslint .` clean; verified live on Waydroid by entering 100/5/81 and confirming 86 cast / 14 unaccounted.
+  * INEC Field Provenance Flag:
+    - Added `FEATURES.ENABLE_INEC_MANUAL_ENTRY` (default `true`). While true the agent types INEC figures (no feed exists yet). Flipping to `false` locks every INEC input — accredited, rejected, cancelled and per-candidate — and hides `Match INEC`, so the column can only be populated from the uploaded INEC record.
+    - `core/components/Input.tsx` gained a `readOnly` prop: `editable: false`, muted background/text, and a lock glyph. Reusable across any future system-populated field.
+    - Rationale: an audit comparison is worthless if one agent types both sides.
+    - Verified both states on Waydroid (locked inputs + hidden Match button, then restored to editable).
+  * INEC Column Sourcing (record-backed, not zeros):
+    - `result-submit.tsx` now looks up the published record for the active polling unit (`useResultsQuery` → match on `pollingUnitId`). When `ENABLE_INEC_MANUAL_ENTRY` is `false`, the whole INEC side — accredited, rejected, cancelled and every candidate — is read from that record instead of the agent's keystrokes, and those sourced figures flow into the derived totals and the saved payload.
+    - Card shows provenance: "INEC column sourced from the uploaded record for this unit", or "Awaiting INEC upload for this unit" when no record exists. Untouched cells stay blank rather than reading as 0-vs-N discrepancies.
+    - Verified on Waydroid against seeded record `r1` (Alausa): accredited 600, rejected 10, candidates 230/190/100/44 → derived INEC valid 564, cast 574, all locked.
