@@ -40,12 +40,19 @@ function normalise(lines: string[]): string[] {
 }
 
 function findLabelValue(lines: string[], labels: string[]): number | undefined {
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
     const upper = line.toUpperCase();
-    if (labels.some((label) => upper.includes(label))) {
-      const values = numbersIn(line);
-      // EC8A prints the figure in the rightmost column of the row.
-      if (values.length > 0) return values[values.length - 1];
+    if (!labels.some((label) => upper.includes(label))) continue;
+
+    const values = numbersIn(line);
+    // EC8A prints the figure in the rightmost column of the row.
+    if (values.length > 0) return values[values.length - 1];
+
+    // Table cells frequently arrive as their own line: "Accredited Voters" then "100".
+    for (let offset = 1; offset <= 2; offset += 1) {
+      const nextValues = numbersIn(lines[index + offset] ?? '');
+      if (nextValues.length > 0) return nextValues[0];
     }
   }
   return undefined;
@@ -151,20 +158,30 @@ export function parseResultSheet(lines: string[], candidates: Candidate[]): Shee
     const tokens = candidateTokens(candidate);
     if (tokens.length === 0) continue;
 
-    const row = cleaned.find((line) => lineMatchesCandidate(line, tokens));
-    if (!row) continue;
+    const rowIndex = cleaned.findIndex((line) => lineMatchesCandidate(line, tokens));
+    if (rowIndex === -1) continue;
 
-    const values = numbersIn(row);
-    if (values.length === 0) continue;
+    const values = numbersIn(cleaned[rowIndex]!);
+    if (values.length > 0) {
+      // Single figure rows (party → votes) are unambiguous; otherwise take the rightmost column.
+      candidateVotes[candidate.id] = values[values.length - 1]!;
+      continue;
+    }
 
-    // Single figure rows (party → votes) are unambiguous; otherwise take the rightmost column.
-    candidateVotes[candidate.id] = values[values.length - 1]!;
+    // OCR frequently splits a row into "APC" then "1,234" on the next line - look ahead briefly.
+    for (let offset = 1; offset <= 2; offset += 1) {
+      const nextValues = numbersIn(cleaned[rowIndex + offset] ?? '');
+      if (nextValues.length > 0) {
+        candidateVotes[candidate.id] = nextValues[0]!;
+        break;
+      }
+    }
   }
 
   const matchedCandidates = Object.keys(candidateVotes).length;
   const accredited = findLabelValue(cleaned, ['ACCREDITED', 'BVAS']);
-  const rejected = findLabelValue(cleaned, ['REJECTED', 'INVALID', 'SPOILED']);
-  const cancelled = findLabelValue(cleaned, ['CANCELLED', 'CANCELED']);
+  const rejected = findLabelValue(cleaned, ['REJECTED', 'INVALID', 'SPOILED', 'BALLOT PAPERS REJECTED']);
+  const cancelled = findLabelValue(cleaned, ['CANCELLED', 'CANCELED', 'ANNULLED']);
 
   return {
     accredited,

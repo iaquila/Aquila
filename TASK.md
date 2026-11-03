@@ -228,3 +228,18 @@
   * Dashboard Tick Tally Trim:
     - Removed the `REPORTING PUS` stat (and its divider/style) from the station console. The ticker was already gated to `ELECTION_OFFICER`, so agent dashboards are unaffected; `TOTAL VOTES TALLIED` remains.
     - Dropped the now-dead `livePulsePUs` state and its 12s interval increment. `pulseBonusVotes` still drives the officer-only projection/pulse.
+  * Sheet Scan Diagnostics + Parser Tolerance:
+    - `result-submit.tsx` gains an on-device diagnostic panel under the scan card (flag-gated): prints "OCR OUTPUT · N LINES" with the raw recognised text plus "Candidates expected: CPA, DPP, PL, PPNF". Removes the need for console access when diagnosing on TestFlight.
+    - Parser: both candidate rows *and* totals rows now look ahead 1–2 lines when a line carries no figure — ML Kit commonly emits table cells as separate lines ("Accredited Voters" then "100", "CPA" then "81"). Broader label vocabulary (BALLOT PAPERS REJECTED, ANNULLED).
+    - Validated with tsx harness against two synthetic OCR shapes (split-cell and single-line): both return accredited 100, rejected 5, cancelled 0, candidates 81/4/0/0, confidence 1.
+    - `docs/mock-ec8a-demo-sheet.html`: printable A4 mock EC8A using the app's seeded parties, internally consistent (valid 85, rejected 5, cast 90, accredited 100) for end-to-end pipeline testing.
+  * INEC Terminology Alignment (ballot accounting):
+    - Row labels now use the EC8A wording: "Accredited Voters", "Rejected Ballot Papers", "Cancelled Votes" (were Accredited / Rejected / Cancelled).
+    - Restructured each pair to a full-width row label with two unlabelled inputs beneath it. Long INEC terms previously wrapped inside half-width columns and pushed the observed/INEC inputs out of horizontal alignment (same failure as the earlier "(Observed)/(INEC)" suffixes).
+    - Derived block renamed: "Total Valid Votes", "Total Votes Cast", and "Unaccounted (accredited − cast − cancelled)" — the old "Accredited, no ballot cast" asserted a cause the residual can't prove. Added a "Cancelled Votes" derived row for both columns so the residual is auditable.
+    - Mock sheet copy aligned ("Rejected Ballot Papers", "Votes Scored") and republished as v2.
+    - Verified: parser still returns 100/5/0 + 81/4/0/0 on split-cell input, `tsc` + `eslint --max-warnings 0` clean, Android bundle exports.
+  * Cancelled Votes Removed From Agent Entry:
+    - A polling unit officer cannot cancel votes (cancellation is a collation-level action), so the Cancelled pair was wrong on `result-submit`. Removed both inputs, the `Match INEC` mirroring, and the scan handler's write-back for that field; the card now states "Cancellations are applied at collation, not at the polling unit."
+    - `cancelledVotes` is no longer persisted by agent returns; `cancelledVotesInec` is only written when the sourced INEC record actually carries one. The derived "Cancelled Votes" row renders only when a value exists, so it can't read as a stuck 0.
+    - Kept `cancelledVotes` / `cancelledVotesInec` on `ResultSubmission` and the parser's cancelled detection for the collation side.

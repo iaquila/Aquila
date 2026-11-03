@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mock Result Sheet — Pipeline Test</title>
+<style>
+  @page { size: A4 portrait; margin: 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #000;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 13pt;
+    line-height: 1.45;
+  }
+  .sheet { max-width: 190mm; margin: 0 auto; }
+  .bar { border-top: 3px solid #000; margin-bottom: 10px; }
+  h1 { font-size: 15pt; margin: 0 0 2px; letter-spacing: 0.4px; text-align: center; }
+  h2 { font-size: 12pt; margin: 0 0 14px; text-align: center; font-weight: normal; }
+  .meta { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .meta div { flex: 1; }
+  .label { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.6px; color: #333; }
+  .value { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 2px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  th, td { border: 1.5px solid #000; padding: 7px 9px; text-align: left; vertical-align: middle; }
+  th { font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.5px; }
+  td.num, th.num { text-align: right; font-size: 14pt; font-weight: bold; width: 24%; }
+  tr.total td { font-weight: bold; background: #f2f2f2; }
+  .party { font-weight: bold; }
+  .acr { font-size: 12pt; }
+  .totals td { padding: 8px 9px; }
+  .sign { display: flex; justify-content: space-between; gap: 30px; margin-top: 26px; }
+  .sign div { flex: 1; }
+  .line { border-bottom: 1px solid #000; height: 30px; }
+  .note { margin-top: 18px; font-size: 8.5pt; text-align: center; letter-spacing: 0.6px; }
+  @media print { body { font-size: 12.5pt; } }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <h1>INDEPENDENT NATIONAL ELECTORAL COMMISSION</h1>
+  <h2>2027 GENERAL ELECTION — PRESIDENTIAL · STATEMENT OF RESULT (EC 8A)</h2>
+  <div class="bar"></div>
+
+  <div class="meta">
+    <div><div class="label">State</div><div class="value">LAGOS</div></div>
+    <div><div class="label">LGA</div><div class="value">IKEJA</div></div>
+    <div><div class="label">Ward</div><div class="value">08</div></div>
+    <div><div class="label">Polling Unit</div><div class="value">024</div></div>
+  </div>
+
+  <table class="totals">
+    <tr>
+      <td>Accredited Voters (BVAS)</td>
+      <td class="num">100</td>
+    </tr>
+    <tr>
+      <td>Rejected Ballot Papers</td>
+      <td class="num">5</td>
+    </tr>
+    <tr>
+      <td>Cancelled Votes</td>
+      <td class="num">0</td>
+    </tr>
+  </table>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Party</th>
+        <th>Acronym</th>
+        <th class="num">Votes Scored</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="party">Coalition for Progressive Action</td>
+        <td class="acr party">CPA</td>
+        <td class="num">81</td>
+      </tr>
+      <tr>
+        <td class="party">Democratic Peoples Party</td>
+        <td class="acr party">DPP</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td class="party">Peoples Liberation</td>
+        <td class="acr party">PL</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td class="party">Progressive Peoples National Front</td>
+        <td class="acr party">PPNF</td>
+        <td class="num">0</td>
+      </tr>
+      <tr class="total">
+        <td>Total Valid Votes</td>
+        <td></td>
+        <td class="num">85</td>
+      </tr>
+      <tr class="total">
+        <td>Total Votes Cast</td>
+        <td></td>
+        <td class="num">90</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sign">
+    <div>
+      <div class="line"></div>
+      <div class="label">Presiding Officer Signature</div>
+    </div>
+    <div>
+      <div class="line"></div>
+      <div class="label">Party Agent Signature</div>
+    </div>
+  </div>
+
+  <div class="note">DEMO SAMPLE — NOT AN OFFICIAL INEC DOCUMENT</div>
+</div>
+</body>
+</html>

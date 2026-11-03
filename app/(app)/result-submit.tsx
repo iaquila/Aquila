@@ -3,7 +3,7 @@ import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Keyboard } fro
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Button, Input, Card } from '@/core/components';
+import { ThemedText, Button, Input, Card, ExpandableText } from '@/core/components';
 import { useResultsStore, useAuthStore, ResultSubmission } from '@/features/auth/store';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { spacing, shadows, radius, border } from '@/constants/tokens';
@@ -72,15 +72,10 @@ export default function SubmitResultScreen() {
   const [accreditedInec, setAccreditedInec] = useState(
     existingDraft?.accreditedVotersInec ? String(existingDraft.accreditedVotersInec) : ''
   );
-  const [cancelledInec, setCancelledInec] = useState(
-    existingDraft?.cancelledVotesInec ? String(existingDraft.cancelledVotesInec) : ''
-  );
-  const [cancelledObs, setCancelledObs] = useState(
-    existingDraft?.cancelledVotes ? String(existingDraft.cancelledVotes) : ''
-  );
   const [submitting, setSubmitting] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [sheetSource, setSheetSource] = useState<SheetCaptureSource | undefined>(undefined);
+  const [scanDebugLines, setScanDebugLines] = useState<string[]>([]);
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
 
   const handleAutoMatchInec = () => {
@@ -98,9 +93,6 @@ export default function SubmitResultScreen() {
     }
     if (accredited) {
       setAccreditedInec(accredited);
-    }
-    if (cancelledObs) {
-      setCancelledInec(cancelledObs);
     }
   };
 
@@ -167,7 +159,6 @@ export default function SubmitResultScreen() {
     });
     if (parsed.accredited !== undefined) setAccredited(String(parsed.accredited));
     if (parsed.rejected !== undefined) setRejectedObs(String(parsed.rejected));
-    if (parsed.cancelled !== undefined) setCancelledObs(String(parsed.cancelled));
     setSheetSource(source);
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -221,6 +212,11 @@ export default function SubmitResultScreen() {
     setScanning(true);
     try {
       const lines = await extractTextFromPages(pageUris);
+      setScanDebugLines(lines);
+      if (lines.length === 0) {
+        Alert.alert('No text detected', 'The sheet was captured but no text was recognised. Check the OCR OUTPUT panel, or enter the figures manually.');
+        return;
+      }
       applyParsedSheet(parseResultSheet(lines, candidates), source);
     } catch {
       Alert.alert('Scan failed', 'The sheet could not be read. Try again or enter the figures manually.');
@@ -260,6 +256,11 @@ export default function SubmitResultScreen() {
         return;
       }
       const lines = await extractTextFromPages(pdf.pages);
+      setScanDebugLines(lines);
+      if (lines.length === 0) {
+        Alert.alert('No text detected', 'The PDF was rendered but no text was recognised. Check the OCR OUTPUT panel, or enter the figures manually.');
+        return;
+      }
       applyParsedSheet(parseResultSheet(lines, candidates), 'LIBRARY');
     } catch {
       Alert.alert('PDF scan failed', 'The document could not be read. Scan the paper sheet instead.');
@@ -307,10 +308,10 @@ export default function SubmitResultScreen() {
   const rejectedInecValue = inecSource
     ? (inecSource.rejectedVotesInec ?? 0)
     : parseInt(rejectedInec || '0', 10) || 0;
-  const cancelledObserved = parseInt(cancelledObs || '0', 10) || 0;
-  const cancelledInecValue = inecSource
-    ? (inecSource.cancelledVotesInec ?? 0)
-    : parseInt(cancelledInec || '0', 10) || 0;
+  // A polling unit officer cannot cancel votes - cancellations are applied at collation level,
+  // so the agent side is always 0 and the INEC side only reflects what the record already carries.
+  const cancelledObserved = 0;
+  const cancelledInecValue = inecSource?.cancelledVotesInec ?? 0;
 
   // Cancelled ballots never enter the box, so they stay out of the cast total.
   const ballotsCastObserved = observedVoteTotal + rejectedObserved;
@@ -350,8 +351,7 @@ export default function SubmitResultScreen() {
       rejectedVotesInec: rejectedInecValue,
       totalAccreditedVoters: accreditedObserved,
       accreditedVotersInec: accreditedInecValue,
-      cancelledVotes: cancelledObserved,
-      cancelledVotesInec: cancelledInecValue,
+      ...(cancelledInecValue > 0 ? { cancelledVotesInec: cancelledInecValue } : {}),
       totalVotesCast: ballotsCastObserved,
       ...(sheetSource ? { sheetCaptureSource: sheetSource } : {}),
       status: 'DRAFT',
@@ -426,8 +426,7 @@ export default function SubmitResultScreen() {
       rejectedVotesInec: rejectedInecValue,
       totalAccreditedVoters: accreditedObserved,
       accreditedVotersInec: accreditedInecValue,
-      cancelledVotes: cancelledObserved,
-      cancelledVotesInec: cancelledInecValue,
+      ...(cancelledInecValue > 0 ? { cancelledVotesInec: cancelledInecValue } : {}),
       totalVotesCast: ballotsCastObserved,
       ...(sheetSource ? { sheetCaptureSource: sheetSource } : {}),
       status: 'PUBLISHED',
@@ -571,6 +570,21 @@ export default function SubmitResultScreen() {
                   : 'Live captures are trusted; imported images are flagged.'}
             </ThemedText>
           </View>
+
+          {/* Diagnostic: what the OCR actually returned, so a failed match can be diagnosed on-device */}
+          {scanDebugLines.length > 0 && (
+            <View style={[styles.debugBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <ThemedText variant="label" color="textMuted" fontFamily="bold">
+                OCR OUTPUT · {scanDebugLines.length} LINES
+              </ThemedText>
+              <ExpandableText variant="micro" color="textSecondary" collapsedLines={8} style={{ marginTop: spacing['3xs'] }}>
+                {scanDebugLines.join('\n')}
+              </ExpandableText>
+              <ThemedText variant="micro" color="textMuted" style={{ marginTop: spacing['3xs'] }}>
+                Candidates expected: {candidates.map((c) => c.partyAcronym).join(', ')}
+              </ThemedText>
+            </View>
+          )}
         </Card>
       )}
 
@@ -592,76 +606,61 @@ export default function SubmitResultScreen() {
           </ThemedText>
         </View>
 
-        <View style={styles.pairRow}>
-          <View style={styles.pairCol}>
-            <Input
-              label="Accredited"
-              placeholder="e.g. 600"
-              value={accredited}
-              onChangeText={setAccredited}
-              keyboardType="number-pad"
-              leftIcon="people-outline"
-            />
+        {[
+          {
+            key: 'accredited',
+            label: 'Accredited Voters',
+            icon: 'people-outline' as const,
+            placeholder: 'e.g. 600',
+            observedValue: accredited,
+            onObservedChange: setAccredited,
+            inecValue: inecSource ? String(accreditedInecValue) : accreditedInec,
+            onInecChange: setAccreditedInec,
+          },
+          {
+            key: 'rejected',
+            label: 'Rejected Ballot Papers',
+            icon: 'close-circle-outline' as const,
+            placeholder: '0',
+            observedValue: rejectedObs,
+            onObservedChange: setRejectedObs,
+            inecValue: inecSource ? String(rejectedInecValue) : rejectedInec,
+            onInecChange: setRejectedInec,
+          },
+        ].map((row) => (
+          <View key={row.key}>
+            <ThemedText variant="label" color="textMuted" fontFamily="bold" style={{ marginBottom: spacing['3xs'] }}>
+              {row.label}
+            </ThemedText>
+            <View style={styles.pairRow}>
+              <View style={styles.pairCol}>
+                <Input
+                  placeholder={row.placeholder}
+                  value={row.observedValue}
+                  onChangeText={row.onObservedChange}
+                  keyboardType="number-pad"
+                  leftIcon={row.icon}
+                />
+              </View>
+              <View style={styles.pairCol}>
+                <Input
+                  placeholder="0"
+                  value={row.inecValue}
+                  onChangeText={row.onInecChange}
+                  readOnly={inecReadOnly}
+                  keyboardType="number-pad"
+                  leftIcon={row.icon}
+                />
+              </View>
+            </View>
           </View>
-          <View style={styles.pairCol}>
-            <Input
-              label="Accredited"
-              placeholder="0"
-              value={inecSource ? String(accreditedInecValue) : accreditedInec}
-              onChangeText={setAccreditedInec}
-              readOnly={inecReadOnly}
-              keyboardType="number-pad"
-              leftIcon="people-outline"
-            />
-          </View>
-        </View>
+        ))}
 
-        <View style={styles.pairRow}>
-          <View style={styles.pairCol}>
-            <Input
-              label="Rejected"
-              placeholder="0"
-              value={rejectedObs}
-              onChangeText={setRejectedObs}
-              keyboardType="number-pad"
-              leftIcon="close-circle-outline"
-            />
-          </View>
-          <View style={styles.pairCol}>
-            <Input
-              label="Rejected"
-              placeholder="0"
-              value={inecSource ? String(rejectedInecValue) : rejectedInec}
-              onChangeText={setRejectedInec}
-              readOnly={inecReadOnly}
-              keyboardType="number-pad"
-              leftIcon="close-circle-outline"
-            />
-          </View>
-        </View>
-
-        <View style={styles.pairRow}>
-          <View style={styles.pairCol}>
-            <Input
-              label="Cancelled"
-              placeholder="0"
-              value={cancelledObs}
-              onChangeText={setCancelledObs}
-              keyboardType="number-pad"
-              leftIcon="ban-outline"
-            />
-          </View>
-          <View style={styles.pairCol}>
-            <Input
-              label="Cancelled"
-              placeholder="0"
-              value={inecSource ? String(cancelledInecValue) : cancelledInec}
-              onChangeText={setCancelledInec}
-              readOnly={inecReadOnly}
-              keyboardType="number-pad"
-              leftIcon="ban-outline"
-            />
-          </View>
+        <View style={styles.inecSourceRow}>
+          <Ionicons name="information-circle-outline" size={14} color={colors.textMuted} />
+          <ThemedText variant="label" color="textMuted" style={{ flex: 1, marginLeft: spacing['2xs'] }}>
+            Cancellations are applied at collation, not at the polling unit.
+          </ThemedText>
         </View>
 
         {inecReadOnly && (
@@ -694,8 +693,12 @@ export default function SubmitResultScreen() {
           </View>
 
           {[
-            { label: 'Valid votes (sum of candidates)', observed: observedVoteTotal, inec: inecVoteTotal },
-            { label: 'Total ballots cast', observed: ballotsCastObserved, inec: ballotsCastInec },
+            { label: 'Total Valid Votes', observed: observedVoteTotal, inec: inecVoteTotal },
+            { label: 'Total Votes Cast', observed: ballotsCastObserved, inec: ballotsCastInec },
+            // Only surfaced when a collation record actually carries a cancellation.
+            ...(cancelledInecValue > 0
+              ? [{ label: 'Cancelled Votes', observed: cancelledObserved, inec: cancelledInecValue }]
+              : []),
           ].map((row) => (
             <View key={row.label} style={[styles.reconcileRow, { borderTopColor: colors.borderSubtle }]}>
               <ThemedText variant="caption" color="textSecondary" style={{ flex: 1 }}>
@@ -712,7 +715,7 @@ export default function SubmitResultScreen() {
 
           <View style={[styles.reconcileRow, { borderTopColor: colors.borderSubtle }]}>
             <ThemedText variant="caption" color="textSecondary" style={{ flex: 1 }}>
-              Accredited, no ballot cast
+              Unaccounted (accredited − cast − cancelled)
             </ThemedText>
             <ThemedText
               variant="body"
@@ -919,6 +922,12 @@ const styles = StyleSheet.create({
   provenanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: border.thin,
+    marginTop: spacing.sm,
+  },
+  debugBox: {
     padding: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: border.thin,
