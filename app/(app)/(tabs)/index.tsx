@@ -76,14 +76,12 @@ export default function DashboardScreen() {
     cand3: 0, // PL
     cand4: 0, // PPNF
   });
-  const [livePulsePUs, setLivePulsePUs] = useState(725);
 
   useEffect(() => {
     if (!isElectionOfficer) return;
 
     const timer = setInterval(() => {
       const incVotes = Math.floor(Math.random() * 55) + 30; // 30-85 new votes incoming
-      const incPUs = Math.random() > 0.45 ? 1 : 0;
 
       // Proportional vote increment matching field returns
       const cpaAdd = Math.round(incVotes * 0.38);
@@ -97,8 +95,6 @@ export default function DashboardScreen() {
         cand3: (prev.cand3 ?? 0) + plAdd,
         cand4: (prev.cand4 ?? 0) + ppnfAdd,
       }));
-
-      setLivePulsePUs((prev) => prev + incPUs);
     }, 12000);
     return () => clearInterval(timer);
   }, [isElectionOfficer]);
@@ -239,13 +235,6 @@ export default function DashboardScreen() {
           {/* Real-time Ticker stats (aggregated national feed - Election Officer only) */}
           {isElectionOfficer && (
           <View style={styles.tickerStatsRow}>
-            <View style={styles.tickerStatItem}>
-              <ThemedText variant="caption" color="textMuted">REPORTING PUS</ThemedText>
-              <ThemedText variant="h3" color="text" fontFamily="bold">
-                {livePulsePUs.toLocaleString()}
-              </ThemedText>
-            </View>
-            <View style={styles.statDivider} />
             <View style={styles.tickerStatItem}>
               <ThemedText variant="caption" color="textMuted">TOTAL VOTES TALLIED</ThemedText>
               <ThemedText variant="h3" color="primary" fontFamily="bold">
@@ -1027,12 +1016,6 @@ const styles = StyleSheet.create({
   },
   tickerStatItem: {
     flex: 1,
-  },
-  statDivider: {
-    width: border.thin,
-    height: sizes.rankBadge - spacing['2xs'],
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    marginHorizontal: spacing.xs,
   },
   draftAlertCard: {
     padding: spacing.md,

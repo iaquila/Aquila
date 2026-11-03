@@ -318,6 +318,13 @@ export default function ProfileTabScreen() {
           </Pressable>
         </View>
 
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['3xs'], marginTop: spacing.xs }}>
+          <Ionicons name="map-outline" size={12} color={colors.textMuted} />
+          <ThemedText variant="micro" color="textMuted">
+            Administrative boundaries: geoBoundaries / GRID3 (CC BY 4.0).
+          </ThemedText>
+        </View>
+
         <View style={{ marginTop: spacing.xs }}>
           {[
             { label: 'Help & Support Desk', icon: 'help-circle-outline', url: LEGAL_URLS.SUPPORT },

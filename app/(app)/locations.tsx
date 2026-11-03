@@ -4,6 +4,7 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, Input, Shimmer } from '@/core/components';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, radius, shadows, border } from '@/constants/tokens';
+import { TOTAL_STATES, TOTAL_LGAS, TOTAL_POLLING_UNITS } from '@/constants/elections';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import {
@@ -49,7 +50,7 @@ export default function LocationsScreen() {
           Electoral Location Engine
         </ThemedText>
         <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: spacing['3xs'] }}>
-          National directory of 36 States, FCT, 774 LGAs, and 176,846 Polling Units
+          National directory of {TOTAL_STATES} States, FCT, {TOTAL_LGAS} LGAs, and {TOTAL_POLLING_UNITS.toLocaleString()} Polling Units
         </ThemedText>
 
         <View style={styles.statsStrip}>
@@ -59,12 +60,12 @@ export default function LocationsScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
-            <ThemedText variant="title" color="#FFFFFF" fontFamily="bold">774</ThemedText>
+            <ThemedText variant="title" color="#FFFFFF" fontFamily="bold">{TOTAL_LGAS}</ThemedText>
             <ThemedText variant="label" color="#A3E6C2">LGAS</ThemedText>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
-            <ThemedText variant="title" color="#FFFFFF" fontFamily="bold">176,846</ThemedText>
+            <ThemedText variant="title" color="#FFFFFF" fontFamily="bold">{TOTAL_POLLING_UNITS.toLocaleString()}</ThemedText>
             <ThemedText variant="label" color="#A3E6C2">POLLING UNITS</ThemedText>
           </View>
         </View>

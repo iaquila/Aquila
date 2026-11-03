@@ -8,7 +8,9 @@
     "ios": "node scripts/start.js --ios",
     "web": "node scripts/start.js --web",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:lga": "node scripts/build-lga-geometry.cjs",
+    "validate:lga": "node scripts/validate-lga-geometry.cjs"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

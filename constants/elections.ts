@@ -1,6 +1,13 @@
 /**
- * Single Source of Truth (SSOT) for election contest status mappings, labels, and position filters.
+ * Single Source of Truth (SSOT) for election contest status mappings, labels,
+ * position filters, and the official national election totals.
  */
+export const TOTAL_STATES = 36;
+export const TOTAL_STATES_AND_FCT = 37;
+export const TOTAL_LGAS = 774;
+export const TOTAL_WARDS = 8809;
+export const TOTAL_POLLING_UNITS = 176846;
+
 export const ELECTION_STATUS_COLORS: Record<string, string> = {
   DRAFT: 'textMuted',
   SCHEDULED: 'pending',

@@ -35,3 +35,5 @@ coverage
 
 expo-env.d.ts
 # @end expo-cli
+# LGA geometry build cache (geoBoundaries source GeoJSON)
+scripts/.cache/
