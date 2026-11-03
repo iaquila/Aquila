@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Button, Input, Card } from '@/core/components';
 import { useResultsStore, useAuthStore, ResultSubmission } from '@/features/auth/store';
@@ -11,6 +13,7 @@ import { useDeviceLocation } from '@/core/hooks/useDeviceLocation';
 import { useCandidatesQuery, usePollingUnitsQuery, useResultsQuery } from '@/features/elections/hooks';
 import { ROUTES } from '@/constants/routes';
 import { ASSIGNED_DEMO_PUS } from '@/constants/elections';
+import { loadSheetOcr, extractTextFromPages, parseResultSheet, rasterisePdf, scanDocumentPages, type SheetScanResult, type SheetCaptureSource } from '@/features/elections/sheetScan';
 import { FEATURES } from '@/constants/features';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,6 +79,8 @@ export default function SubmitResultScreen() {
     existingDraft?.cancelledVotes ? String(existingDraft.cancelledVotes) : ''
   );
   const [submitting, setSubmitting] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [sheetSource, setSheetSource] = useState<SheetCaptureSource | undefined>(undefined);
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
 
   const handleAutoMatchInec = () => {
@@ -146,6 +151,122 @@ export default function SubmitResultScreen() {
     selectedPuName ||
     allPollingUnits.find((p) => p.id === selectedPuId)?.name ||
     'Unassigned Polling Unit';
+
+  const applyParsedSheet = (parsed: SheetScanResult, source: SheetCaptureSource) => {
+    if (parsed.matchedCandidates === 0 && parsed.accredited === undefined) {
+      Alert.alert('Nothing read', 'No result-sheet figures were recognised. Retake the sheet in good light, or enter manually.');
+      return;
+    }
+
+    setVotes((prev) => {
+      const next = { ...prev };
+      Object.entries(parsed.candidateVotes).forEach(([candidateId, voteCount]) => {
+        next[candidateId] = { inec: next[candidateId]?.inec ?? '', observed: String(voteCount) };
+      });
+      return next;
+    });
+    if (parsed.accredited !== undefined) setAccredited(String(parsed.accredited));
+    if (parsed.rejected !== undefined) setRejectedObs(String(parsed.rejected));
+    if (parsed.cancelled !== undefined) setCancelledObs(String(parsed.cancelled));
+    setSheetSource(source);
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert(
+      'Sheet captured',
+      `${parsed.matchedCandidates}/${candidates.length} candidates read (${Math.round(parsed.confidence * 100)}%). Review every figure before publishing.`
+    );
+  };
+
+  const handleScanSheet = async (source: SheetCaptureSource) => {
+    const ocr = await loadSheetOcr();
+    if (!ocr) {
+      Alert.alert(
+        'Scanner unavailable',
+        'Sheet scanning needs a build that includes the OCR module. Enter the figures manually for this session.'
+      );
+      return;
+    }
+
+    let pageUris: string[] = [];
+
+    if (source === 'LIVE_CAMERA') {
+      // Native scanner: edge detection, crop and de-skew before OCR.
+      const scan = await scanDocumentPages();
+      if (scan.status === 'cancelled') return;
+      if (scan.status === 'unavailable') {
+        Alert.alert('Scanner unavailable', 'The document scanner needs a build that includes it. Choose a photo or enter manually.');
+        return;
+      }
+      if (scan.pages.length === 0) {
+        Alert.alert('Nothing scanned', 'No page was captured. Try again.');
+        return;
+      }
+      pageUris = scan.pages;
+    } else {
+      try {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Permission needed', 'Allow access to photos to choose the result sheet.');
+          return;
+        }
+        const picked = await ImagePicker.launchImageLibraryAsync({ quality: 0.9, mediaTypes: ['images'] });
+        if (picked.canceled || !picked.assets?.[0]) return;
+        pageUris = [picked.assets[0].uri];
+      } catch {
+        Alert.alert('Photos unavailable', 'Could not open the photo library. Try again or enter manually.');
+        return;
+      }
+    }
+
+    setScanning(true);
+    try {
+      const lines = await extractTextFromPages(pageUris);
+      applyParsedSheet(parseResultSheet(lines, candidates), source);
+    } catch {
+      Alert.alert('Scan failed', 'The sheet could not be read. Try again or enter the figures manually.');
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleImportPdf = async () => {
+    const ocr = await loadSheetOcr();
+    if (!ocr) {
+      Alert.alert(
+        'Scanner unavailable',
+        'PDF reading needs a build that includes the OCR module. Enter the figures manually for this session.'
+      );
+      return;
+    }
+
+    let picked: Awaited<ReturnType<typeof DocumentPicker.getDocumentAsync>>;
+    try {
+      picked = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true });
+    } catch {
+      Alert.alert('File picker unavailable', 'Could not open the file picker. Try again or enter manually.');
+      return;
+    }
+    if (picked.canceled || !picked.assets?.[0]) return;
+
+    setScanning(true);
+    try {
+      const pdf = await rasterisePdf(picked.assets[0].uri);
+      if (pdf.status === 'unavailable') {
+        Alert.alert('PDF support unavailable', 'PDF reading needs a build that includes it. Scan the paper sheet instead.');
+        return;
+      }
+      if (pdf.status === 'failed' || pdf.pages.length === 0) {
+        Alert.alert('PDF unreadable', 'That PDF could not be rendered. Scan the paper sheet or choose a photo instead.');
+        return;
+      }
+      const lines = await extractTextFromPages(pdf.pages);
+      applyParsedSheet(parseResultSheet(lines, candidates), 'LIBRARY');
+    } catch {
+      Alert.alert('PDF scan failed', 'The document could not be read. Scan the paper sheet instead.');
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const handleVoteChange = (candidateId: string, field: 'inec' | 'observed', value: string) => {
     setVotes((prev) => ({
@@ -232,6 +353,7 @@ export default function SubmitResultScreen() {
       cancelledVotes: cancelledObserved,
       cancelledVotesInec: cancelledInecValue,
       totalVotesCast: ballotsCastObserved,
+      ...(sheetSource ? { sheetCaptureSource: sheetSource } : {}),
       status: 'DRAFT',
       latitude: deviceCoords?.latitude ?? 6.600,
       longitude: deviceCoords?.longitude ?? 3.350,
@@ -307,6 +429,7 @@ export default function SubmitResultScreen() {
       cancelledVotes: cancelledObserved,
       cancelledVotesInec: cancelledInecValue,
       totalVotesCast: ballotsCastObserved,
+      ...(sheetSource ? { sheetCaptureSource: sheetSource } : {}),
       status: 'PUBLISHED',
       latitude: deviceCoords?.latitude ?? 6.600,
       longitude: deviceCoords?.longitude ?? 3.350,
@@ -384,6 +507,72 @@ export default function SubmitResultScreen() {
           )}
         </View>
       </Card>
+
+      {/* Sheet capture: OCR fills the observed figures from a photo of the paper result sheet */}
+      {FEATURES.ENABLE_RESULT_SHEET_SCAN && (
+        <Card style={styles.sectionCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons name="scan-outline" size={18} color={colors.primary} />
+            <ThemedText variant="title" color="text" fontFamily="bold">
+              Scan Result Sheet
+            </ThemedText>
+          </View>
+          <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'], marginBottom: spacing.sm }}>
+            Photograph the signed EC8A and the observed figures fill in. Always review before publishing.
+          </ThemedText>
+
+          <Button
+            label="Scan with camera"
+            variant="primary"
+            leftIcon="scan-outline"
+            onPress={() => handleScanSheet('LIVE_CAMERA')}
+            loading={scanning}
+            fullWidth
+          />
+
+          {FEATURES.ENABLE_SHEET_LIBRARY_IMPORT && (
+            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Photo"
+                  variant="outline"
+                  size="sm"
+                  leftIcon="images-outline"
+                  onPress={() => handleScanSheet('LIBRARY')}
+                  loading={scanning}
+                  fullWidth
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="PDF"
+                  variant="outline"
+                  size="sm"
+                  leftIcon="document-outline"
+                  onPress={handleImportPdf}
+                  loading={scanning}
+                  fullWidth
+                />
+              </View>
+            </View>
+          )}
+
+          <View style={[styles.provenanceRow, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+            <Ionicons
+              name={sheetSource === 'LIBRARY' ? 'images-outline' : 'camera-outline'}
+              size={13}
+              color={colors.textMuted}
+            />
+            <ThemedText variant="label" color="textMuted" style={{ flex: 1, marginLeft: spacing['2xs'] }}>
+              {sheetSource === 'LIVE_CAMERA'
+                ? 'Captured live at this polling unit'
+                : sheetSource === 'LIBRARY'
+                  ? 'Imported image — flagged in the audit trail'
+                  : 'Live captures are trusted; imported images are flagged.'}
+            </ThemedText>
+          </View>
+        </Card>
+      )}
 
       {/* Ballot accounting: observed field count vs the INEC uploaded record */}
       <Card style={styles.sectionCard}>
@@ -726,6 +915,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.sm,
+  },
+  provenanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: border.thin,
+    marginTop: spacing.sm,
   },
   reconcileBox: {
     padding: spacing.sm,

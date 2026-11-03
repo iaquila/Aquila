@@ -292,6 +292,18 @@ export default function ResultDetailScreen() {
               Rejected / Spoiled Ballots: {result.rejectedVotes} observed · {result.rejectedVotesInec} INEC
             </ThemedText>
           </View>
+          {result.sheetCaptureSource ? (
+            <View style={styles.custodyRow}>
+              <Ionicons
+                name={result.sheetCaptureSource === 'LIVE_CAMERA' ? 'camera-outline' : 'images-outline'}
+                size={16}
+                color={colors.primary}
+              />
+              <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
+                Sheet capture: {result.sheetCaptureSource === 'LIVE_CAMERA' ? 'Live camera' : 'Imported image (flagged)'}
+              </ThemedText>
+            </View>
+          ) : null}
           {result.cancelledVotes !== undefined || result.cancelledVotesInec !== undefined ? (
             <View style={styles.custodyRow}>
               <Ionicons name="ban-outline" size={16} color={colors.warning} />

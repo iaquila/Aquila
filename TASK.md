@@ -182,3 +182,25 @@
     - `result-submit.tsx` now looks up the published record for the active polling unit (`useResultsQuery` → match on `pollingUnitId`). When `ENABLE_INEC_MANUAL_ENTRY` is `false`, the whole INEC side — accredited, rejected, cancelled and every candidate — is read from that record instead of the agent's keystrokes, and those sourced figures flow into the derived totals and the saved payload.
     - Card shows provenance: "INEC column sourced from the uploaded record for this unit", or "Awaiting INEC upload for this unit" when no record exists. Untouched cells stay blank rather than reading as 0-vs-N discrepancies.
     - Verified on Waydroid against seeded record `r1` (Alausa): accredited 600, rejected 10, candidates 230/190/100/44 → derived INEC valid 564, cast 574, all locked.
+  * Live Feed: Incidents + Incoming Returns (Situation Room parity):
+    - `IncidentMarquee.tsx` generalized to a typed stream: new `MarqueeItem` (`kind: 'incident' | 'result'`), `LiveStreamMarquee`, and `LiveStreamMarqueeScrollable`. Animation contract unchanged (40pt/s, duplicated seamless track, press-to-pause, reduce-motion fallback, 8-item cap). `IncidentMarquee` remains as a thin incidents-only wrapper, so agent dashboards are untouched.
+    - Dashboard feed is now role-aware: `ELECTION_OFFICER` gets `Live Situation Feed` with incidents and published returns merged and sorted by recency (incident → red pill, return → green pill, tap routes to the matching detail screen). Field/Polling Unit Agents keep the incidents-only `Field Incident Stream`, since the national returns feed isn't theirs.
+    - Verified: `npx tsc --noEmit` + `npx eslint . --max-warnings 0` clean, `npx expo export --platform android` bundles.
+  * Result Sheet OCR Capture (flagged, native):
+    - Added `expo-text-extractor` ^2.0.0 (on-device ML Kit on Android, Apple Vision on iOS). Resolved lazily via `loadSheetOcr()` so Expo Go / pre-rebuild binaries fall through to manual entry instead of crashing.
+    - New `features/elections/sheetScan.ts`: `loadSheetOcr()` + `parseResultSheet(lines, candidates)` — word-boundary candidate matching on acronym/short name/surname, rightmost-figure extraction for ACCREDITED / REJECTED / CANCELLED. Validated with a tsx harness against a synthetic EC8A (accredited 100, rejected 5, candidates 81/4/0/0 → PASS).
+    - `result-submit.tsx`: "Scan Result Sheet" card with Camera and Choose Photo. Extracted figures fill the observed column only, and an alert forces review before publishing (never auto-publishes).
+    - Provenance: `ResultSubmission.sheetCaptureSource` (`LIVE_CAMERA` | `LIBRARY`) persisted on save/publish and surfaced in `result-detail` as "Live camera" or "Imported image (flagged)".
+    - Flags: `ENABLE_RESULT_SHEET_SCAN` (default `false`, hides the whole card) and `ENABLE_SHEET_LIBRARY_IMPORT` (default `true`, removes the import path without a refactor).
+    - Verified: `tsc` + `eslint --max-warnings 0` clean, Android bundle exports.
+  * Native Document Scanner + PDF Import (same build as OCR):
+    - Added `react-native-document-scanner-plugin` ^2.0.4 — VisionKit on iOS, ML Kit Document Scanner on Android. It ships `app.plugin.js`, so `expo install` registered it in `app.json` plugins; no permission changes needed (iOS camera copy already present, Android scanner needs none).
+    - `sheetScan.ts`: `scanDocumentPages()` (lazy import, edge-detected/de-skewed page URIs), `rasterisePdf()` (react-native-pdf-thumbnail `generateAllPages`, quality 90 / maxWidth 2400 ≈ OCR-legible), `extractTextFromPages()` (sequential per-page OCR so memory stays bounded on cheap devices).
+    - `result-submit.tsx`: "Scan with camera" now runs the native scanner instead of a plain photo; "Photo" (library import) and "PDF" (document picker → rasterise → OCR) sit beneath it, both gated by `ENABLE_SHEET_LIBRARY_IMPORT`. Everything still behind `ENABLE_RESULT_SHEET_SCAN`.
+    - Refactor: `applyParsedSheet()` is the single write path, so camera / photo / PDF all converge on the same review-first behaviour.
+    - Verified: `tsc` + `eslint --max-warnings 0` clean, `expo config --type introspect` shows the plugin applied with unchanged permissions, Android bundle exports.
+  * Sheet Scan Hardening (audit pass):
+    - `scanDocumentPages()` now returns `ok | cancelled | unavailable`. The native scanner *resolves* with `status: 'cancel'` when the user backs out, so treating an empty array as failure was reporting "Scanner unavailable" for a plain cancel.
+    - `rasterisePdf()` now distinguishes module-missing (`unavailable`) from render failure (`failed`), so the PDF path can say "needs a build" instead of "unreadable".
+    - Photo-library permission + `launchImageLibraryAsync` and `DocumentPicker.getDocumentAsync` are now inside try/catch. They ran outside it, and an event-handler rejection is not caught by the ErrorBoundary.
+    - Existing guards confirmed: lazy native imports (Expo Go safe), `isSupported` check, per-page OCR isolation, `applyParsedSheet()` refuses an empty parse, `loading` disables the buttons, and every entry point sits behind `ENABLE_RESULT_SHEET_SCAN` (default off).

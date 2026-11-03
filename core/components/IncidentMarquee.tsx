@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,10 +20,34 @@ import * as Haptics from 'expo-haptics';
 import { useHaptics } from '@/core/hooks';
 import { Ionicons } from '@expo/vector-icons';
 
+/**
+ * One row of the live feed. Incidents and published returns share the same pill grammar:
+ * "what happened, where, and the number that matters".
+ */
+export type MarqueeItem = {
+  id: string;
+  kind: 'incident' | 'result';
+  label: string;
+  area: string;
+  detail: string;
+  timestamp: string;
+};
+
+type StreamProps = {
+  items: MarqueeItem[];
+  style?: ViewStyle;
+};
+
 type Props = {
   incidents: IncidentReport[];
   style?: ViewStyle;
 };
+
+const MAX_ITEMS = 8;
+
+function itemColor(kind: MarqueeItem['kind'], colors: (typeof Colors)['light']): string {
+  return kind === 'result' ? colors.success : colors.critical;
+}
 
 /**
  * Production-hardened Continuous Marquee Ticker.
@@ -35,7 +59,7 @@ type Props = {
  * 4. Respects system Accessibility "Reduce Motion" setting.
  * 5. Uses native driver for 60/120fps hardware-accelerated translation.
  */
-export function IncidentMarquee({ incidents, style }: Props) {
+export function LiveStreamMarquee({ items, style }: StreamProps) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { impact } = useHaptics();
@@ -49,7 +73,7 @@ export function IncidentMarquee({ incidents, style }: Props) {
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
   const isMountedRef = useRef(true);
 
-  const activeIncidents = incidents.slice(0, 8);
+  const activeItems = useMemo(() => items.slice(0, MAX_ITEMS), [items]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -123,59 +147,66 @@ export function IncidentMarquee({ incidents, style }: Props) {
     setIsPaused(false);
   };
 
-  const handleIncidentPress = (incidentId: string) => {
+  const handleItemPress = (item: MarqueeItem) => {
     impact(Haptics.ImpactFeedbackStyle.Light);
-    router.push({ pathname: ROUTES.INCIDENT_DETAIL, params: { id: incidentId } });
+    if (item.kind === 'result') {
+      router.push({ pathname: ROUTES.RESULT_DETAIL, params: { id: item.id } });
+    } else {
+      router.push({ pathname: ROUTES.INCIDENT_DETAIL, params: { id: item.id } });
+    }
   };
 
-  if (activeIncidents.length === 0) return null;
+  if (activeItems.length === 0) return null;
 
   // Reduced motion accessible fallback
   if (reduceMotion) {
-    return <IncidentMarqueeScrollable incidents={incidents} style={style} />;
+    return <LiveStreamMarqueeScrollable items={activeItems} style={style} />;
   }
 
-  const renderIncidentPill = (i: IncidentReport, keySuffix: string) => (
-    <Pressable
-      key={`${i.id}-${keySuffix}`}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={() => handleIncidentPress(i.id)}
-      style={styles.incidentPill}
-      accessibilityRole="button"
-      accessibilityLabel={`Incident: ${i.category.replace(/_/g, ' ')} at ${i.electoralArea}`}
-    >
-      <ThemedText
-        variant="caption"
-        numberOfLines={1}
-        style={{ color: colors.critical, fontWeight: '700', flexShrink: 0 }}
+  const renderPill = (item: MarqueeItem, keySuffix: string) => {
+    const accent = itemColor(item.kind, colors);
+    return (
+      <Pressable
+        key={`${item.id}-${keySuffix}`}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={() => handleItemPress(item)}
+        style={styles.incidentPill}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.kind === 'result' ? 'Result' : 'Incident'}: ${item.label} at ${item.area}`}
       >
-        {i.category.replace(/_/g, ' ')}
-      </ThemedText>
-      <ThemedText
-        variant="caption"
-        numberOfLines={1}
-        color="textSecondary"
-        style={{ marginLeft: spacing['2xs'], flexShrink: 0 }}
-      >
-        @{i.electoralArea}: {i.description.slice(0, 48)}
-      </ThemedText>
-      <Ionicons
-        name="chevron-forward"
-        size={11}
-        color={colors.critical}
-        style={{ opacity: 0.8, marginLeft: spacing['3xs'], flexShrink: 0 }}
-      />
-      <ThemedText
-        variant="caption"
-        numberOfLines={1}
-        color="textMuted"
-        style={{ marginHorizontal: spacing.sm, flexShrink: 0 }}
-      >
-        •
-      </ThemedText>
-    </Pressable>
-  );
+        <ThemedText
+          variant="caption"
+          numberOfLines={1}
+          style={{ color: accent, fontWeight: '700', flexShrink: 0 }}
+        >
+          {item.label}
+        </ThemedText>
+        <ThemedText
+          variant="caption"
+          numberOfLines={1}
+          color="textSecondary"
+          style={{ marginLeft: spacing['2xs'], flexShrink: 0 }}
+        >
+          @{item.area}: {item.detail}
+        </ThemedText>
+        <Ionicons
+          name="chevron-forward"
+          size={11}
+          color={accent}
+          style={{ opacity: 0.8, marginLeft: spacing['3xs'], flexShrink: 0 }}
+        />
+        <ThemedText
+          variant="caption"
+          numberOfLines={1}
+          color="textMuted"
+          style={{ marginHorizontal: spacing.sm, flexShrink: 0 }}
+        >
+          •
+        </ThemedText>
+      </Pressable>
+    );
+  };
 
   return (
     <View
@@ -216,12 +247,12 @@ export function IncidentMarquee({ incidents, style }: Props) {
               }
             }}
           >
-            {activeIncidents.map((i) => renderIncidentPill(i, 'set1'))}
+            {activeItems.map((item) => renderPill(item, 'set1'))}
           </View>
 
           {/* Seamless Duplicate Sequence (guarantees zero empty gap) */}
           <View style={styles.sequenceGroup}>
-            {activeIncidents.map((i) => renderIncidentPill(i, 'set2'))}
+            {activeItems.map((item) => renderPill(item, 'set2'))}
           </View>
         </Animated.View>
       </View>
@@ -230,12 +261,12 @@ export function IncidentMarquee({ incidents, style }: Props) {
 }
 
 /** Accessible non-animating fallback for Reduced Motion and assistive technologies */
-export function IncidentMarqueeScrollable({ incidents, style }: Props) {
+export function LiveStreamMarqueeScrollable({ items, style }: StreamProps) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { impact } = useHaptics();
 
-  if (incidents.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <View
@@ -256,21 +287,25 @@ export function IncidentMarqueeScrollable({ incidents, style }: Props) {
         style={styles.track}
         contentContainerStyle={{ alignItems: 'center' }}
       >
-        {incidents.slice(0, 8).map((i) => (
+        {items.slice(0, MAX_ITEMS).map((item) => (
           <Pressable
-            key={i.id}
+            key={item.id}
             onPress={() => {
               impact(Haptics.ImpactFeedbackStyle.Light);
-              router.push({ pathname: ROUTES.INCIDENT_DETAIL, params: { id: i.id } });
+              if (item.kind === 'result') {
+                router.push({ pathname: ROUTES.RESULT_DETAIL, params: { id: item.id } });
+              } else {
+                router.push({ pathname: ROUTES.INCIDENT_DETAIL, params: { id: item.id } });
+              }
             }}
             style={styles.incidentPill}
           >
             <ThemedText
               variant="caption"
               numberOfLines={1}
-              style={{ color: colors.critical, fontWeight: '700', flexShrink: 0 }}
+              style={{ color: itemColor(item.kind, colors), fontWeight: '700', flexShrink: 0 }}
             >
-              {i.category.replace(/_/g, ' ')}
+              {item.label}
             </ThemedText>
             <ThemedText
               variant="caption"
@@ -278,13 +313,31 @@ export function IncidentMarqueeScrollable({ incidents, style }: Props) {
               color="textSecondary"
               style={{ marginLeft: spacing['2xs'], flexShrink: 0 }}
             >
-              @{i.electoralArea} •
+              @{item.area} •
             </ThemedText>
           </Pressable>
         ))}
       </ScrollView>
     </View>
   );
+}
+
+/** Incidents-only marquee, kept for dashboards that don't consume the results stream. */
+export function IncidentMarquee({ incidents, style }: Props) {
+  const items = useMemo<MarqueeItem[]>(
+    () =>
+      incidents.map((i) => ({
+        id: i.id,
+        kind: 'incident',
+        label: i.category.replace(/_/g, ' '),
+        area: i.electoralArea,
+        detail: i.description.slice(0, 48),
+        timestamp: i.reportedAt,
+      })),
+    [incidents]
+  );
+
+  return <LiveStreamMarquee items={items} style={style} />;
 }
 
 const styles = StyleSheet.create({

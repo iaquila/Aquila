@@ -120,6 +120,7 @@ export interface ResultSubmission {
   accreditedVotersInec?: number;
   cancelledVotes?: number;
   cancelledVotesInec?: number;
+  sheetCaptureSource?: 'LIVE_CAMERA' | 'LIBRARY';
   totalVotesCast: number;
   status: ResultStatus;
   latitude?: number;

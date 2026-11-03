@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, IncidentMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge, SectionHeader } from '@/core/components';
+import { ThemedText, Card, LiveStreamMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge, SectionHeader } from '@/core/components';
+import type { MarqueeItem } from '@/core/components';
 import { EntranceView } from '@/core/components/EntranceView';
 import { useAuthStore, useResultsStore } from '@/features/auth/store';
 import { ROUTES } from '@/constants/routes';
@@ -115,6 +116,34 @@ export default function DashboardScreen() {
     const remoteUnique = allResults.filter((r) => !ids.has(r.id));
     return [...localPublished, ...remoteUnique];
   }, [submissions, allResults]);
+
+  // Live feed: the Situation Room sees returns and incidents interleaved by recency.
+  // Agents keep incidents only - the national returns feed isn't theirs.
+  const liveFeedItems = useMemo<MarqueeItem[]>(() => {
+    const incidentItems: MarqueeItem[] = incidents.map((i) => ({
+      id: i.id,
+      kind: 'incident',
+      label: i.category.replace(/_/g, ' '),
+      area: i.electoralArea,
+      detail: i.description.slice(0, 48),
+      timestamp: i.reportedAt,
+    }));
+
+    if (!isElectionOfficer) return incidentItems.slice(0, 8);
+
+    const resultItems: MarqueeItem[] = liveResults.map((r) => ({
+      id: r.id,
+      kind: 'result',
+      label: 'RESULT',
+      area: r.pollingUnitName,
+      detail: `${(r.totalVotesCast ?? 0).toLocaleString()} tallied`,
+      timestamp: r.submittedAt,
+    }));
+
+    return [...incidentItems, ...resultItems]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 8);
+  }, [incidents, liveResults, isElectionOfficer]);
 
   // Candidate scores aggregation for snapshot performance (Audio Part 2 & 6: linked to live pulse)
   const candidateScores = useMemo(() => {
@@ -917,17 +946,19 @@ export default function DashboardScreen() {
         </View>
       </EntranceView>
 
-      {/* 7. Recent Incidents Marquee */}
-      {incidents.length > 0 && (
+      {/* 7. Live feed: incidents (agents) or incidents + published returns (Situation Room) */}
+      {liveFeedItems.length > 0 && (
         <EntranceView delay={350}>
           <Card style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
               <View style={styles.sectionHeaderLeft}>
                 <ThemedText variant="title" color="text" fontFamily="bold">
-                  Field Incident Stream
+                  {isElectionOfficer ? 'Live Situation Feed' : 'Field Incident Stream'}
                 </ThemedText>
                 <ThemedText variant="caption" color="textSecondary">
-                  {incidents.length} security & logistical issues logged
+                  {isElectionOfficer
+                    ? `${incidents.length} incidents · ${liveResults.length} returns streaming`
+                    : `${incidents.length} security & logistical issues logged`}
                 </ThemedText>
               </View>
               <DebouncedPressable
@@ -943,7 +974,7 @@ export default function DashboardScreen() {
               </DebouncedPressable>
             </View>
             <View style={{ marginTop: spacing.xs }}>
-              <IncidentMarquee incidents={incidents} />
+              <LiveStreamMarquee items={liveFeedItems} />
             </View>
           </Card>
         </EntranceView>

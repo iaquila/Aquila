@@ -76,7 +76,8 @@
       "expo-build-properties",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-video"
+      "expo-video",
+      "react-native-document-scanner-plugin"
     ],
     "experiments": {
       "typedRoutes": true,
