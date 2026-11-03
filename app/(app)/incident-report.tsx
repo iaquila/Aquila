@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Platform, Alert, Pressable, StyleSheet, KeyboardAvoidingView, Keyboard } from 'react-native';
+import { View, Platform, Alert, Pressable, StyleSheet, Keyboard } from 'react-native';
 import { useAudioRecorder, useAudioRecorderState, AudioModule, RecordingPresets, setAudioModeAsync } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenView } from '@/core/components/ScreenView';
@@ -348,8 +348,7 @@ export default function ReportIncidentScreen() {
   }
 
   return (
-    <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1 }}>
-      <ScreenView scrollable contentContainerStyle={styles.scrollContent}>
+    <ScreenView scrollable automaticallyAdjustKeyboardInsets contentContainerStyle={styles.scrollContent}>
       {/* 1. Situation Room Command Header */}
       <Card style={[styles.heroCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
         <View style={styles.heroRow}>
@@ -658,7 +657,6 @@ export default function ReportIncidentScreen() {
             <Button label="Submit Incident Report" onPress={handleSubmit} loading={submitting} fullWidth />
           </View>
       </ScreenView>
-    </KeyboardAvoidingView>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Keyboard, TextInput } from 'react-native';
+import { Platform, ScrollView, View, StyleSheet, Keyboard, TextInput } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -79,156 +79,151 @@ export default function LoginScreen() {
         end={{ x: 0.5, y: 1 }}
         style={{ flex: 1 }}
       >
-        <KeyboardAvoidingView
-          enabled={Platform.OS === 'ios'}
-          behavior="padding"
-          style={{ flex: 1 }}
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.xl,
+            paddingHorizontal: spacing.md,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={{
-              paddingTop: insets.top + spacing.lg,
-              paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.xl,
-              paddingHorizontal: spacing.md,
-            }}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Header / Brand Identity */}
-            <View style={styles.headerBlock}>
-              <View style={[styles.logoBadge, { borderColor: colors.primaryLight + '44' }]}>
-                <Image
-                  // eslint-disable-next-line @typescript-eslint/no-require-imports
-                  source={require('@/assets/eagle-head.png')}
-                  style={styles.logoImage}
-                  contentFit="contain"
-                  priority="high"
-                  cachePolicy="memory-disk"
+          {/* Header / Brand Identity */}
+          <View style={styles.headerBlock}>
+            <View style={[styles.logoBadge, { borderColor: colors.primaryLight + '44' }]}>
+              <Image
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                source={require('@/assets/eagle-head.png')}
+                style={styles.logoImage}
+                contentFit="contain"
+                priority="high"
+                cachePolicy="memory-disk"
+              />
+            </View>
+            <ThemedText variant="display" color="#FFFFFF" fontFamily="bold" style={styles.brandTitle}>
+              iAQUILA
+            </ThemedText>
+            <ThemedText variant="label" color="#10B981" fontFamily="medium" style={styles.brandSub}>
+              REAL-TIME ELECTION INTELLIGENCE · ELECTION CONSOLE
+            </ThemedText>
+          </View>
+
+          {/* Auth Form Card */}
+          <Card style={[styles.formCard, { backgroundColor: colors.surface }]}>
+            <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginBottom: spacing.xs }}>
+              Sign In
+            </ThemedText>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.md }}>
+              Enter credentials to connect to the situation room.
+            </ThemedText>
+
+            <Input
+              label="Email"
+              placeholder="agent@iaquila.com.ng"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
+              keyboardType="email-address"
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              leftIcon="mail-outline"
+              containerStyle={{ marginBottom: spacing.sm }}
+            />
+
+            <Input
+              ref={passwordRef}
+              label="Password"
+              placeholder="Enter your security passkey"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCorrect={false}
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+              secureToggle
+              visible={showPassword}
+              onToggleSecure={() => setShowPassword((prev) => !prev)}
+              leftIcon="lock-closed-outline"
+              containerStyle={{ marginBottom: spacing.md }}
+            />
+
+            {error ? (
+              <View style={[styles.errorBanner, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
+                <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
+                <ThemedText variant="caption" color="error" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
+                  {error}
+                </ThemedText>
+              </View>
+            ) : null}
+
+            <Button
+              label="Access Situation Room"
+              onPress={handleLogin}
+              loading={loginMutation.isPending}
+              fullWidth
+              leftIcon="shield-checkmark-outline"
+              style={{ marginTop: spacing.xs }}
+              size="lg"
+            />
+
+            {/* Quick Demo Access Buttons */}
+            <View style={styles.demoSection}>
+              <ThemedText variant="label" color="textMuted" style={{ textAlign: 'center', marginBottom: spacing.xs }}>
+                ONE-TAP DEMO ROLES
+              </ThemedText>
+              <View style={{ gap: spacing.xs }}>
+                <Button
+                  label="Field Agent"
+                  variant="outline"
+                  onPress={() => launchDemo('agent')}
+                  loading={loginMutation.isPending}
+                  fullWidth
+                  size="sm"
+                />
+                <Button
+                  label="PU Agent"
+                  variant="outline"
+                  onPress={() => launchDemo('polling')}
+                  loading={loginMutation.isPending}
+                  fullWidth
+                  size="sm"
+                />
+                <Button
+                  label="Election Officer"
+                  variant="outline"
+                  onPress={() => launchDemo('officer')}
+                  loading={loginMutation.isPending}
+                  fullWidth
+                  size="sm"
                 />
               </View>
-              <ThemedText variant="display" color="#FFFFFF" fontFamily="bold" style={styles.brandTitle}>
-                iAQUILA
-              </ThemedText>
-              <ThemedText variant="label" color="#10B981" fontFamily="medium" style={styles.brandSub}>
-                REAL-TIME ELECTION INTELLIGENCE · ELECTION CONSOLE
-              </ThemedText>
             </View>
+          </Card>
 
-            {/* Auth Form Card */}
-            <Card style={[styles.formCard, { backgroundColor: colors.surface }]}>
-              <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginBottom: spacing.xs }}>
-                Sign In
-              </ThemedText>
-              <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.md }}>
-                Enter credentials to connect to the situation room.
-              </ThemedText>
-
-              <Input
-                label="Email"
-                placeholder="agent@iaquila.com.ng"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                textContentType="emailAddress"
-                keyboardType="email-address"
-                returnKeyType="next"
-                submitBehavior="submit"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                leftIcon="mail-outline"
-                containerStyle={{ marginBottom: spacing.sm }}
-              />
-
-              <Input
-                ref={passwordRef}
-                label="Password"
-                placeholder="Enter your security passkey"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCorrect={false}
-                autoComplete="current-password"
-                textContentType="password"
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-                secureToggle
-                visible={showPassword}
-                onToggleSecure={() => setShowPassword((prev) => !prev)}
-                leftIcon="lock-closed-outline"
-                containerStyle={{ marginBottom: spacing.md }}
-              />
-
-              {error ? (
-                <View style={[styles.errorBanner, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
-                  <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
-                  <ThemedText variant="caption" color="error" style={{ marginLeft: spacing['2xs'] + spacing['3xs'], flex: 1 }}>
-                    {error}
-                  </ThemedText>
-                </View>
-              ) : null}
-
-              <Button
-                label="Access Situation Room"
-                onPress={handleLogin}
-                loading={loginMutation.isPending}
-                fullWidth
-                leftIcon="shield-checkmark-outline"
-                style={{ marginTop: spacing.xs }}
-                size="lg"
-              />
-
-              {/* Quick Demo Access Buttons */}
-              <View style={styles.demoSection}>
-                <ThemedText variant="label" color="textMuted" style={{ textAlign: 'center', marginBottom: spacing.xs }}>
-                  ONE-TAP DEMO ROLES
-                </ThemedText>
-                <View style={{ gap: spacing.xs }}>
-                  <Button
-                    label="Field Agent"
-                    variant="outline"
-                    onPress={() => launchDemo('agent')}
-                    loading={loginMutation.isPending}
-                    fullWidth
-                    size="sm"
-                  />
-                  <Button
-                    label="PU Agent"
-                    variant="outline"
-                    onPress={() => launchDemo('polling')}
-                    loading={loginMutation.isPending}
-                    fullWidth
-                    size="sm"
-                  />
-                  <Button
-                    label="Election Officer"
-                    variant="outline"
-                    onPress={() => launchDemo('officer')}
-                    loading={loginMutation.isPending}
-                    fullWidth
-                    size="sm"
-                  />
-                </View>
-              </View>
-            </Card>
-
-            {/* Government Non-Affiliation Disclaimer */}
-            <View style={styles.disclaimerBox}>
-              <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" />
-              <ThemedText variant="micro" color="#A3B8AC" style={{ flex: 1 }}>
-                <ThemedText variant="micro" color="#FFFFFF" fontFamily="bold">iAQUILA</ThemedText> is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
-              </ThemedText>
-            </View>
-
-            <ThemedText
-              variant="caption"
-              color="#A3B8AC"
-              style={{ textAlign: 'center', marginTop: spacing.md }}
-            >
-              Independent Observer Intelligence System · Secured & Real-time
+          {/* Government Non-Affiliation Disclaimer */}
+          <View style={styles.disclaimerBox}>
+            <Ionicons name="information-circle-outline" size={16} color="#A3B8AC" />
+            <ThemedText variant="micro" color="#A3B8AC" style={{ flex: 1 }}>
+              <ThemedText variant="micro" color="#FFFFFF" fontFamily="bold">iAQUILA</ThemedText> is an independent non-governmental collation and research tool. It does not represent or act on behalf of INEC or any government entity. Official election results: inecnigeria.org
             </ThemedText>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </View>
+
+          <ThemedText
+            variant="caption"
+            color="#A3B8AC"
+            style={{ textAlign: 'center', marginTop: spacing.md }}
+          >
+            Independent Observer Intelligence System · Secured & Real-time
+          </ThemedText>
+        </ScrollView>
       </LinearGradient>
     </View>
   );
