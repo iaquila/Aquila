@@ -9,6 +9,11 @@ export type SheetScanResult = {
   candidateVotes: Record<string, number>;
   matchedCandidates: number;
   confidence: number;
+  /** The sheet's own printed totals, used as ground truth to catch row mis-mapping. */
+  printedValidVotes?: number;
+  printedVotesCast?: number;
+  candidateSum: number;
+  reconciles: boolean;
 };
 
 type SheetOcr = {
@@ -150,9 +155,13 @@ export async function extractTextFromPages(pageUris: string[]): Promise<string[]
  * Heuristic parse of an OCR'd result sheet. Deliberately conservative: it only reports what it
  * could match, and the caller must let the agent review every figure before publishing.
  */
+const NUMERIC_CELL = /^\d[\d,]*$/;
+
 export function parseResultSheet(lines: string[], candidates: Candidate[]): SheetScanResult {
   const cleaned = normalise(lines);
   const candidateVotes: Record<string, number> = {};
+  // A figure can only be claimed once - otherwise a shared number line feeds every candidate.
+  const consumed = new Set<number>();
 
   for (const candidate of candidates) {
     const tokens = candidateTokens(candidate);
@@ -168,27 +177,46 @@ export function parseResultSheet(lines: string[], candidates: Candidate[]): Shee
       continue;
     }
 
-    // OCR frequently splits a row into "APC" then "1,234" on the next line - look ahead briefly.
+    // OCR frequently splits a row into "APC" then a bare "1,234" cell on the next line.
+    // Only accept a numeric-only line, and never the same line twice.
     for (let offset = 1; offset <= 2; offset += 1) {
-      const nextValues = numbersIn(cleaned[rowIndex + offset] ?? '');
-      if (nextValues.length > 0) {
-        candidateVotes[candidate.id] = nextValues[0]!;
-        break;
-      }
+      const target = rowIndex + offset;
+      const line = cleaned[target];
+      if (!line || consumed.has(target) || !NUMERIC_CELL.test(line)) continue;
+      consumed.add(target);
+      candidateVotes[candidate.id] = numbersIn(line)[0]!;
+      break;
     }
   }
 
   const matchedCandidates = Object.keys(candidateVotes).length;
   const accredited = findLabelValue(cleaned, ['ACCREDITED', 'BVAS']);
+
+  // A party cannot out-poll the accredited electorate - that figure was misread.
+  if (accredited !== undefined && accredited > 0) {
+    for (const [candidateId, votes] of Object.entries(candidateVotes)) {
+      if (votes > accredited) delete candidateVotes[candidateId];
+    }
+  }
   const rejected = findLabelValue(cleaned, ['REJECTED', 'INVALID', 'SPOILED', 'BALLOT PAPERS REJECTED']);
   const cancelled = findLabelValue(cleaned, ['CANCELLED', 'CANCELED', 'ANNULLED']);
 
+  const printedValidVotes = findLabelValue(cleaned, ['VALID VOTES', 'TOTAL VALID']);
+  const printedVotesCast = findLabelValue(cleaned, ['TOTAL VOTES CAST', 'TOTAL VOTE CAST']);
+  const candidateSum = Object.values(candidateVotes).reduce((acc, votes) => acc + votes, 0);
+
+  const finalMatches = Object.keys(candidateVotes).length;
   return {
     accredited,
     rejected,
     cancelled,
     candidateVotes,
-    matchedCandidates,
-    confidence: candidates.length > 0 ? matchedCandidates / candidates.length : 0,
+    matchedCandidates: Math.min(matchedCandidates, finalMatches),
+    confidence: candidates.length > 0 ? Math.min(matchedCandidates, finalMatches) / candidates.length : 0,
+    printedValidVotes,
+    printedVotesCast,
+    candidateSum,
+    // If the sheet prints its own valid total, our per-candidate mapping must agree with it.
+    reconciles: printedValidVotes === undefined || printedValidVotes === candidateSum,
   };
 }

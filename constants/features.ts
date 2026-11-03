@@ -9,8 +9,10 @@ export const FEATURES = {
   ENABLE_INEC_MANUAL_ENTRY: true,
   // Result entry: OCR capture of the paper result sheet. Needs a dev/production build (native module).
   ENABLE_RESULT_SHEET_SCAN: true,
-  // Allow importing an existing photo in addition to live capture. Imports are always provenance-flagged.
-  ENABLE_SHEET_LIBRARY_IMPORT: true,
+  // Import an existing screenshot/photo. Lowest fidelity and weakest evidence - off by default.
+  ENABLE_SHEET_PHOTO_IMPORT: false,
+  // Import a PDF. Rendered at 2400px from vector text, so it parses far more reliably than a photo.
+  ENABLE_SHEET_PDF_IMPORT: true,
   LIVE_POLL_INTERVAL_MS: 15_000,
 } as const;
 

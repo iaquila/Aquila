@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Keyboard } fro
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { ScreenView } from '@/core/components/ScreenView';
+import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { ThemedText, Button, Input, Card, ExpandableText } from '@/core/components';
 import { useResultsStore, useAuthStore, ResultSubmission } from '@/features/auth/store';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -76,6 +77,7 @@ export default function SubmitResultScreen() {
   const [scanning, setScanning] = useState(false);
   const [sheetSource, setSheetSource] = useState<SheetCaptureSource | undefined>(undefined);
   const [scanDebugLines, setScanDebugLines] = useState<string[]>([]);
+  const [lastScanSummary, setLastScanSummary] = useState<SheetScanResult | null>(null);
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
 
   const handleAutoMatchInec = () => {
@@ -145,6 +147,7 @@ export default function SubmitResultScreen() {
     'Unassigned Polling Unit';
 
   const applyParsedSheet = (parsed: SheetScanResult, source: SheetCaptureSource) => {
+    setLastScanSummary(parsed);
     if (parsed.matchedCandidates === 0 && parsed.accredited === undefined) {
       Alert.alert('Nothing read', 'No result-sheet figures were recognised. Retake the sheet in good light, or enter manually.');
       return;
@@ -163,8 +166,10 @@ export default function SubmitResultScreen() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert(
-      'Sheet captured',
-      `${parsed.matchedCandidates}/${candidates.length} candidates read (${Math.round(parsed.confidence * 100)}%). Review every figure before publishing.`
+      parsed.reconciles ? 'Sheet captured' : 'Check the scan',
+      parsed.reconciles
+        ? `${parsed.matchedCandidates}/${candidates.length} candidates read (${Math.round(parsed.confidence * 100)}%). Review every figure before publishing.`
+        : `Candidates add up to ${parsed.candidateSum}, but the sheet prints ${parsed.printedValidVotes} valid votes. Some figures were mis-read — check each count before publishing.`
     );
   };
 
@@ -213,6 +218,7 @@ export default function SubmitResultScreen() {
     try {
       const lines = await extractTextFromPages(pageUris);
       setScanDebugLines(lines);
+      setLastScanSummary(null);
       if (lines.length === 0) {
         Alert.alert('No text detected', 'The sheet was captured but no text was recognised. Check the OCR OUTPUT panel, or enter the figures manually.');
         return;
@@ -257,6 +263,7 @@ export default function SubmitResultScreen() {
       }
       const lines = await extractTextFromPages(pdf.pages);
       setScanDebugLines(lines);
+      setLastScanSummary(null);
       if (lines.length === 0) {
         Alert.alert('No text detected', 'The PDF was rendered but no text was recognised. Check the OCR OUTPUT panel, or enter the figures manually.');
         return;
@@ -267,6 +274,18 @@ export default function SubmitResultScreen() {
     } finally {
       setScanning(false);
     }
+  };
+
+  const handleClearFigures = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setVotes({});
+    setAccredited('');
+    setAccreditedInec('');
+    setRejectedObs('');
+    setRejectedInec('');
+    setSheetSource(undefined);
+    setScanDebugLines([]);
+    setLastScanSummary(null);
   };
 
   const handleVoteChange = (candidateId: string, field: 'inec' | 'observed', value: string) => {
@@ -529,30 +548,34 @@ export default function SubmitResultScreen() {
             fullWidth
           />
 
-          {FEATURES.ENABLE_SHEET_LIBRARY_IMPORT && (
+          {(FEATURES.ENABLE_SHEET_PHOTO_IMPORT || FEATURES.ENABLE_SHEET_PDF_IMPORT) && (
             <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Photo"
-                  variant="outline"
-                  size="sm"
-                  leftIcon="images-outline"
-                  onPress={() => handleScanSheet('LIBRARY')}
-                  loading={scanning}
-                  fullWidth
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="PDF"
-                  variant="outline"
-                  size="sm"
-                  leftIcon="document-outline"
-                  onPress={handleImportPdf}
-                  loading={scanning}
-                  fullWidth
-                />
-              </View>
+              {FEATURES.ENABLE_SHEET_PHOTO_IMPORT && (
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Photo"
+                    variant="outline"
+                    size="sm"
+                    leftIcon="images-outline"
+                    onPress={() => handleScanSheet('LIBRARY')}
+                    loading={scanning}
+                    fullWidth
+                  />
+                </View>
+              )}
+              {FEATURES.ENABLE_SHEET_PDF_IMPORT && (
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="PDF"
+                    variant="outline"
+                    size="sm"
+                    leftIcon="document-outline"
+                    onPress={handleImportPdf}
+                    loading={scanning}
+                    fullWidth
+                  />
+                </View>
+              )}
             </View>
           )}
 
@@ -583,6 +606,9 @@ export default function SubmitResultScreen() {
               <ThemedText variant="micro" color="textMuted" style={{ marginTop: spacing['3xs'] }}>
                 Candidates expected: {candidates.map((c) => c.partyAcronym).join(', ')}
               </ThemedText>
+              <ThemedText variant="micro" color="textMuted">
+                Candidate sum {lastScanSummary?.candidateSum ?? 0} · printed valid {lastScanSummary?.printedValidVotes ?? '—'}
+              </ThemedText>
             </View>
           )}
         </Card>
@@ -590,9 +616,18 @@ export default function SubmitResultScreen() {
 
       {/* Ballot accounting: observed field count vs the INEC uploaded record */}
       <Card style={styles.sectionCard}>
-        <ThemedText variant="label" color="textMuted" fontFamily="bold">
-          BALLOT ACCOUNTING
-        </ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs }}>
+          <ThemedText variant="label" color="textMuted" fontFamily="bold">
+            BALLOT ACCOUNTING
+          </ThemedText>
+          {(accredited.length > 0 || rejectedObs.length > 0 || Object.keys(votes).length > 0) && (
+            <DebouncedPressable onPress={handleClearFigures} hitSlop={spacing.xs}>
+              <ThemedText variant="caption" color="primary" fontFamily="bold">
+                Clear figures
+              </ThemedText>
+            </DebouncedPressable>
+          )}
+        </View>
         <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.sm }}>
           Left is what your agent observed, right is what INEC recorded.
         </ThemedText>
@@ -713,6 +748,7 @@ export default function SubmitResultScreen() {
             </View>
           ))}
 
+          {unaccountedObserved !== 0 && (
           <View style={[styles.reconcileRow, { borderTopColor: colors.borderSubtle }]}>
             <ThemedText variant="caption" color="textSecondary" style={{ flex: 1 }}>
               Unaccounted (accredited − cast − cancelled)
@@ -729,6 +765,7 @@ export default function SubmitResultScreen() {
               —
             </ThemedText>
           </View>
+          )}
         </View>
       </Card>
 
@@ -833,7 +870,7 @@ export default function SubmitResultScreen() {
                 style={{ color: ballotIntegrityOk ? colors.success : colors.critical }}
               >
                 {exceedsAccredited
-                  ? `Over-voting: ${ballotsCastObserved} cast exceeds ${accreditedObserved} accredited`
+                  ? `Figures don't reconcile: ${ballotsCastObserved} cast vs ${accreditedObserved} accredited — check the counts`
                   : accreditationOverdrawn
                     ? `Mismatch: valid, rejected and cancelled exceed ${accreditedObserved} accredited`
                     : `${ballotsCastObserved} cast · ${observedVoteTotal} valid · ${rejectedObserved} rejected · ${cancelledObserved} cancelled`}

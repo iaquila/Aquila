@@ -243,3 +243,17 @@
     - A polling unit officer cannot cancel votes (cancellation is a collation-level action), so the Cancelled pair was wrong on `result-submit`. Removed both inputs, the `Match INEC` mirroring, and the scan handler's write-back for that field; the card now states "Cancellations are applied at collation, not at the polling unit."
     - `cancelledVotes` is no longer persisted by agent returns; `cancelledVotesInec` is only written when the sourced INEC record actually carries one. The derived "Cancelled Votes" row renders only when a value exists, so it can't read as a stuck 0.
     - Kept `cancelledVotes` / `cancelledVotesInec` on `ResultSubmission` and the parser's cancelled detection for the collation side.
+  * Reconciliation UX + Scan Figure Leak Fix:
+    - Root cause of "205 cast exceeds 100 accredited": the parser's next-line fallback accepted any line containing a number, so a shared or neighbouring cell fed figures across rows (205 implies 200 valid + 5 rejected, which the mock sheet cannot produce). Hardened: a fallback figure must come from a numeric-only cell, each cell can be claimed once, and any candidate total exceeding the accredited count is discarded as a misread.
+    - Validation wording: "Over-voting" asserted fraud from our own derived sums. Now "Figures don't reconcile: X cast vs Y accredited — check the counts". Publishing still asks for confirmation.
+    - `Unaccounted (accredited − cast − cancelled)` renders only when non-zero; it's a reconciliation check, not a required field.
+    - Added "Clear figures" (top-right of Ballot Accounting) so a bad scan can be reset in one tap instead of editing six fields.
+    - Verified with column-wise and split-cell OCR shapes; `tsc`, `eslint --max-warnings 0`, Android export all clean.
+  * Scan Cross-Check (why photo and PDF disagree):
+    - `parseResultSheet` now reports `candidateSum`, `printedValidVotes`, `printedVotesCast` and `reconciles` — the sheet's own "Total Valid Votes" is treated as ground truth for the per-candidate mapping.
+    - Success alert branches: "Sheet captured" when the candidate sum matches the printed total, otherwise "Check the scan" naming both figures. Diagnostic panel also prints "Candidate sum X · printed valid Y".
+    - Cause of photo-vs-PDF divergence: the PDF path rasterises at 2400px from clean vector text, while a screenshot re-encodes to JPEG at lower effective resolution and can carry UI chrome (clock, page indicator) as extra numeric lines. Same parser, materially different line grouping.
+  * Scan Source Flags Split:
+    - `ENABLE_SHEET_LIBRARY_IMPORT` replaced by two independent flags: `ENABLE_SHEET_PHOTO_IMPORT` (default `false`) and `ENABLE_SHEET_PDF_IMPORT` (default `true`).
+    - Rationale: PDF renders from vector text at 2400px and reconciles against the sheet's printed total; a gallery screenshot is re-compressed at lower effective resolution and can include UI chrome, so it is the least reliable and weakest-evidence path. It is now opt-in rather than shipped alongside PDF.
+    - Live scanner remains the primary path (paper is the real field workflow); both import paths stay provenance-tagged as `LIBRARY`.
