@@ -10,4 +10,5 @@ export const listPerf = {
   windowSize: 7,
   updateCellsBatchingPeriod: 50,
   removeClippedSubviews: true,
+  keyboardDismissMode: 'on-drag',
 } as const;

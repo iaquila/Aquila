@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Keyboard } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { Platform, KeyboardAvoidingView, ScrollView, View, StyleSheet, Keyboard, TextInput } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +30,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const passwordRef = useRef<TextInput>(null);
   const loginMutation = useLoginMutation();
 
   const handleLogin = async () => {
@@ -128,17 +129,29 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
                 keyboardType="email-address"
+                returnKeyType="next"
+                submitBehavior="submit"
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 leftIcon="mail-outline"
                 containerStyle={{ marginBottom: spacing.sm }}
               />
 
               <Input
+                ref={passwordRef}
                 label="Password"
                 placeholder="Enter your security passkey"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
+                autoCorrect={false}
+                autoComplete="current-password"
+                textContentType="password"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
                 secureToggle
                 visible={showPassword}
                 onToggleSecure={() => setShowPassword((prev) => !prev)}

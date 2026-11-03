@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, StyleSheet, Alert, Keyboard } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { ScreenView } from '@/core/components/ScreenView';
@@ -493,8 +493,7 @@ export default function SubmitResultScreen() {
   }
 
   return (
-    <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={{ flex: 1 }}>
-      <ScreenView scrollable contentContainerStyle={styles.scrollContent}>
+    <ScreenView scrollable automaticallyAdjustKeyboardInsets contentContainerStyle={styles.scrollContent}>
       {/* Polling Unit Selector / Display */}
       <Card style={styles.sectionCard}>
         <ThemedText variant="label" color="textMuted" fontFamily="bold">
@@ -902,7 +901,6 @@ export default function SubmitResultScreen() {
         />
       </View>
       </ScreenView>
-    </KeyboardAvoidingView>
   );
 }
 

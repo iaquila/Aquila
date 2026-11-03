@@ -24,6 +24,8 @@ type ScreenViewProps = {
   skipAndroidTopPadding?: boolean;
   skipTopSafeArea?: boolean;
   sectionGap?: number;
+  keyboardDismissMode?: ScrollViewProps['keyboardDismissMode'];
+  automaticallyAdjustKeyboardInsets?: boolean;
 };
 
 export function ScreenView({
@@ -40,6 +42,8 @@ export function ScreenView({
   skipAndroidTopPadding = false,
   skipTopSafeArea = false,
   sectionGap,
+  keyboardDismissMode,
+  automaticallyAdjustKeyboardInsets = false,
 }: ScreenViewProps) {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme() ?? 'light';
@@ -98,6 +102,8 @@ export function ScreenView({
       // Default tap-through: search + form screens shouldn't need a double-tap
       // to press list items while the keyboard is open.
       keyboardShouldPersistTaps: keyboardShouldPersistTaps ?? 'handled',
+      keyboardDismissMode: keyboardDismissMode ?? (Platform.OS === 'ios' ? 'interactive' : 'on-drag'),
+      automaticallyAdjustKeyboardInsets,
       bounces: true,
       overScrollMode: 'always',
     };

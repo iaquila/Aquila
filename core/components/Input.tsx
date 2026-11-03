@@ -13,8 +13,16 @@ import {
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import Colors from '@/constants/colors';
 import { ThemedText } from './ThemedText';
+import { KEYBOARD_DONE_ACCESSORY_ID } from './KeyboardDoneAccessory';
 import { radius, spacing, border, animation, typography, sizes } from '@/constants/tokens';
 import { Ionicons } from '@expo/vector-icons';
+
+const ACCESSORY_KEYBOARD_TYPES = new Set<string>([
+  'number-pad',
+  'decimal-pad',
+  'phone-pad',
+  'numeric',
+]);
 
 type InputProps = {
   label?: string;
@@ -45,6 +53,9 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
   description,
   readOnly,
   editable,
+  keyboardType,
+  multiline,
+  inputAccessoryViewID,
   ...rest
 }: InputProps, ref) => {
   const scheme = useColorScheme() ?? 'light';
@@ -54,6 +65,12 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
 
   const inputRef = (ref as React.Ref<RNTextInput>) ?? internalRef;
   const isReadOnly = !!readOnly;
+  // Keyboards that ship without a return/dismiss key need the accessory bar; text keyboards already
+  // have one, so a universal bar would just duplicate it.
+  const showDoneAccessory =
+    inputAccessoryViewID !== undefined ||
+    multiline === true ||
+    (keyboardType !== undefined && ACCESSORY_KEYBOARD_TYPES.has(keyboardType));
   const rightIconName = secureToggle
     ? (visible ? 'eye-off' : 'eye')
     : rightIcon;
@@ -128,7 +145,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
             { color: isReadOnly ? colors.textMuted : colors.text },
             hasLeftIcon && styles.inputWithLeftIcon,
             (hasRightIcon || isReadOnly) && styles.inputWithRightIcon,
-            Platform.OS === 'android' && { textAlignVertical: rest.multiline ? 'top' : 'center', paddingVertical: spacing.md },
+            Platform.OS === 'android' && { textAlignVertical: multiline ? 'top' : 'center', paddingVertical: spacing.md },
           ]}
           placeholderTextColor={colors.textMuted}
           onFocus={() => setFocused(true)}
@@ -136,6 +153,11 @@ export const Input = forwardRef<RNTextInput, InputProps>(({
           testID={testID}
           maxFontSizeMultiplier={1.3}
           editable={isReadOnly ? false : editable}
+          keyboardType={keyboardType}
+          multiline={multiline}
+          inputAccessoryViewID={
+            showDoneAccessory ? (inputAccessoryViewID ?? KEYBOARD_DONE_ACCESSORY_ID) : undefined
+          }
           {...rest}
         />
         {isReadOnly && (

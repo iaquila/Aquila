@@ -10,6 +10,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/core/utils/queryClient';
 import { AuthProvider, useAuthStore, useElectionsStore, useResultsStore, useIncidentsStore, useLocationsStore } from '@/features/auth/store';
 import { ToastProvider } from '@/core/components/ToastProvider';
+import { KeyboardDoneAccessory } from '@/core/components';
 import { RootErrorBoundary } from '@/core/components/ErrorBoundary';
 import { mockApi } from '@/features/elections/service';
 import { ResultSubmission } from '@/features/auth/store';
@@ -81,7 +82,10 @@ function RootLayout() {
           <AuthProvider>
             <ToastProvider>
               <RootErrorBoundary>
-                <RootLayoutNav />
+                <>
+                  <RootLayoutNav />
+                  <KeyboardDoneAccessory />
+                </>
               </RootErrorBoundary>
             </ToastProvider>
           </AuthProvider>
