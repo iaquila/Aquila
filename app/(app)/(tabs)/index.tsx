@@ -769,7 +769,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
     paddingBottom: sizes.tabBarClearance,
     gap: spacing.md,
   },
