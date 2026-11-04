@@ -7,6 +7,7 @@ import { ThemedText, EmptyState, SkeletonCard, Card, Input, Badge, SectionHeader
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useLiveElectionsQuery, useLiveElectionCyclesQuery, useLiveElectionPartiesQuery, useLivePositionsQuery } from '@/features/api/hooks';
@@ -21,15 +22,6 @@ import {
 } from '@/constants/elections';
 
 const ALL_POSITIONS = 'ALL';
-
-// Server position names are lowercase ("federal Rep", "state Rep"). Matching uses
-// the raw name; only the chip text is title-cased for display.
-const toChipLabel = (name: string) =>
-  name
-    .trim()
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 
 
 
@@ -74,7 +66,7 @@ export default function ElectionsScreen() {
       const label = position.name.trim();
       const key = label.toLowerCase();
       if (!label || byName.has(key)) continue;
-      byName.set(key, { key, label: toChipLabel(label), type: position.electoralAreaType });
+      byName.set(key, { key, label: formatServerLabel(label), type: position.electoralAreaType });
     }
     return [...byName.values()].sort((a, b) => {
       const rankA = ELECTORAL_AREA_TYPE_ORDER[a.type] ?? Number.MAX_SAFE_INTEGER;
@@ -345,15 +337,15 @@ export default function ElectionsScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginBottom: spacing.sm }}>
                 <View style={[styles.electionIcon, { backgroundColor: colors.primary + '16' }]}>
                   <ThemedText variant="xl" style={{ color: colors.primary, fontWeight: '800' }}>
-                    {election.position.charAt(0)}
+                    {formatServerLabel(election.position).charAt(0)}
                   </ThemedText>
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <ThemedText variant="body" fontFamily="bold">
-                    {election.position}
+                    {formatServerLabel(election.position)}
                   </ThemedText>
                   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['2xs'] }}>
-                    {election.electoralArea} · {election.electoralAreaType}
+                    {election.electoralArea} · {formatServerLabel(election.electoralAreaType)}
                   </ThemedText>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs, flexWrap: 'wrap' }}>

@@ -9,20 +9,21 @@ import { spacing, radius, shadows, border } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
-import { useIncidentsQuery } from '@/features/elections/hooks';
+import { useLiveIncidentsQuery } from '@/features/api/hooks';
 import { useRefreshControl, useForegroundRefresh } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function IncidentSearchScreen() {
-  const { data: incidents = [], isLoading: loading, refetch } = useIncidentsQuery();
+  const { data: incidents = [], isLoading: loading, refetch } = useLiveIncidentsQuery();
   const [search, setSearch] = useState('');
   const { incidents: storeIncidents } = useIncidentsStore();
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refreshControl } = useRefreshControl(loading, refetch);
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
-  useForegroundRefresh([['incidents', 'list']], 5 * 60 * 1000);
+  useForegroundRefresh([['incidents', 'live']], 5 * 60 * 1000);
 
   const pool = useMemo(() => {
     const ids = new Set(storeIncidents.map((i) => i.id));
@@ -94,12 +95,12 @@ export default function IncidentSearchScreen() {
                     </ThemedText>
                   </View>
                   <ThemedText variant="label" color="textMuted">
-                    {item.status.replace(/_/g, ' ')}
+                    {formatServerLabel(item.status)}
                   </ThemedText>
                 </View>
 
                 <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing['2xs'] }}>
-                  {item.category.replace(/_/g, ' ')}
+                  {formatServerLabel(item.category)}
                 </ThemedText>
                 <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                   {item.description}

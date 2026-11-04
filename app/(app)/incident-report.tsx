@@ -23,6 +23,7 @@ import { useCreateIncidentMutation, useLiveElectionsQuery, useLiveIncidentCatego
 import { incidentCategoryForName } from '@/features/api/mappers';
 import { loadSession } from '@/core/services/session';
 import { useHaptics } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 import * as Haptics from 'expo-haptics';
 
 export default function ReportIncidentScreen() {
@@ -293,7 +294,7 @@ export default function ReportIncidentScreen() {
     const area = electoralArea.trim() || selectedPuName || 'Assigned Operational Sector';
     let desc = description.trim();
     if (!desc && mediaUris.length > 0) {
-      desc = `Field evidence logged with ${mediaUris.length} live attachment(s) (${category.replace(/_/g, ' ')}).`;
+      desc = `Field evidence logged with ${mediaUris.length} live attachment(s) (${formatServerLabel(category)}).`;
     }
 
     if (!desc) {
@@ -591,7 +592,7 @@ export default function ReportIncidentScreen() {
             {CATEGORIES.map((cat) => (
               <Button
                 key={cat}
-                label={cat.replace(/_/g, ' ')}
+                label={formatServerLabel(cat)}
                 variant={category === cat ? 'primary' : 'outline'}
                 size="sm"
                 onPress={() => setCategory(cat)}

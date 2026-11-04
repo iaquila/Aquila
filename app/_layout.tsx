@@ -210,6 +210,15 @@ function RootLayoutNav() {
         // from the local demo data. Mocks remain only for the one-tap demo roles.
         if (await loadSession()) {
           useIncidentsStore.getState().setIncidents([]);
+          // Demo drafts are persisted, so they survive the switch to a real
+          // session and show up as the user's own work. Drop just those, by the
+          // id the seeder gives them, and keep anything the user actually saved.
+          const keptSubmissions = useResultsStore
+            .getState()
+            .submissions.filter((s) => !s.id.startsWith('draft-demo-'));
+          if (keptSubmissions.length !== useResultsStore.getState().submissions.length) {
+            useResultsStore.getState().setSubmissions(keptSubmissions);
+          }
           return;
         }
         const [cycles, elections, results, incidents, states, lgas, pus, parties, candidates] = await Promise.all([

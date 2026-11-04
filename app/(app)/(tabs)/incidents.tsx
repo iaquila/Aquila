@@ -15,6 +15,7 @@ import { incidentCategoryForName } from '@/features/api/mappers';
 import { loadSession } from '@/core/services/session';
 import { FEATURES } from '@/constants/features';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -77,7 +78,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, scheme, canTriag
 
       {/* Category & Description */}
       <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing.xs }}>
-        {item.category.replace(/_/g, ' ')}
+        {formatServerLabel(item.category)}
       </ThemedText>
       <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
         {item.description}

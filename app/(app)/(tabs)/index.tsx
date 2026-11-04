@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { DebouncedPressable } from '@/core/components/DebouncedPressable';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, LiveStreamMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge, SectionHeader } from '@/core/components';
+import { ThemedText, Card, LiveStreamMarquee, Shimmer, SkeletonCard, ExpandableText, Input, Badge, SectionHeader, EmptyState } from '@/core/components';
 import type { MarqueeItem } from '@/core/components';
 import { EntranceView } from '@/core/components/EntranceView';
 import { useAuthStore, useResultsStore } from '@/features/auth/store';
@@ -16,7 +16,9 @@ import {
   useLiveIncidentsQuery,
   useLiveTenantPartyQuery,
 } from '@/features/api/hooks';
+import { useAIProjectionQuery, useLocationSearchQuery } from '@/features/elections/hooks';
 import { useRefreshControl, useHaptics, useForegroundRefresh } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 import Colors from '@/constants/colors';
 import { partyColor } from '@/constants/parties';
 import { router } from 'expo-router';
@@ -54,8 +56,12 @@ export default function DashboardScreen() {
     return submissions.filter((s) => s.status === 'DRAFT');
   }, [submissions]);
 
-  // The console reports on the first live contest the server returns.
-  const activeElection = elections[0] ?? null;
+  // The console reports on the contest the server publishes with a slate, falling
+  // back to the first one when none has candidates yet.
+  const activeElection = useMemo(
+    () => elections.find((e) => e.candidateCount > 0) ?? elections[0] ?? null,
+    [elections]
+  );
   const { data: candidates = [], isLoading: candidatesLoading } = useLiveCandidatesQuery(activeElection?.id);
 
   // The pinned candidate is the one fielded by the tenant's own party, as the
@@ -68,6 +74,30 @@ export default function DashboardScreen() {
     if (!mine) return { myCandidate: list[0] ?? null, otherCandidates: list.slice(1, 4) };
     return { myCandidate: mine, otherCandidates: list.filter((c) => c.id !== mine.id).slice(0, 3) };
   }, [candidates, tenantParty]);
+
+  // AI projection: the endpoint is still being built, so this block keeps its
+  // shape and reads from the projection source until the route lands.
+  const [selectedCandidateId, setSelectedCandidateId] = useState('');
+  const [pastDataEnum, setPastDataEnum] = useState<0 | 1 | 2>(0);
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<{ id: string; name: string; qualification: string } | null>(null);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const currentDataSwitch = true;
+
+  // Start the projection on the server's pinned candidate rather than a local id.
+  useEffect(() => {
+    if (!selectedCandidateId && myCandidate) setSelectedCandidateId(myCandidate.id);
+  }, [myCandidate, selectedCandidateId]);
+
+  const { data: searchResults = [], isLoading: searchingLocations } = useLocationSearchQuery(locationSearchQuery);
+
+  const { data: projection } = useAIProjectionQuery({
+    candidateId: selectedCandidateId,
+    currentData: currentDataSwitch,
+    pastData: pastDataEnum,
+    locationId: selectedLocation?.id,
+    locationText: selectedLocation ? `${selectedLocation.name}, ${selectedLocation.qualification}` : undefined,
+  });
 
   const { refreshControl } = useRefreshControl(
     electionsLoading || incidentsLoading,
@@ -82,7 +112,7 @@ export default function DashboardScreen() {
       incidents.slice(0, 8).map((i) => ({
         id: i.id,
         kind: 'incident',
-        label: i.category.replace(/_/g, ' '),
+        label: formatServerLabel(i.category),
         area: i.electoralArea || (i.pollingUnitId ? `PU ${i.pollingUnitId}` : ''),
         detail: i.description.slice(0, 48),
         timestamp: i.reportedAt,
@@ -131,7 +161,7 @@ export default function DashboardScreen() {
             </View>
 
             <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
-              {activeElection ? activeElection.position : 'No Active Contest'}
+              {activeElection ? formatServerLabel(activeElection.position) : 'No Active Contest'}
             </ThemedText>
             {activeElection ? (
               <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
@@ -188,151 +218,87 @@ export default function DashboardScreen() {
         </EntranceView>
       )}
 
-      {/* 3. Candidate Snapshot Performance (Audio Part 2 - Hidden for Polling Agent per spec) */}
+      {/* 3. Contesting Candidates (live slate; tallies await the results feed) */}
       {!isPollingAgent && (
         <EntranceView delay={150}>
           <Card style={styles.sectionCard}>
             <SectionHeader
-              title="Snapshot Performance"
-              subtitle={isAgent ? 'Top candidates ranked by verified vote tally' : 'Live top candidates ranked by verified vote tally'}
+              title="Contesting Candidates"
+              subtitle={
+                activeElection
+                  ? `${formatServerLabel(activeElection.position)} · ${activeElection.electoralArea}`
+                  : 'No active contest is published yet'
+              }
             />
 
-            {/* Situation Room only: compare our field returns against what INEC declared */}
-            {isElectionOfficer && FEATURES.ENABLE_INEC_OBSERVED_TOGGLE && (
-              <View style={[styles.scoreSourceToggle, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                {([
-                  { id: 'OBSERVED' as const, label: 'Our Returns' },
-                  { id: 'INEC' as const, label: 'INEC Declared' },
-                ]).map((option) => {
-                  const active = scoreSource === option.id;
-                  return (
-                    <Pressable
-                      key={option.id}
-                      onPress={() => {
-                        impact(Haptics.ImpactFeedbackStyle.Light);
-                        setScoreSource(option.id);
-                      }}
-                      style={[styles.scoreSourceItem, active && { backgroundColor: colors.primary }]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                    >
-                      <ThemedText variant="caption" color={active ? '#FFFFFF' : 'textSecondary'} fontFamily="bold">
-                        {option.label}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
-
-          {/* Candidate score rows (Audio Part 2: Agent's affiliated candidate pinned at the top) */}
-          <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
-            {myCandidate && (
-              <View style={[styles.candidateRowCard, { borderColor: colors.primary, borderWidth: border.thick }]}>
-                <View style={styles.candHeader}>
-                  <View style={styles.candLeft}>
-                    <View style={[styles.rankTag, { backgroundColor: colors.primary }]}>
-                      <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
-                        #{myCandidateRank}
-                      </ThemedText>
-                    </View>
-                    <View style={{ marginLeft: spacing.xs, flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
-                        <ThemedText variant="body" color="text" fontFamily="bold">
-                          {myCandidate.fullName}
-                        </ThemedText>
-                        <View style={[styles.myCandidatePill, { backgroundColor: colors.primarySubtle }]}>
-                          <ThemedText variant="label" color="primary" fontFamily="bold">
-                            MY CANDIDATE
+            {candidatesLoading ? (
+              <SkeletonCard lines={3} />
+            ) : candidates.length === 0 ? (
+              <EmptyState
+                icon="people-outline"
+                title="No Candidates Filed"
+                subtitle="The server has not published any candidates for this contest."
+              />
+            ) : (
+              <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+                {myCandidate ? (
+                  <View style={[styles.candidateRowCard, { borderColor: colors.primary, borderWidth: border.thick }]}>
+                    <View style={styles.candHeader}>
+                      <View style={styles.candLeft}>
+                        <View style={[styles.rankTag, { backgroundColor: partyColor(myCandidate.partyAcronym) }]}>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
+                            {myCandidate.partyAcronym.slice(0, 2)}
                           </ThemedText>
                         </View>
-                      </View>
-                      <View style={styles.partyBadgeRow}>
-                        <Badge label={myCandidate.partyAcronym} color={PARTY_COLORS[myCandidate.partyAcronym] ?? colors.primary} size="sm" />
+                        <View style={{ marginLeft: spacing.xs, flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
+                            <ThemedText variant="body" color="text" fontFamily="bold">
+                              {myCandidate.fullName}
+                            </ThemedText>
+                            <View style={[styles.myCandidatePill, { backgroundColor: colors.primarySubtle }]}>
+                              <ThemedText variant="label" color="primary" fontFamily="bold">
+                                {tenantParty ? tenantParty.acronym : 'MY PARTY'}
+                              </ThemedText>
+                            </View>
+                          </View>
+                          <View style={styles.partyBadgeRow}>
+                            <Badge label={myCandidate.partyAcronym} color={partyColor(myCandidate.partyAcronym)} size="sm" />
+                          </View>
+                        </View>
                       </View>
                     </View>
                   </View>
+                ) : null}
 
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <ThemedText variant="title" color="text" fontFamily="bold">
-                      {myCandidate.votes.toLocaleString()}
-                    </ThemedText>
-                    <ThemedText variant="caption" color="primary" fontFamily="bold">
-                      {myCandidate.pct.toFixed(1)}%
-                    </ThemedText>
-                  </View>
-                </View>
-
-                {/* Progress bar */}
-                <View style={[styles.progressBarTrack, { backgroundColor: colors.borderSubtle }]}>
-                  <View
-                    style={[
-                      styles.progressBarFill,
-                      {
-                        width: `${Math.min(myCandidate.pct, 100)}%`,
-                        backgroundColor: PARTY_COLORS[myCandidate.partyAcronym] ?? colors.primary,
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-            )}
-
-            {/* Other Contesting Candidates */}
-            {otherCandidates.map((cand) => {
-              const rank = candidateScores.findIndex((c) => c.id === cand.id) + 1;
-              const isWinner = rank === 1;
-              const partyCol = PARTY_COLORS[cand.partyAcronym] ?? colors.primary;
-
-              return (
-                <View key={cand.id} style={[styles.candidateRowCard, { borderColor: isWinner ? colors.primary : colors.border }]}>
-                  <View style={styles.candHeader}>
-                    <View style={styles.candLeft}>
-                      <View style={[styles.rankTag, { backgroundColor: isWinner ? colors.primary : colors.borderSubtle }]}>
-                        <ThemedText variant="caption" color={isWinner ? '#FFFFFF' : 'textSecondary'} fontFamily="bold">
-                          #{rank}
-                        </ThemedText>
-                      </View>
-                      <View style={{ marginLeft: spacing.xs, flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] + spacing['3xs'], flexWrap: 'wrap' }}>
+                {otherCandidates.map((cand) => (
+                  <View key={cand.id} style={[styles.candidateRowCard, { borderColor: colors.border }]}>
+                    <View style={styles.candHeader}>
+                      <View style={styles.candLeft}>
+                        <View style={[styles.rankTag, { backgroundColor: partyColor(cand.partyAcronym) }]}>
+                          <ThemedText variant="caption" color="#FFFFFF" fontFamily="bold">
+                            {cand.partyAcronym.slice(0, 2)}
+                          </ThemedText>
+                        </View>
+                        <View style={{ marginLeft: spacing.xs, flex: 1 }}>
                           <ThemedText variant="body" color="text" fontFamily="bold">
                             {cand.fullName}
                           </ThemedText>
-                          {isWinner && (
-                            <View style={[styles.winnerMiniPill, { backgroundColor: colors.primarySubtle }]}>
-                              <Ionicons name="trophy" size={10} color={colors.primary} />
-                              <ThemedText variant="micro" color="primary" fontFamily="bold" style={{ marginLeft: spacing['3xs'] }}>
-                                LEADING
-                              </ThemedText>
-                            </View>
-                          )}
-                        </View>
-                        <View style={styles.partyBadgeRow}>
-                          <Badge label={cand.partyAcronym} color={partyCol} size="sm" />
+                          <View style={styles.partyBadgeRow}>
+                            <Badge label={cand.partyAcronym} color={partyColor(cand.partyAcronym)} size="sm" />
+                          </View>
                         </View>
                       </View>
                     </View>
-
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <ThemedText variant="title" color="text" fontFamily="bold">
-                        {cand.votes.toLocaleString()}
-                      </ThemedText>
-                      <ThemedText variant="caption" color="primary" fontFamily="bold">
-                        {cand.pct.toFixed(1)}%
-                      </ThemedText>
-                    </View>
                   </View>
+                ))}
 
-                  {/* Progress bar */}
-                  <View style={[styles.progressBarTrack, { backgroundColor: colors.borderSubtle }]}>
-                    <View style={[styles.progressBarFill, { width: `${Math.min(cand.pct, 100)}%`, backgroundColor: partyCol }]} />
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </Card>
-      </EntranceView>
+                <ThemedText variant="caption" color="textMuted" style={{ marginTop: spacing['2xs'] }}>
+                  Vote tallies will appear here once the results feed is available.
+                </ThemedText>
+              </View>
+            )}
+          </Card>
+        </EntranceView>
       )}
 
       {/* 4. AI Election Projection Engine (Officers only - Hidden for Field Agent and Polling Agent) */}
@@ -616,19 +582,13 @@ export default function DashboardScreen() {
       <EntranceView delay={250}>
         <View style={styles.sectionContainer}>
           <SectionHeader
-            title={
-              user?.role === 'POLLING_AGENT'
-                ? 'My Assigned Polling Unit'
-                : isElectionOfficer
-                  ? 'Jurisdictional Polling Units'
-                  : 'My Assigned Polling Units'
-            }
+            title="Polling Unit Assignments"
             subtitle={
-              user?.role === 'POLLING_AGENT'
-                ? 'Polling Unit Agent assignment · 1 Polling Unit'
+              isPollingAgent
+                ? 'Polling unit agent assignment'
                 : isElectionOfficer
-                  ? 'Election Officer supervisory overview · 3 Reporting Units'
-                  : 'Field Agent jurisdiction · 3 Polling Units'
+                  ? 'Supervisory overview'
+                  : 'Your field jurisdiction'
             }
             action={
               <DebouncedPressable
@@ -645,92 +605,18 @@ export default function DashboardScreen() {
             }
           />
 
-          <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
-            {(user?.role === 'POLLING_AGENT' ? ASSIGNED_DEMO_PUS.slice(0, 1) : ASSIGNED_DEMO_PUS).map((pu) => {
-              const isPub = pu.status === 'PUBLISHED';
-              const isDraft = pu.status === 'DRAFT';
-
-              return (
-                <Card
-                  key={pu.id}
-                  pressable
-                  onPress={() => {
-                    impact(Haptics.ImpactFeedbackStyle.Medium);
-                    if (isElectionOfficer) {
-                      // Election officers can view results, not submit
-                      router.push({ pathname: ROUTES.RESULT_DETAIL, params: { id: 'r1' } });
-                    } else if (isPub) {
-                      router.push({ pathname: ROUTES.RESULT_DETAIL, params: { id: 'r1' } });
-                    } else if (isDraft) {
-                      router.push(ROUTES.RESULT_DRAFTS);
-                    } else {
-                      router.push({ pathname: ROUTES.RESULT_SUBMIT, params: { puId: pu.id, puName: pu.name } });
-                    }
-                  }}
-                  style={[styles.puCard, { borderColor: colors.border }]}
-                >
-                  <View style={styles.puTopRow}>
-                    <View style={{ flex: 1, minWidth: 0, paddingRight: spacing.xs }}>
-                      <ThemedText variant="body" color="text" fontFamily="bold">
-                        {pu.name}
-                      </ThemedText>
-                      <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
-                        {pu.code} · {pu.lga}, {pu.state}
-                      </ThemedText>
-                    </View>
-
-                    {/* Unreported units carry no status badge - the Submit CTA and caption already say it */}
-                    {(isPub || isDraft) && (
-                      <Badge
-                        label={isPub ? 'PUBLISHED' : 'DRAFT'}
-                        variant={isPub ? 'success' : 'warning'}
-                        size="sm"
-                        icon={
-                          <Ionicons
-                            name={isPub ? 'checkmark-circle' : 'time'}
-                            size={12}
-                            color={isPub ? colors.success : colors.warning}
-                          />
-                        }
-                      />
-                    )}
-                  </View>
-
-                  <View style={[styles.puBottomRow, { borderTopColor: colors.borderSubtle }]}>
-                    <View style={{ flex: 1, minWidth: 0, flexShrink: 1, paddingRight: spacing.xs }}>
-                      <ThemedText variant="caption" color="textSecondary">
-                        {isPub
-                          ? `${pu.votes} Votes tallied (${pu.accredited} accredited)`
-                          : isDraft
-                            ? 'Draft saved in local store'
-                            : 'No ballot return submitted yet'}
-                      </ThemedText>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.puActionBtn,
-                        { backgroundColor: isPub || isElectionOfficer ? colors.borderSubtle : colors.primary },
-                      ]}
-                    >
-                      <ThemedText
-                        variant="caption"
-                        color={isPub || isElectionOfficer ? 'text' : '#FFFFFF'}
-                        fontFamily="bold"
-                      >
-                        {isElectionOfficer ? 'View' : isPub ? 'View' : isDraft ? 'Resume' : 'Submit'}
-                      </ThemedText>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={12}
-                        color={isPub || isElectionOfficer ? colors.text : '#FFFFFF'}
-                      />
-                    </View>
-                  </View>
-                </Card>
-              );
-            })}
-          </View>
+          {/* Assignments come from a polling-unit endpoint that does not exist yet,
+              so nothing is invented here. The section stays for when it lands. */}
+          <EmptyState
+            icon="location-outline"
+            title="Assignments Not Available Yet"
+            subtitle="Polling unit assignments are not yet exposed by the control room. You can still file an incident with a unit id."
+            actionLabel="Browse Locations"
+            onAction={() => {
+              impact(Haptics.ImpactFeedbackStyle.Light);
+              router.push(ROUTES.LOCATIONS);
+            }}
+          />
         </View>
       </EntranceView>
 
@@ -854,7 +740,7 @@ export default function DashboardScreen() {
                 </ThemedText>
                 <ThemedText variant="caption" color="textSecondary">
                   {isElectionOfficer
-                    ? `${incidents.length} incidents · ${liveResults.length} returns streaming`
+                    ? `${incidents.length} incidents in the live feed`
                     : `${incidents.length} security & logistical issues logged`}
                 </ThemedText>
               </View>

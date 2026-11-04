@@ -11,6 +11,7 @@ import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useLiveElectionDetailQuery, useLiveCandidatesQuery } from '@/features/api/hooks';
 import Colors from '@/constants/colors';
 import { useForegroundRefresh, useRefreshControl } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 
 import { partyColor } from '@/constants/parties';
 
@@ -83,10 +84,10 @@ export default function ElectionDetailScreen() {
           ELECTORAL CONTEST
         </ThemedText>
         <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
-          {election.position}
+          {formatServerLabel(election.position)}
         </ThemedText>
         <ThemedText variant="caption" color="#D1FAE5" style={{ marginTop: spacing['3xs'] }}>
-          {election.electoralArea} · {election.electoralAreaType}
+          {election.electoralArea} · {formatServerLabel(election.electoralAreaType)}
         </ThemedText>
         <View style={styles.dateTag}>
           <ThemedText variant="label" color="#FFFFFF" fontFamily="bold">

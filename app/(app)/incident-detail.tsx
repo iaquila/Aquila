@@ -14,6 +14,7 @@ import { spacing, radius, shadows, border, typography, sizes, opacities } from '
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useHaptics, useRefreshControl } from '@/core/hooks';
+import { formatServerLabel } from '@/core/utils/formatters';
 import Colors from '@/constants/colors';
 import { useIncidentsStore, useAuthStore, type IncidentReport } from '@/features/auth/store';
 import { loadSession } from '@/core/services/session';
@@ -168,7 +169,7 @@ export default function IncidentDetailScreen() {
           <View style={[styles.categoryBadge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
             <Ionicons name={categoryIcon} size={14} color="#FFFFFF" />
             <ThemedText variant="label" color="#FFFFFF" fontFamily="bold" style={{ marginLeft: spacing['2xs'] + spacing['3xs'] }}>
-              {incident.category.replace(/_/g, ' ')}
+              {formatServerLabel(incident.category)}
             </ThemedText>
           </View>
 
@@ -179,7 +180,7 @@ export default function IncidentDetailScreen() {
         </View>
 
         <ThemedText variant="h2" color="#FFFFFF" fontFamily="bold" style={{ marginTop: spacing.sm }}>
-          {incident.category.replace(/_/g, ' ')}
+          {formatServerLabel(incident.category)}
         </ThemedText>
 
         <ThemedText variant="caption" color="rgba(255, 255, 255, 0.85)" style={{ marginTop: spacing['3xs'] }}>
