@@ -131,21 +131,26 @@ export default function DashboardScreen() {
             </View>
 
             <ThemedText variant="title" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
-              Presidential Election
+              {activeElection ? activeElection.position : 'No Active Contest'}
             </ThemedText>
+            {activeElection ? (
+              <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
+                {activeElection.electoralArea} · {activeElection.electionDate}
+              </ThemedText>
+            ) : null}
           </View>
 
-          {/* Real-time Ticker stats (aggregated national feed - Election Officer only) */}
-          {isElectionOfficer && (
-          <View style={styles.tickerStatsRow}>
-            <View style={styles.tickerStatItem}>
-              <ThemedText variant="caption" color="textMuted">TOTAL VOTES TALLIED</ThemedText>
-              <ThemedText variant="h3" color="primary" fontFamily="bold">
-                {grandTotalVotes.toLocaleString()}
-              </ThemedText>
+          {/* Contesting candidates, as the server counts them */}
+          {activeElection ? (
+            <View style={styles.tickerStatsRow}>
+              <View style={styles.tickerStatItem}>
+                <ThemedText variant="caption" color="textMuted">CANDIDATES</ThemedText>
+                <ThemedText variant="h3" color="primary" fontFamily="bold">
+                  {activeElection.candidateCount}
+                </ThemedText>
+              </View>
             </View>
-          </View>
-          )}
+          ) : null}
         </View>
       </EntranceView>
 
