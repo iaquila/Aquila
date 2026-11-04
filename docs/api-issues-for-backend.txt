@@ -183,3 +183,5 @@ the field name. It also ignores the page number entirely.
 - POST /auth/forgot-password expects identifierType / identifierValue, not email:
   {"identifierType":"email","identifierValue":"..."} ->
   400 "Identifier type and identifier value are required" when sent as {"email":...}
+-GET /election-area/details/page/1 returns control_electoral_area_id = 990003,
+but the tenant's own areas are 991001..991006.

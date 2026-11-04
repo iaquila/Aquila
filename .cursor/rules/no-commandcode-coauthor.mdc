@@ -1,0 +1,8 @@
+---
+description: Prevent automatic CommandCodeBot co-author trailer on git commits
+alwaysApply: true
+---
+
+# No CommandCodeBot Co-Author Trailer
+
+Never append `Co-authored-by: CommandCodeBot <noreply@commandcode.ai>` to any git commit unless explicitly requested by the user.

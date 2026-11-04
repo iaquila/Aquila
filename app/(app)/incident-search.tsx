@@ -109,7 +109,7 @@ export default function IncidentSearchScreen() {
                 <View style={styles.metaRow}>
                   <Ionicons name="location-outline" size={12} color={colors.primary} />
                   <ThemedText variant="label" color="primary" style={{ marginLeft: spacing['2xs'] }}>
-                    {item.electoralArea}
+                    {item.electoralArea || (item.pollingUnitId ? `PU ${item.pollingUnitId}` : 'Area unavailable')}
                   </ThemedText>
                 </View>
               </Card>
@@ -125,8 +125,14 @@ export default function IncidentSearchScreen() {
             ) : (
               <EmptyState
                 icon="search-outline"
-                title="No Incidents Found"
-                subtitle={`No logged incidents matched "${search}".`}
+                title={search.trim() ? 'No Matches' : 'No Incidents Logged'}
+                subtitle={
+                  search.trim()
+                    ? `Nothing matched "${search.trim()}". Try a category, area or unit id.`
+                    : 'No incidents have been filed yet. Report one to see it here.'
+                }
+                actionLabel={search.trim() ? 'Clear Search' : undefined}
+                onAction={() => setSearch('')}
               />
             )
           }

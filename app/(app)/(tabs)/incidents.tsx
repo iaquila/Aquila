@@ -245,15 +245,29 @@ export default function IncidentsScreen() {
             </ThemedText>
           </View>
 
-          <Button
-            label="+ File Incident"
-            variant="primary"
-            size="sm"
-            onPress={() => {
-              impact(Haptics.ImpactFeedbackStyle.Medium);
-              router.push(ROUTES.INCIDENT_REPORT);
-            }}
-          />
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => {
+                impact(Haptics.ImpactFeedbackStyle.Light);
+                router.push(ROUTES.INCIDENT_SEARCH);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Search incidents"
+              style={[styles.searchBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            >
+              <Ionicons name="search-outline" size={18} color={colors.text} />
+            </Pressable>
+
+            <Button
+              label="+ File Incident"
+              variant="primary"
+              size="sm"
+              onPress={() => {
+                impact(Haptics.ImpactFeedbackStyle.Medium);
+                router.push(ROUTES.INCIDENT_REPORT);
+              }}
+            />
+          </View>
         </View>
 
         {/* Status Filter Toggle: All vs Unresolved vs Resolved (Audio Part 4) */}
@@ -363,6 +377,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
+    gap: spacing.xs,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 0,
+    gap: spacing.xs,
+  },
+  searchBtn: {
+    width: sizes.buttonMd,
+    height: sizes.buttonMd,
+    borderRadius: radius.md,
+    borderWidth: border.thin,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statusToggleBar: {
     flexDirection: 'row',
