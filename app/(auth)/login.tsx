@@ -5,7 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText, Input, Button, Card } from '@/core/components';
 import { spacing, radius, shadows, typography, border, sizes } from '@/constants/tokens';
-import { useLoginMutation } from '@/features/auth/hooks';
+import { useLoginMutation, useDemoLoginMutation } from '@/features/auth/hooks';
+import { UnsupportedOfficerError } from '@/features/auth/api';
+import { ApiError } from '@/core/services/http';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useFocusEffect } from 'expo-router';
@@ -32,6 +34,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const passwordRef = useRef<TextInput>(null);
   const loginMutation = useLoginMutation();
+  const demoLoginMutation = useDemoLoginMutation();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -47,7 +50,13 @@ export default function LoginScreen() {
       if (__DEV__) console.log('[login] success', email.trim());
     } catch (e) {
       console.warn('[login] failed', e);
-      setError('Authentication failed. Please verify credentials.');
+      if (e instanceof UnsupportedOfficerError) {
+        setError(e.message);
+      } else if (e instanceof ApiError) {
+        setError(e.statusCode === 401 ? 'Invalid email or password.' : 'Could not reach the election service.');
+      } else {
+        setError('Authentication failed. Please verify credentials.');
+      }
     }
   };
 
@@ -61,7 +70,7 @@ export default function LoginScreen() {
         demoEmail = 'officer@iaquila.com.ng';
       }
 
-      await loginMutation.mutateAsync({
+      await demoLoginMutation.mutateAsync({
         email: demoEmail,
         password: 'demo',
       });
@@ -184,7 +193,7 @@ export default function LoginScreen() {
                   label="Field Agent"
                   variant="outline"
                   onPress={() => launchDemo('agent')}
-                  loading={loginMutation.isPending}
+                  loading={demoLoginMutation.isPending}
                   fullWidth
                   size="sm"
                 />
@@ -192,7 +201,7 @@ export default function LoginScreen() {
                   label="PU Agent"
                   variant="outline"
                   onPress={() => launchDemo('polling')}
-                  loading={loginMutation.isPending}
+                  loading={demoLoginMutation.isPending}
                   fullWidth
                   size="sm"
                 />
@@ -200,7 +209,7 @@ export default function LoginScreen() {
                   label="Election Officer"
                   variant="outline"
                   onPress={() => launchDemo('officer')}
-                  loading={loginMutation.isPending}
+                  loading={demoLoginMutation.isPending}
                   fullWidth
                   size="sm"
                 />

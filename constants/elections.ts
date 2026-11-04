@@ -12,6 +12,7 @@ export const ELECTION_STATUS_COLORS: Record<string, string> = {
   DRAFT: 'textMuted',
   SCHEDULED: 'pending',
   ACTIVE: 'verified',
+  INACTIVE: 'textMuted',
   COMPLETED: 'primary',
   ARCHIVED: 'textSecondary',
 };
@@ -20,20 +21,23 @@ export const ELECTION_STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Draft',
   SCHEDULED: 'Scheduled',
   ACTIVE: 'Active',
+  INACTIVE: 'Inactive',
   COMPLETED: 'Completed',
   ARCHIVED: 'Archived',
 };
 
-export const ELECTION_POSITION_FILTERS = [
-  { id: 'ALL', label: 'All Contests' },
-  { id: 'PRESIDENT', label: 'Presidential' },
-  { id: 'GOVERNOR', label: 'Governorship' },
-  { id: 'SENATOR', label: 'Senatorial' },
-  { id: 'REPRESENTATIVES', label: 'House of Reps' },
-  { id: 'LOCAL', label: 'LGA / Local' },
-] as const;
-
-export type ElectionPositionFilterId = (typeof ELECTION_POSITION_FILTERS)[number]['id'];
+// Display order for the position chips, highest office first. The chips
+// themselves come from the live position list, so this only decides ordering;
+// a type not listed here sorts to the end.
+export const ELECTORAL_AREA_TYPE_ORDER: Record<string, number> = {
+  country: 0,
+  state: 1,
+  senatorial_district: 2,
+  federal_constituency: 3,
+  state_constituency: 4,
+  lga: 5,
+  ward: 6,
+};
 
 export interface AssignedDemoPu {
   id: string;

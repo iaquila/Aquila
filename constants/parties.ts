@@ -24,3 +24,17 @@ export const PARTY_CANDIDATE_NAMES: Record<string, string> = {
   PPNF: 'Ibrahim Shehu',
   ADP: 'Amina Yusuf',
 };
+
+const FALLBACK_PARTY_COLORS = ['#059669', '#DC2626', '#16A34A', '#2563EB', '#7C3AED', '#D97706', '#0891B2', '#DB2777'];
+
+// Server parties are open-ended (22 and counting), so brand colours only exist
+// for the seeded demo acronyms. Unknown acronyms get a stable hash colour.
+export function partyColor(acronym: string): string {
+  const known = PARTY_COLORS[acronym.toUpperCase()];
+  if (known) return known;
+  let hash = 0;
+  for (let index = 0; index < acronym.length; index++) {
+    hash = (hash * 31 + acronym.charCodeAt(index)) % 997;
+  }
+  return FALLBACK_PARTY_COLORS[hash % FALLBACK_PARTY_COLORS.length] ?? '#059669';
+}

@@ -9,24 +9,37 @@ import { spacing, radius, shadows, border, typography, sizes } from '@/constants
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
-import { useElectionsQuery, useElectionCyclesQuery } from '@/features/elections/hooks';
-import { MAJOR_PARTIES } from '@/constants/parties';
+import { useLiveElectionsQuery, useLiveElectionCyclesQuery, useLiveElectionPartiesQuery, useLivePositionsQuery } from '@/features/api/hooks';
+import { partyColor } from '@/constants/parties';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 import {
   ELECTION_STATUS_COLORS as STATUS_COLORS,
   ELECTION_STATUS_LABELS as STATUS_LABELS,
-  ELECTION_POSITION_FILTERS as POSITION_FILTERS,
+  ELECTORAL_AREA_TYPE_ORDER,
 } from '@/constants/elections';
+
+const ALL_POSITIONS = 'ALL';
+
+// Server position names are lowercase ("federal Rep", "state Rep"). Matching uses
+// the raw name; only the chip text is title-cased for display.
+const toChipLabel = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
 
 
 export default function ElectionsScreen() {
-  const { data: cycles = [], isLoading: cyclesLoading } = useElectionCyclesQuery();
-  const { data: elections = [], isLoading: electionsLoading, refetch: refetchElections } = useElectionsQuery();
+  const { data: cycles = [], isLoading: cyclesLoading } = useLiveElectionCyclesQuery();
+  const { data: elections = [], isLoading: electionsLoading, refetch: refetchElections } = useLiveElectionsQuery();
+  const { data: partiesByElection } = useLiveElectionPartiesQuery();
+  const { data: positions = [] } = useLivePositionsQuery();
   const [selectedCycle, setSelectedCycle] = useState<string | null>(null);
-  const [selectedPosition, setSelectedPosition] = useState<string>('ALL');
+  const [selectedPosition, setSelectedPosition] = useState<string>(ALL_POSITIONS);
   const [searchQuery, setSearchQuery] = useState('');
 
   const scheme = useColorScheme() ?? 'light';
@@ -38,7 +51,7 @@ export default function ElectionsScreen() {
     cyclesLoading || electionsLoading,
     refetchElections
   );
-  useForegroundRefresh([['elections', 'list'], ['elections', 'cycles']], 5 * 60 * 1000);
+  useForegroundRefresh([['catalogue']], 5 * 60 * 1000);
 
   const loading = cyclesLoading || electionsLoading;
 
@@ -52,19 +65,31 @@ export default function ElectionsScreen() {
     return cycles.find((c) => c.id === selectedCycle) ?? cycles[0] ?? null;
   }, [cycles, selectedCycle]);
 
+  // Chips are the server's own position names, deduped and ordered by the office
+  // hierarchy. Matching is an exact class of name, so a newly seeded position
+  // appears without a code change and never silently filters to zero rows.
+  const positionFilters = useMemo(() => {
+    const byName = new Map<string, { key: string; label: string; type: string }>();
+    for (const position of positions) {
+      const label = position.name.trim();
+      const key = label.toLowerCase();
+      if (!label || byName.has(key)) continue;
+      byName.set(key, { key, label: toChipLabel(label), type: position.electoralAreaType });
+    }
+    return [...byName.values()].sort((a, b) => {
+      const rankA = ELECTORAL_AREA_TYPE_ORDER[a.type] ?? Number.MAX_SAFE_INTEGER;
+      const rankB = ELECTORAL_AREA_TYPE_ORDER[b.type] ?? Number.MAX_SAFE_INTEGER;
+      return rankA - rankB || a.label.localeCompare(b.label);
+    });
+  }, [positions]);
+
   const filteredElections = useMemo(() => {
     return elections.filter((e) => {
       const matchCycle = !selectedCycle || e.cycleId === selectedCycle;
       if (!matchCycle) return false;
 
-      // Filter by position chip
-      if (selectedPosition !== 'ALL') {
-        const posUpper = e.position.toUpperCase();
-        if (selectedPosition === 'PRESIDENT' && !posUpper.includes('PRESIDENT')) return false;
-        if (selectedPosition === 'GOVERNOR' && !posUpper.includes('GOVERNOR')) return false;
-        if (selectedPosition === 'SENATOR' && !posUpper.includes('SENATOR')) return false;
-        if (selectedPosition === 'REPRESENTATIVES' && !posUpper.includes('REPRESENTATIVE')) return false;
-        if (selectedPosition === 'LOCAL' && !posUpper.includes('CHAIRMAN') && !posUpper.includes('COUNCILLOR') && !posUpper.includes('LOCAL')) return false;
+      if (selectedPosition !== ALL_POSITIONS && e.position.trim().toLowerCase() !== selectedPosition) {
+        return false;
       }
 
       // Filter by search query
@@ -211,12 +236,14 @@ export default function ElectionsScreen() {
       {/* Position Filter Chips (Horizontal Scroll) */}
       <View style={styles.filterScrollContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          {POSITION_FILTERS.map((f) => {
-            const active = selectedPosition === f.id;
+          {[{ key: ALL_POSITIONS, label: 'All Contests' }, ...positionFilters].map((f) => {
+            const active = selectedPosition === f.key;
             return (
               <Pressable
-                key={f.id}
-                onPress={() => handlePositionSelect(f.id)}
+                key={f.key}
+                onPress={() => handlePositionSelect(f.key)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
                 style={[
                   styles.filterChip,
                   {
@@ -286,14 +313,14 @@ export default function ElectionsScreen() {
           icon="document-text-outline"
           title="No Contests Found"
           subtitle={
-            searchQuery.length > 0 || selectedPosition !== 'ALL'
+            searchQuery.length > 0 || selectedPosition !== ALL_POSITIONS
               ? 'No elections match your current search or position filter.'
               : 'No elections scheduled in this cycle yet.'
           }
-          actionLabel={searchQuery.length > 0 || selectedPosition !== 'ALL' ? 'Reset Filters' : undefined}
+          actionLabel={searchQuery.length > 0 || selectedPosition !== ALL_POSITIONS ? 'Reset Filters' : undefined}
           onAction={() => {
             setSearchQuery('');
-            setSelectedPosition('ALL');
+            setSelectedPosition(ALL_POSITIONS);
           }}
         />
       ) : null}
@@ -338,11 +365,11 @@ export default function ElectionsScreen() {
                 </View>
               </View>
 
-              {/* Major Competing Parties Badges */}
+              {/* Parties contesting, derived from this election's candidates */}
               <View style={[styles.cardFooter, { borderTopColor: colors.border + '50' }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'], flex: 1, minWidth: 0 }}>
-                  {MAJOR_PARTIES.slice(0, election.candidateCount >= 4 ? 4 : 3).map((p) => (
-                    <Badge key={p.acronym} label={p.acronym} color={p.bg} size="sm" />
+                  {(partiesByElection?.get(election.id) ?? []).slice(0, 4).map((acronym) => (
+                    <Badge key={acronym} label={acronym} color={partyColor(acronym)} size="sm" />
                   ))}
                   <ThemedText variant="micro" color="textSecondary" style={{ marginLeft: spacing['2xs'], flexShrink: 1 }}>
                     {election.candidateCount} {election.candidateCount === 1 ? 'Candidate' : 'Candidates'}

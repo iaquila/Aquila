@@ -8,6 +8,8 @@ import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, Button, DebouncedPressable } from '@/core/components';
 import { useAuthStore } from '@/features/auth/store';
 import { useLogoutMutation } from '@/features/auth/hooks';
+import { useLiveTenantPartyQuery } from '@/features/api/hooks';
+import { partyColor } from '@/constants/parties';
 import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { LEGAL_URLS } from '@/constants/legal';
@@ -23,6 +25,7 @@ import * as WebBrowser from 'expo-web-browser';
 export default function ProfileTabScreen() {
   const { user, login } = useAuthStore();
   const logoutMutation = useLogoutMutation();
+  const { data: tenantParty } = useLiveTenantPartyQuery();
 
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -128,6 +131,25 @@ export default function ProfileTabScreen() {
             </ThemedText>
           </View>
         </View>
+
+        {tenantParty ? (
+          <View style={[styles.orgRow, { marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: border.thin, borderTopColor: colors.borderSubtle }]}>
+            <View style={[styles.orgIconWrap, { backgroundColor: partyColor(tenantParty.acronym) + '18' }]}>
+              <Ionicons name="flag" size={22} color={partyColor(tenantParty.acronym)} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.sm }}>
+              <ThemedText variant="label" color="textMuted" fontFamily="bold">
+                ASSIGNED PARTY
+              </ThemedText>
+              <ThemedText variant="body" color="text" fontFamily="bold">
+                {tenantParty.name}
+              </ThemedText>
+              <ThemedText variant="caption" color="textSecondary">
+                {tenantParty.acronym} · {tenantParty.code}
+              </ThemedText>
+            </View>
+          </View>
+        ) : null}
       </Card>
 
       {/* 3. Field Agent Covert & Security Settings (Audio Part 5) */}

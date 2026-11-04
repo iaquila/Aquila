@@ -13,6 +13,8 @@ import { ToastProvider } from '@/core/components/ToastProvider';
 import { KeyboardDoneAccessory } from '@/core/components';
 import { RootErrorBoundary } from '@/core/components/ErrorBoundary';
 import { mockApi } from '@/features/elections/service';
+import { loadSession } from '@/core/services/session';
+import { ensureFreshSession } from '@/core/services/http';
 import { ResultSubmission } from '@/features/auth/store';
 import { Asset } from 'expo-asset';
 import * as ScreenCapture from 'expo-screen-capture';
@@ -174,12 +176,42 @@ function RootLayoutNav() {
     if (!isAuthenticated) seededRef.current = false;
   }, [isAuthenticated]);
 
+  // Keep the API session fresh while the app is alive: on foreground, on the way
+  // to background, and on a slow tick. Demo logins have no session and are ignored.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    const check = async () => {
+      const result = await ensureFreshSession();
+      if (!cancelled && result === 'invalid') {
+        if (__DEV__) console.warn('[session] expired, signing out');
+        useAuthStore.getState().logout();
+      }
+    };
+    void check();
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' || nextAppState === 'background') void check();
+    });
+    const timer = setInterval(() => void check(), 60_000);
+    return () => {
+      cancelled = true;
+      subscription.remove();
+      clearInterval(timer);
+    };
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (!isNavigationReady || !isAuthenticated || seededRef.current) return;
     seededRef.current = true;
     const controller = new AbortController();
     (async () => {
       try {
+        // Server-first: a real login has an API session, so nothing is seeded
+        // from the local demo data. Mocks remain only for the one-tap demo roles.
+        if (await loadSession()) {
+          useIncidentsStore.getState().setIncidents([]);
+          return;
+        }
         const [cycles, elections, results, incidents, states, lgas, pus, parties, candidates] = await Promise.all([
           mockApi.getElectionCycles(),
           mockApi.getElections(),

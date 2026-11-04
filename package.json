@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "build:lga": "node scripts/build-lga-geometry.cjs",
-    "validate:lga": "node scripts/validate-lga-geometry.cjs"
+    "validate:lga": "node scripts/validate-lga-geometry.cjs",
+    "api:check": "node scripts/api-sync.cjs",
+    "api:capture": "node scripts/api-sync.cjs --capture"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

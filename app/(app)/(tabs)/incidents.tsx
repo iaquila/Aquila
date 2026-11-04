@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, FlatList } from 'react-native';
+import { Alert, StyleSheet, View, ScrollView, Pressable, FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, EmptyState, Button, Card, SkeletonCard, Badge } from '@/core/components';
@@ -10,38 +10,38 @@ import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
-import { useIncidentsQuery } from '@/features/elections/hooks';
+import { useLiveIncidentCategoriesQuery, useLiveIncidentsQuery, useUpdateIncidentMutation } from '@/features/api/hooks';
+import { incidentCategoryForName } from '@/features/api/mappers';
+import { loadSession } from '@/core/services/session';
+import { FEATURES } from '@/constants/features';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import Colors from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-const CATEGORY_FILTERS = [
-  'ALL',
-  'VIOLENCE',
-  'BALLOT_SNATCHING',
-  'VOTE_BUYING',
-  'BVAS_FAILURE',
-  'SECURITY_INCIDENT',
-] as const;
+const ALL_CATEGORIES = 'ALL';
 
 type IncidentCardProps = {
   item: IncidentReport;
   colors: (typeof Colors)['light'];
   scheme: 'light' | 'dark';
-  isElectionOfficer: boolean;
+  canTriage: boolean;
+  isUpdating: boolean;
   impact: ReturnType<typeof useHaptics>['impact'];
-  onUpdateStatus: (id: string, status: 'UNDER_REVIEW' | 'RESOLVED') => void;
+  onUpdateStatus: (id: string, status: 'open' | 'close') => void;
 };
 
 // Memoized row: FlatList re-renders every row on each parent render unless
 // rows are memo/Pure (VirtualizedList slow-update warning).
-const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElectionOfficer, impact, onUpdateStatus }: IncidentCardProps) {
-  const isCritical = item.severity === 'CRITICAL';
-  const isHigh = item.severity === 'HIGH';
-  const isResolved = item.status === 'RESOLVED';
-  const isReviewing = item.status === 'UNDER_REVIEW' || item.status === 'SUBMITTED';
-
+const IncidentCard = memo(function IncidentCard({ item, colors, scheme, canTriage, isUpdating, impact, onUpdateStatus }: IncidentCardProps) {
+  const isHigh = item.severity === 'HIGH' || item.severity === 'CRITICAL';
+  const isClosed = item.status === 'CLOSED';
+  const statusLabel =
+    item.status === 'CLOSED'
+      ? 'CLOSED'
+      : item.status === 'OPEN'
+        ? 'OPEN'
+        : item.status;
   const sevColor = getSeverityColor(item.severity, scheme);
 
   return (
@@ -61,7 +61,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElecti
           size="sm"
           icon={
             <Ionicons
-              name={isCritical || isHigh ? 'warning' : 'alert-circle-outline'}
+              name={isHigh ? 'warning' : 'alert-circle-outline'}
               size={13}
               color={sevColor}
             />
@@ -69,8 +69,8 @@ const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElecti
         />
 
         <Badge
-          label={isResolved ? 'RESOLVED' : isReviewing ? 'REVIEWING' : item.status}
-          variant={isResolved ? 'success' : isReviewing ? 'warning' : 'neutral'}
+          label={statusLabel}
+          variant={isClosed ? 'success' : 'neutral'}
           size="sm"
         />
       </View>
@@ -88,7 +88,7 @@ const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElecti
         <View style={styles.metaItem}>
           <Ionicons name="location-outline" size={13} color={colors.primary} />
           <ThemedText variant="label" color="primary" fontFamily="medium" style={{ marginLeft: spacing['2xs'] }}>
-            {item.electoralArea}
+            {item.electoralArea || (item.pollingUnitId ? `PU ${item.pollingUnitId}` : 'Area unavailable')}
           </ThemedText>
         </View>
 
@@ -117,32 +117,23 @@ const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElecti
           {new Date(item.reportedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </ThemedText>
 
-        {isElectionOfficer ? (
-          <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-            {!isResolved && (
-              <Button
-                label="Reviewing"
-                variant={isReviewing ? 'primary' : 'outline'}
-                size="sm"
-                onPress={() => onUpdateStatus(item.id, 'UNDER_REVIEW')}
-              />
-            )}
-            <Button
-              label={isResolved ? 'Mark Reopened' : 'Resolve'}
-              variant={isResolved ? 'outline' : 'primary'}
-              size="sm"
-              leftIcon={isResolved ? 'refresh-outline' : 'checkmark-circle-outline'}
-              onPress={() => onUpdateStatus(item.id, isResolved ? 'UNDER_REVIEW' : 'RESOLVED')}
-            />
-          </View>
+        {canTriage ? (
+          <Button
+            label={isClosed ? 'Reopen' : 'Close'}
+            variant={isClosed ? 'outline' : 'primary'}
+            size="sm"
+            leftIcon={isClosed ? 'refresh-outline' : 'checkmark-circle-outline'}
+            loading={isUpdating}
+            onPress={() => onUpdateStatus(item.id, isClosed ? 'open' : 'close')}
+          />
         ) : (
-          <View style={[styles.fieldAgentPill, { backgroundColor: isResolved ? colors.successSubtle : colors.warningSubtle }]}>
+          <View style={[styles.fieldAgentPill, { backgroundColor: isClosed ? colors.successSubtle : colors.warningSubtle }]}>
             <ThemedText
               variant="label"
-              color={isResolved ? 'success' : 'warning'}
+              color={isClosed ? 'success' : 'warning'}
               fontFamily="bold"
             >
-              {isResolved ? 'RESOLVED' : isReviewing ? 'UNDER REVIEW' : 'LOGGED'}
+              {statusLabel}
             </ThemedText>
           </View>
         )}
@@ -152,18 +143,39 @@ const IncidentCard = memo(function IncidentCard({ item, colors, scheme, isElecti
 });
 
 export default function IncidentsScreen() {
-  const { data: apiIncidents = [], isLoading: loading, refetch: refetchIncidents } = useIncidentsQuery();
-  const { incidents: storeIncidents, updateIncident } = useIncidentsStore();
+  const { data: apiIncidents = [], isLoading: loading, refetch: refetchIncidents } = useLiveIncidentsQuery(
+    FEATURES.ENABLE_LIVE_POLLING ? 30_000 : undefined
+  );
+  const { incidents: storeIncidents, updateIncident: updateLocalIncident } = useIncidentsStore();
   const { user } = useAuthStore();
-  const isElectionOfficer = user?.role === 'ELECTION_OFFICER';
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const { data: liveCategories = [] } = useLiveIncidentCategoriesQuery();
+  const updateIncidentMutation = useUpdateIncidentMutation();
+  // PATCH /incident/edit admits field and polling-unit agents only, and refuses a
+  // tenant admin. Demo accounts have no session, so their edits stay on device.
+  const canTriage = user?.role === 'FIELD_AGENT' || user?.role === 'POLLING_AGENT';
+  const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORIES);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNRESOLVED' | 'RESOLVED'>('ALL');
+
+  // Chips come from the live category list, so a category the server adds shows
+  // up without a code change. Names map to the app enum through the one mapper
+  // that owns that translation; names it does not know fall under OTHER.
+  const categoryFilters = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const category of liveCategories) {
+      const key = incidentCategoryForName(category.name) ?? 'OTHER';
+      if (key !== 'OTHER' && !seen.has(key)) seen.set(key, category.name);
+    }
+    return [
+      { key: ALL_CATEGORIES, label: 'All' },
+      ...[...seen.entries()].map(([key, name]) => ({ key, label: name })),
+    ];
+  }, [liveCategories]);
 
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
   const { refreshControl } = useRefreshControl(loading, refetchIncidents);
-  useForegroundRefresh([['incidents', 'list']], 5 * 60 * 1000);
+  useForegroundRefresh([['incidents', 'live']], 5 * 60 * 1000);
   const { impact } = useHaptics();
 
   // Combine store incidents with API incidents
@@ -181,27 +193,42 @@ export default function IncidentsScreen() {
         statusFilter === 'ALL'
           ? true
           : statusFilter === 'RESOLVED'
-            ? item.status === 'RESOLVED'
-            : item.status !== 'RESOLVED';
+            ? item.status === 'RESOLVED' || item.status === 'CLOSED'
+            : item.status !== 'RESOLVED' && item.status !== 'CLOSED';
       return matchCat && matchStatus;
     });
   }, [allIncidents, selectedCategory, statusFilter]);
 
-  const handleUpdateStatus = useCallback((id: string, newStatus: 'UNDER_REVIEW' | 'RESOLVED') => {
-    impact(Haptics.ImpactFeedbackStyle.Medium);
-    updateIncident(id, { status: newStatus as any });
-  }, [impact, updateIncident]);
+  const handleUpdateStatus = useCallback(
+    async (id: string, next: 'open' | 'close') => {
+      impact(Haptics.ImpactFeedbackStyle.Medium);
+      if (!(await loadSession())) {
+        updateLocalIncident(id, { status: next === 'close' ? 'CLOSED' : 'OPEN' });
+        return;
+      }
+      const incidentId = Number(id);
+      if (!Number.isFinite(incidentId)) return;
+      try {
+        await updateIncidentMutation.mutateAsync({ id: incidentId, status: next });
+      } catch (error) {
+        if (__DEV__) console.warn('[incident] status update failed', error);
+        Alert.alert('Status not saved', 'The incident could not be updated. Check your connection and try again.');
+      }
+    },
+    [impact, updateIncidentMutation, updateLocalIncident]
+  );
 
   const renderIncidentCard = useCallback(({ item }: { item: IncidentReport }) => (
     <IncidentCard
       item={item}
       colors={colors}
       scheme={scheme}
-      isElectionOfficer={isElectionOfficer}
+      canTriage={canTriage}
+      isUpdating={updateIncidentMutation.isPending}
       impact={impact}
       onUpdateStatus={handleUpdateStatus}
     />
-  ), [colors, scheme, handleUpdateStatus, impact, isElectionOfficer]);
+  ), [canTriage, colors, scheme, handleUpdateStatus, impact, updateIncidentMutation.isPending]);
 
   return (
     <ScreenView scrollable={false} noScrollPadding>
@@ -260,15 +287,17 @@ export default function IncidentsScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.catScrollContent}
           >
-            {CATEGORY_FILTERS.map((cat) => {
-              const active = selectedCategory === cat;
+            {categoryFilters.map((cat) => {
+              const active = selectedCategory === cat.key;
               return (
                 <Pressable
-                  key={cat}
+                  key={cat.key}
                   onPress={() => {
                     impact(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedCategory(cat);
+                    setSelectedCategory(cat.key);
                   }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   style={[
                     styles.catChip,
                     {
@@ -282,7 +311,7 @@ export default function IncidentsScreen() {
                     color={active ? '#FFFFFF' : 'textSecondary'}
                     fontFamily={active ? 'bold' : 'regular'}
                   >
-                    {cat.replace(/_/g, ' ')}
+                    {cat.label}
                   </ThemedText>
                 </Pressable>
               );

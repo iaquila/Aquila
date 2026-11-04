@@ -37,3 +37,6 @@ expo-env.d.ts
 # @end expo-cli
 # LGA geometry build cache (geoBoundaries source GeoJSON)
 scripts/.cache/
+
+# Live API samples captured by scripts/api-sync.cjs (contain real tenant data)
+.api-samples/

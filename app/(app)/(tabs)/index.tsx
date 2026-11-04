@@ -10,15 +10,19 @@ import { ROUTES } from '@/constants/routes';
 import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
-import { useElectionsQuery, useIncidentsQuery, useCandidatesQuery, useResultsQuery, useAIProjectionQuery, useLocationSearchQuery } from '@/features/elections/hooks';
+import {
+  useLiveElectionsQuery,
+  useLiveCandidatesQuery,
+  useLiveIncidentsQuery,
+  useLiveTenantPartyQuery,
+} from '@/features/api/hooks';
 import { useRefreshControl, useHaptics, useForegroundRefresh } from '@/core/hooks';
 import Colors from '@/constants/colors';
-import { PARTY_COLORS } from '@/constants/parties';
+import { partyColor } from '@/constants/parties';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { ASSIGNED_DEMO_PUS } from '@/constants/elections';
 import { ROLE_LABELS } from '@/constants/roles';
 import { FEATURES } from '@/constants/features';
 
@@ -28,10 +32,11 @@ export default function DashboardScreen() {
   const colors = Colors[scheme];
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
 
-  const { isLoading: electionsLoading, refetch: refetchElections } = useElectionsQuery();
-  const { data: incidents = [], isLoading: incidentsLoading, refetch: refetchIncidents } = useIncidentsQuery();
-  const { data: candidates = [] } = useCandidatesQuery('e1');
-  const { data: allResults = [], isLoading: resultsLoading, refetch: refetchResults } = useResultsQuery();
+  const { data: elections = [], isLoading: electionsLoading, refetch: refetchElections } = useLiveElectionsQuery();
+  const { data: incidents = [], isLoading: incidentsLoading, refetch: refetchIncidents } = useLiveIncidentsQuery(
+    FEATURES.ENABLE_LIVE_POLLING ? 30_000 : undefined
+  );
+  const { data: tenantParty } = useLiveTenantPartyQuery();
   const { user } = useAuthStore();
   const { submissions } = useResultsStore();
   const { impact } = useHaptics();
@@ -49,143 +54,43 @@ export default function DashboardScreen() {
     return submissions.filter((s) => s.status === 'DRAFT');
   }, [submissions]);
 
-  // AI Projection parameters (Audio Parts 6, 7, 8, 9)
-  const [selectedCandidateId, setSelectedCandidateId] = useState('cand1');
-  const [pastDataEnum, setPastDataEnum] = useState<0 | 1 | 2>(0);
-  const [locationSearchQuery, setLocationSearchQuery] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState<{ id: string; name: string; qualification: string } | null>(null);
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [scoreSource, setScoreSource] = useState<'OBSERVED' | 'INEC'>('OBSERVED');
-  const currentDataSwitch = true;
+  // The console reports on the first live contest the server returns.
+  const activeElection = elections[0] ?? null;
+  const { data: candidates = [], isLoading: candidatesLoading } = useLiveCandidatesQuery(activeElection?.id);
 
-  const { data: searchResults = [], isLoading: searchingLocations } = useLocationSearchQuery(locationSearchQuery);
-
-  const { data: projection } = useAIProjectionQuery({
-    candidateId: selectedCandidateId,
-    currentData: currentDataSwitch,
-    pastData: pastDataEnum,
-    locationId: selectedLocation?.id,
-    locationText: selectedLocation ? `${selectedLocation.name}, ${selectedLocation.qualification}` : undefined,
-  });
-
-  // Simulated Live Pulse (Audio Part 6): aggregated incoming field data is an Election Officer concern.
-  // Field and Polling Unit Agents only ever see values tied to their own submitted returns, so theirs never tick.
-  const [pulseBonusVotes, setPulseBonusVotes] = useState<Record<string, number>>({
-    cand1: 0, // CPA
-    cand2: 0, // DPP
-    cand3: 0, // PL
-    cand4: 0, // PPNF
-  });
-
-  useEffect(() => {
-    if (!isElectionOfficer) return;
-
-    const timer = setInterval(() => {
-      const incVotes = Math.floor(Math.random() * 55) + 30; // 30-85 new votes incoming
-
-      // Proportional vote increment matching field returns
-      const cpaAdd = Math.round(incVotes * 0.38);
-      const plAdd = Math.round(incVotes * 0.34);
-      const dppAdd = Math.round(incVotes * 0.22);
-      const ppnfAdd = Math.max(0, incVotes - cpaAdd - plAdd - dppAdd);
-
-      setPulseBonusVotes((prev) => ({
-        cand1: (prev.cand1 ?? 0) + cpaAdd,
-        cand2: (prev.cand2 ?? 0) + dppAdd,
-        cand3: (prev.cand3 ?? 0) + plAdd,
-        cand4: (prev.cand4 ?? 0) + ppnfAdd,
-      }));
-    }, 12000);
-    return () => clearInterval(timer);
-  }, [isElectionOfficer]);
+  // The pinned candidate is the one fielded by the tenant's own party, as the
+  // server reports it. There is no local watch list and no hardcoded id.
+  const { myCandidate, otherCandidates } = useMemo(() => {
+    const list = candidates;
+    const mine = tenantParty
+      ? list.find((c) => c.partyAcronym.toUpperCase() === tenantParty.acronym.toUpperCase())
+      : undefined;
+    if (!mine) return { myCandidate: list[0] ?? null, otherCandidates: list.slice(1, 4) };
+    return { myCandidate: mine, otherCandidates: list.filter((c) => c.id !== mine.id).slice(0, 3) };
+  }, [candidates, tenantParty]);
 
   const { refreshControl } = useRefreshControl(
     electionsLoading || incidentsLoading,
-    () => Promise.all([refetchElections(), refetchIncidents(), refetchResults()])
+    () => Promise.all([refetchElections(), refetchIncidents()])
   );
-  useForegroundRefresh([['elections', 'list'], ['incidents', 'list'], ['results', 'list']], 5 * 60 * 1000);
+  useForegroundRefresh([['catalogue'], ['incidents', 'live']], 5 * 60 * 1000);
 
-  // Combine remote published results with persistent local submissions (live link)
-  const liveResults = useMemo(() => {
-    const localPublished = submissions.filter((s) => s.status === 'PUBLISHED');
-    const ids = new Set(localPublished.map((s) => s.id));
-    const remoteUnique = allResults.filter((r) => !ids.has(r.id));
-    return [...localPublished, ...remoteUnique];
-  }, [submissions, allResults]);
+  // Incidents are the only live feed: no results endpoint exists, so nothing is
+  // synthesised from local submissions.
+  const liveFeedItems = useMemo<MarqueeItem[]>(
+    () =>
+      incidents.slice(0, 8).map((i) => ({
+        id: i.id,
+        kind: 'incident',
+        label: i.category.replace(/_/g, ' '),
+        area: i.electoralArea || (i.pollingUnitId ? `PU ${i.pollingUnitId}` : ''),
+        detail: i.description.slice(0, 48),
+        timestamp: i.reportedAt,
+      })),
+    [incidents]
+  );
 
-  // Live feed: the Situation Room sees returns and incidents interleaved by recency.
-  // Agents keep incidents only - the national returns feed isn't theirs.
-  const liveFeedItems = useMemo<MarqueeItem[]>(() => {
-    const incidentItems: MarqueeItem[] = incidents.map((i) => ({
-      id: i.id,
-      kind: 'incident',
-      label: i.category.replace(/_/g, ' '),
-      area: i.electoralArea,
-      detail: i.description.slice(0, 48),
-      timestamp: i.reportedAt,
-    }));
-
-    if (!isElectionOfficer) return incidentItems.slice(0, 8);
-
-    const resultItems: MarqueeItem[] = liveResults.map((r) => ({
-      id: r.id,
-      kind: 'result',
-      label: 'RESULT',
-      area: r.pollingUnitName,
-      detail: `${(r.totalVotesCast ?? 0).toLocaleString()} tallied`,
-      timestamp: r.submittedAt,
-    }));
-
-    return [...incidentItems, ...resultItems]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 8);
-  }, [incidents, liveResults, isElectionOfficer]);
-
-  // Candidate scores aggregation for snapshot performance (Audio Part 2 & 6: linked to live pulse)
-  const candidateScores = useMemo(() => {
-    const totals: Record<string, number> = {};
-    liveResults.forEach((r) => {
-      const source = scoreSource === 'INEC' ? r.candidateVotesInec : r.candidateVotes;
-      Object.entries(source ?? {}).forEach(([candId, v]) => {
-        const val = typeof v === 'number' ? v : 0;
-        totals[candId] = (totals[candId] ?? 0) + val;
-      });
-    });
-
-    const baseMap: Record<string, number> = {
-      cand1: 6420, // CPA
-      cand3: 5890, // PL
-      cand2: 3980, // DPP
-      cand4: 1210, // PPNF
-    };
-
-    const list = candidates.map((c) => {
-      const dbVotes = totals[c.id];
-      const base = dbVotes !== undefined ? dbVotes : (baseMap[c.id] ?? 500);
-      // The live pulse belongs to the Situation Room. Agents never inherit increments from an officer session.
-      const bonus = isElectionOfficer ? (pulseBonusVotes[c.id] ?? 0) : 0;
-      return { ...c, votes: base + bonus };
-    });
-
-    const grandTotal = list.reduce((acc, c) => acc + c.votes, 0);
-
-    return list
-      .map((c) => ({
-        ...c,
-        pct: grandTotal > 0 ? (c.votes / grandTotal) * 100 : 25,
-      }))
-      .sort((a, b) => b.votes - a.votes);
-  }, [candidates, liveResults, pulseBonusVotes, scoreSource, isElectionOfficer]);
-
-  const grandTotalVotes = useMemo(() => {
-    return candidateScores.reduce((acc, c) => acc + c.votes, 0);
-  }, [candidateScores]);
-
-  // Audio Part 2: Show candidate agent is tied to first (default Nassiru Bawa / PL if unspecified)
-  const myCandidateId = user?.watchCandidateId ?? 'cand3';
-  const myCandidate = candidateScores.find((c) => c.id === myCandidateId) ?? candidateScores[0];
-  const myCandidateRank = candidateScores.findIndex((c) => c.id === myCandidate?.id) + 1;
-  if ((electionsLoading || resultsLoading) && liveResults.length === 0) {
+  if (electionsLoading && !activeElection) {
     return (
       <ScreenView scrollable={false} contentContainerStyle={styles.scrollContent}>
         {/* Situation Console Header Skeleton */}
@@ -199,7 +104,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Snapshot Performance Skeleton Cards */}
+        {/* Contest Skeleton Cards */}
         <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
           <SkeletonCard lines={2} />
           <SkeletonCard lines={3} />
@@ -207,8 +112,6 @@ export default function DashboardScreen() {
       </ScreenView>
     );
   }
-
-  const otherCandidates = candidateScores.filter((c) => c.id !== myCandidate?.id).slice(0, 3);
 
   return (
     <ScreenView

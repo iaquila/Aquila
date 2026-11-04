@@ -19,6 +19,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { INCIDENT_CATEGORIES as CATEGORIES, INCIDENT_SEVERITIES as SEVERITIES, AREA_PRESETS } from '@/constants/incidents';
 import { Badge } from '@/core/components';
 import { useLocationSearchQuery } from '@/features/elections/hooks';
+import { useCreateIncidentMutation, useLiveElectionsQuery, useLiveIncidentCategoriesQuery } from '@/features/api/hooks';
+import { incidentCategoryForName } from '@/features/api/mappers';
+import { loadSession } from '@/core/services/session';
 import { useHaptics } from '@/core/hooks';
 import * as Haptics from 'expo-haptics';
 
@@ -60,6 +63,9 @@ export default function ReportIncidentScreen() {
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
   const { coordinates: deviceCoords } = useDeviceLocation({ latitude: 6.600, longitude: 3.350 });
   const { data: locationSuggestions = [], isLoading: isLocationsLoading } = useLocationSearchQuery(electoralArea);
+  const createIncidentMutation = useCreateIncidentMutation();
+  const { data: liveCategories = [] } = useLiveIncidentCategoriesQuery();
+  const { data: liveElections = [] } = useLiveElectionsQuery();
   const { impact, notification } = useHaptics();
 
   const isRecordingRef = useRef(false);
@@ -300,7 +306,9 @@ export default function ReportIncidentScreen() {
     }
 
     setSubmitting(true);
-    const incident: IncidentReport = {
+    const latitude = deviceCoords?.latitude ?? 6.600;
+    const longitude = deviceCoords?.longitude ?? 3.350;
+    const localIncident: IncidentReport = {
       id: `i-${Date.now()}`,
       electionId: electionId ?? 'e1',
       pollingUnitId: selectedPuId || undefined,
@@ -309,20 +317,79 @@ export default function ReportIncidentScreen() {
       severity,
       status: 'SUBMITTED',
       description: desc,
-      latitude: deviceCoords?.latitude ?? 6.600,
-      longitude: deviceCoords?.longitude ?? 3.350,
+      latitude,
+      longitude,
       mediaUrls: mediaUris,
       reportedBy: user?.id ?? 'current-user',
       reportedAt: new Date().toISOString(),
     };
-    addIncident(incident);
-    setSubmitting(false);
-    notification(Haptics.NotificationFeedbackType.Success);
-    Alert.alert(
-      'Incident Dispatched',
-      'Incident report transmitted successfully to the iAQUILA Incident Control Room.',
-      [{ text: 'OK', onPress: () => router.replace(ROUTES.INCIDENTS_TAB) }]
-    );
+
+    try {
+      const session = await loadSession();
+      if (!session) {
+        addIncident(localIncident);
+        setSubmitting(false);
+        notification(Haptics.NotificationFeedbackType.Success);
+        Alert.alert('Incident Logged', 'Saved on this device. Sign in with your organisation account to send reports.', [
+          { text: 'OK', onPress: () => router.replace(ROUTES.INCIDENTS_TAB) },
+        ]);
+        return;
+      }
+
+      // The schema requires a real polling-unit row; the app has no polling-unit
+      // endpoint yet, so a mock picker id cannot be sent. Empty string coerces to
+      // 0, which is why the value itself is checked too.
+      const pollingUnitId = Number(selectedPuId);
+      if (!selectedPuId || !Number.isFinite(pollingUnitId) || pollingUnitId <= 0) {
+        setSubmitting(false);
+        Alert.alert('Choose a polling unit', 'Select the unit where this happened before submitting.');
+        return;
+      }
+
+      const categoryRow = liveCategories.find((row) => incidentCategoryForName(row.name) === category);
+      const categoryId = categoryRow ? Number(categoryRow.id) : Number.NaN;
+      if (!Number.isFinite(categoryId)) {
+        setSubmitting(false);
+        Alert.alert('Category unavailable', 'That category is not available for your organisation.');
+        return;
+      }
+
+      if (severity === 'CRITICAL') {
+        setSubmitting(false);
+        Alert.alert('Choose a lower severity', 'This report can be logged as low, medium or high.');
+        return;
+      }
+
+      const numericElectionId = Number(electionId) || Number(liveElections[0]?.id);
+      if (!Number.isFinite(numericElectionId)) {
+        setSubmitting(false);
+        Alert.alert('Election required', 'No election is selected for this report.');
+        return;
+      }
+
+      await createIncidentMutation.mutateAsync({
+        electionId: numericElectionId,
+        pollingUnitId,
+        categoryId,
+        description: desc,
+        severity,
+        latitude,
+        longitude,
+      });
+
+      setSubmitting(false);
+      notification(Haptics.NotificationFeedbackType.Success);
+      const mediaNote =
+        mediaUris.length > 0 ? ' Photos and audio stay on this device until upload is available.' : '';
+      Alert.alert('Incident Dispatched', `Incident transmitted to the iAQUILA Control Room.${mediaNote}`, [
+        { text: 'OK', onPress: () => router.replace(ROUTES.INCIDENTS_TAB) },
+      ]);
+    } catch (error) {
+      setSubmitting(false);
+      notification(Haptics.NotificationFeedbackType.Error);
+      if (__DEV__) console.warn('[incident] create failed', error);
+      Alert.alert('Report not sent', 'Check your connection and try again.');
+    }
   };
 
   if (user?.role === 'ELECTION_OFFICER') {

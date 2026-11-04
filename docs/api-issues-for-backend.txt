@@ -1,0 +1,185 @@
+API ISSUES
+Test accounts: barka@gmail.com (tenant admin), olusanwolu@gmail.com (field agent).
+
+
+====================================================================
+1. SECURITY — login leaks server paths and stack trace
+====================================================================
+POST /auth/login
+body: {"identifierType":"email","identifierValue":"nope@nope.com","password":"x"}
+
+HTTP 401
+{"statusCode":401,"success":false,"messages":["Authentication instantiation error:
+unknown 'email' supplied for identity parameter #0
+/home/iaqutmao/api.iaquila.com.ng/class/Session.php(96): Authentication->__construct()
+#1 /home/iaqutmao/api.iaquila.com.ng/api/v1/controller/auth.php(62): Session::create()
+#2 {main}"],"data":null}
+
+mayb a catch for the fix
+
+
+====================================================================
+2. SECURITY — tenant detail exposes database credentials
+====================================================================
+GET /tenant/1
+
+HTTP 200
+{"statusCode":200,"success":true,"messages":["Tenant retrieval successful"],"data":{"tenant":{
+  "id":1,"name":"APC Lago","code":"TEN00001",
+  "contact_email":"hazmat2027@apcLagos.com","contact_phone":"1234567890",
+  "contact_address":"","status":"active",
+  "db_host":"localhost","db_name":"iaqutmao_db_00001","db_port":3306,
+  "db_username":"iaqutmao_db_00001_admin","db_status":"ready",
+  "created_at":"2026-10-12 07:40:47","updated_at":"2026-11-04 07:27:47"}}}
+
+Problem: db_host / db_name / db_port / db_username are returned to any authenticated
+client. The password is not exposed, but this hands an attacker the exact database
+name and username to brute force.
+
+maybe to strip all db_* fields from the API response. Also the row is nested as
+data.tenant here, while every other detail endpoint returns the row directly in data.
+
+
+====================================================================
+3. ROLE GATE IS INVERTED — only admins are blocked from triage
+====================================================================
+The success message also says "Incident category" on an incident edit.
+
+PATCH /incident/edit/66   {"severity":"medium"}   as barka@gmail.com (tenant admin)
+HTTP 401  {"messages":["Must be a tenant's field agent or pu agent"]}
+
+PATCH /incident/edit/66   {"severity":"medium"}   as olusanwolu@gmail.com (field agent)
+HTTP 200  {"messages":["Incident category updated successfully"],
+           "data":{"id":66,...,"severity":"medium","status":"open",...}}
+
+idk if this is correct like no admin allowed
+
+
+====================================================================
+4. candidate/create returns 500 — missing PHP class file
+====================================================================
+POST /candidate/create     as barka@gmail.com (tenant admin)
+body: {"election":4,"party":31,"position":2,"name":"API Probe Candidate"}
+
+HTTP 500
+{"statusCode":500,"success":false,"messages":["Failed opening required
+'class/Politicalparty.php' (include_path='.:/opt/alt/php83/usr/share/pear:
+/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php')"],"data":null}
+
+Problem: the class file is either missing from class/ or the filename casing is wrong
+(actual file is probably class/PoliticalParty.php). PHP on Linux is case-sensitive,
+so the require fails. This blocks candidate creation entirely.
+Candidates can be read (/candidate/details/page/1 works, 2 rows), only writes fail.
+
+Note: theendpoint uses short field names election / party / position / name.
+Sending electionId / politicalPartyId / positionId instead returns
+400 {"messages":["Election is missing","Party is missing","Position is missing"]}.
+
+
+====================================================================
+5. MISSING ENDPOINTS — the mobile app cannot be finished without these
+====================================================================
+All of the following return HTTP 404, content-type text/html (LiteSpeed default page,
+not your JSON envelope).
+  /results                      /result/details/page/1     /results/details/page/1
+  /polling-units                /polling-unit/details/page/1
+  /polling_units/details/page/1 /polling-unit/detail/991101
+  /location-assignments         /location-assignment/details/page/1
+  /location-assignments/details/page/1
+
+They exist in the database (polling_units, polling_unit_entitlements,
+tenant_polling_units, results, result_voters, officer_warehouse) but have no routes.
+
+What the app needs, in priority order:
+  a) GET /polling-unit/details/page/N  (id, code, name, ward/electoral area)
+     - incidents store polling_unit_id only, so the app can currently show "PU 991101"
+       but never the polling unit name. This is visible on the incident screen today.
+  b) GET /location-assignment/details/page/N or an "assigned to me" endpoint
+     - a field agent cannot see which polling units they are assigned to, so the
+       app falls back to a free-text polling unit id.
+  c) GET /result/details/page/N + create/edit
+  d) POST media upload (photo/video/audio) — incident photos currently stay on the
+     device because there is nowhere to send them. No endpoint exists at all.
+
+
+====================================================================
+6. 404s return HTML, not the JSON envelope
+====================================================================
+GET /nonexistent-endpoint
+HTTP 404, content-type: text/html
+<!DOCTYPE html> ... <h1>404</h1> ... Proudly powered by LiteSpeed Web Server
+
+Problem: any unknown path falls through to the web server instead of your API, so the
+client gets a 9900-character HTML page.ihadto specialcase this to
+avoid trying to JSON-parse it.
+Fix: route 404s through the API so they return
+{"statusCode":404,"success":false,"messages":["Not found"],"data":null}.
+
+
+====================================================================
+7. Validation failures return 500 instead of 400/404
+====================================================================
+POST /candidate/create {"election":2,"party":7,"position":1,"name":"x"}
+HTTP 500  {"messages":["Election not found."]}
+
+POST /candidate/create {}
+HTTP 400  {"messages":["Election is missing","Party is missing","Position is missing",
+                       "Name is missing"]}
+
+Problem: a missing record is a 404 (or at worst 400), not a 500. Only the
+presence checks use 400. Same pattern elsewhere — a bad electoral-area hierarchy
+returns 500 with "A 'country' area cannot be the parent of a 'ward' area".
+so400 for bad input, 404 for missing records, 500 reserved for real faults.
+A 500 also makes the client retry logic think the server is broken.
+
+
+====================================================================
+8. Invalid enum values return 401 Unauthorized instead of 400
+====================================================================
+PATCH /incident/edit/66 {"status":"RESOLVED"}
+HTTP 401  {"messages":["Invalid incident status."]}
+
+PATCH /incident/edit/66 {"severity":"critical"}
+HTTP 401  {"messages":["Invalid incident severity."]}
+
+Problem: 401 means "not authenticated" and makes clients attempt a token refresh
+before retrying a request that can never succeed. Should be 400/422.
+Also please document the allowed values. enforced:
+  status:   open | close          (not UNDER_REVIEW, not RESOLVED, not uppercase)
+  severity: low | medium | high   (no critical)
+
+
+====================================================================
+9. Detail endpoints return three different shapes
+====================================================================
+GET /party/detail/7        -> data is an ARRAY of 1:  "data":[{ "id":7,... }]
+GET /incident/detail/66    -> data is an OBJECT:       "data":{ "id":66,... }
+GET /tenant/1              -> data is NESTED:          "data":{"tenant":{...}}
+
+Problem: the client needs three separate parsers for what should be one contract.
+
+
+====================================================================
+10. election-cycle list breaks the pagination contract
+====================================================================
+GET /election-cycle/details/page/1
+HTTP 200
+{"statusCode":200,"success":true,"messages":["Election Cycle(s) retrieval successfully"],
+ "data":{"total":1,"data":[{"id":1,"name":"Test Election Cycle 2027",...}]}}
+
+Every other list returns:
+  "data":{"total":N,"pageNo":1,"perPage":100,"payload":[...]}
+
+Problem: no pageNo / perPage / payload. A client cannot page it and has to special-case
+the field name. It also ignores the page number entirely.
+
+
+====================================================================
+11. Minor
+====================================================================
+- GET /test returns HTTP 200 with an empty body and content-type text/html.
+- GET /tenants/page/1 returns 401 "User is not an admin" even for a tenant admin
+  (barka@gmail.com).
+- POST /auth/forgot-password expects identifierType / identifierValue, not email:
+  {"identifierType":"email","identifierValue":"..."} ->
+  400 "Identifier type and identifier value are required" when sent as {"email":...}

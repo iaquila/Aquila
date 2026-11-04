@@ -13,6 +13,8 @@ export const FEATURES = {
   ENABLE_SHEET_PHOTO_IMPORT: false,
   // Import a PDF. Rendered at 2400px from vector text, so it parses far more reliably than a photo.
   ENABLE_SHEET_PDF_IMPORT: true,
+  // Backend `admin` officers have no field role. Off = refused at login; on = treated as ELECTION_OFFICER.
+  ENABLE_ADMIN_ACCOUNT: false,
   LIVE_POLL_INTERVAL_MS: 15_000,
 } as const;
 

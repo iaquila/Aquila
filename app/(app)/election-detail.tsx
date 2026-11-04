@@ -8,16 +8,16 @@ import { ROUTES } from '@/constants/routes';
 import { spacing, shadows, radius, border, sizes } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
-import { useElectionDetailQuery, useCandidatesQuery } from '@/features/elections/hooks';
+import { useLiveElectionDetailQuery, useLiveCandidatesQuery } from '@/features/api/hooks';
 import Colors from '@/constants/colors';
 import { useForegroundRefresh, useRefreshControl } from '@/core/hooks';
 
-import { PARTY_COLORS } from '@/constants/parties';
+import { partyColor } from '@/constants/parties';
 
 export default function ElectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: election, isLoading: electionLoading, refetch: refetchElection } = useElectionDetailQuery(id);
-  const { data: candidates = [], isLoading: candidatesLoading, refetch: refetchCandidates } = useCandidatesQuery(id);
+  const { data: election, isLoading: electionLoading, refetch: refetchElection } = useLiveElectionDetailQuery(id);
+  const { data: candidates = [], isLoading: candidatesLoading, refetch: refetchCandidates } = useLiveCandidatesQuery(id);
   const loading = electionLoading || candidatesLoading;
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
@@ -26,7 +26,7 @@ export default function ElectionDetailScreen() {
     refetchCandidates();
   });
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
-  useForegroundRefresh([['elections', 'detail', id], ['elections', 'candidates', id]], 5 * 60 * 1000);
+  useForegroundRefresh([['catalogue']], 5 * 60 * 1000);
 
   if (loading && !election) {
     return (
@@ -105,12 +105,12 @@ export default function ElectionDetailScreen() {
       {/* 3. Candidates List */}
       <View style={{ gap: spacing.xs }}>
         {candidates.map((c, index) => {
-          const partyColor = PARTY_COLORS[c.partyAcronym] ?? colors.primary;
+          const partyColorValue = partyColor(c.partyAcronym);
           return (
             <Card key={c.id} style={styles.candCard}>
               <View style={styles.candRow}>
-                <View style={[styles.avatarBox, { backgroundColor: partyColor + '18' }]}>
-                  <ThemedText variant="title" style={{ color: partyColor, fontWeight: '800' }}>
+                <View style={[styles.avatarBox, { backgroundColor: partyColorValue + '18' }]}>
+                  <ThemedText variant="title" style={{ color: partyColorValue, fontWeight: '800' }}>
                     #{c.candidateNumber ?? index + 1}
                   </ThemedText>
                 </View>
@@ -119,7 +119,7 @@ export default function ElectionDetailScreen() {
                     <ThemedText variant="body" color="text" fontFamily="bold">
                       {c.fullName}
                     </ThemedText>
-                    <Badge label={c.partyAcronym} color={partyColor} size="sm" />
+                    <Badge label={c.partyAcronym} color={partyColorValue} size="sm" />
                   </View>
                   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing['3xs'] }}>
                     {c.partyName}
@@ -130,7 +130,7 @@ export default function ElectionDetailScreen() {
                     </ThemedText>
                   ) : null}
                 </View>
-                <Badge label={c.status} variant="success" size="sm" />
+                <Badge label={c.status} variant={c.status === 'ACTIVE' ? 'success' : 'neutral'} size="sm" />
               </View>
             </Card>
           );

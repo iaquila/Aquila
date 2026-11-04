@@ -1,0 +1,266 @@
+{
+  "source": "https://documenter.getpostman.com/api/collections/6734990/2sBYHXSKAY",
+  "capturedAt": "2026-11-04",
+  "endpoints": [
+    {
+      "method": "DELETE",
+      "path": "auth/1/logout-all",
+      "name": "Logout All"
+    },
+    {
+      "method": "PATCH",
+      "path": "auth/20/refresh",
+      "name": "Refresh Token"
+    },
+    {
+      "method": "DELETE",
+      "path": "auth/4/logout",
+      "name": "Logout"
+    },
+    {
+      "method": "POST",
+      "path": "auth/forgot-password",
+      "name": "Forgot Password"
+    },
+    {
+      "method": "POST",
+      "path": "auth/login",
+      "name": "Login"
+    },
+    {
+      "method": "POST",
+      "path": "auth/officer-verification",
+      "name": "Officer Verification"
+    },
+    {
+      "method": "POST",
+      "path": "auth/reset-password",
+      "name": "Reset Password"
+    },
+    {
+      "method": "POST",
+      "path": "auth/verify-activation",
+      "name": "Verify Activation"
+    },
+    {
+      "method": "POST",
+      "path": "candidate/create",
+      "name": "Create Candidate"
+    },
+    {
+      "method": "DELETE",
+      "path": "candidate/delete/18",
+      "name": "Delete Candidate"
+    },
+    {
+      "method": "GET",
+      "path": "candidate/detail/17",
+      "name": "Candidate Detail"
+    },
+    {
+      "method": "GET",
+      "path": "candidate/details/page/1",
+      "name": "All Candidates"
+    },
+    {
+      "method": "PATCH",
+      "path": "candidate/edit/17",
+      "name": "Edit Candidate"
+    },
+    {
+      "method": "POST",
+      "path": "election-area/create",
+      "name": "Create Electoral Area"
+    },
+    {
+      "method": "DELETE",
+      "path": "election-area/delete/991014",
+      "name": "Delete Electoral Area"
+    },
+    {
+      "method": "GET",
+      "path": "election-area/detail/99101",
+      "name": "Electoral Area Details"
+    },
+    {
+      "method": "GET",
+      "path": "election-area/details/page/1",
+      "name": "All Electoral Areas"
+    },
+    {
+      "method": "PATCH",
+      "path": "election-area/edit/991014",
+      "name": "Edit Electoral Area"
+    },
+    {
+      "method": "POST",
+      "path": "election-cycle/create",
+      "name": "Create Election Cycle"
+    },
+    {
+      "method": "DELETE",
+      "path": "election-cycle/delete/6",
+      "name": "Delete Election Cycle"
+    },
+    {
+      "method": "GET",
+      "path": "election-cycle/detail/6",
+      "name": "Election Cycle Details"
+    },
+    {
+      "method": "GET",
+      "path": "election-cycle/details/page/1",
+      "name": "All Election Cycles"
+    },
+    {
+      "method": "PATCH",
+      "path": "election-cycle/edit/6",
+      "name": "Edit Election Cycle"
+    },
+    {
+      "method": "POST",
+      "path": "election/create",
+      "name": "Create Election"
+    },
+    {
+      "method": "DELETE",
+      "path": "election/delete/3",
+      "name": "Delete Election"
+    },
+    {
+      "method": "GET",
+      "path": "election/detail/3",
+      "name": "Election Detail"
+    },
+    {
+      "method": "GET",
+      "path": "election/details/page/1",
+      "name": "All Elections"
+    },
+    {
+      "method": "PATCH",
+      "path": "election/edit/3",
+      "name": "Edit Election"
+    },
+    {
+      "method": "POST",
+      "path": "incident-categories/create",
+      "name": "Create Incident Category"
+    },
+    {
+      "method": "DELETE",
+      "path": "incident-categories/delete/38",
+      "name": "Delete Incident Category"
+    },
+    {
+      "method": "GET",
+      "path": "incident-categories/detail/1",
+      "name": "Incident Category Details"
+    },
+    {
+      "method": "GET",
+      "path": "incident-categories/details/page/1",
+      "name": "All Incident Category"
+    },
+    {
+      "method": "PATCH",
+      "path": "incident-categories/edit/39",
+      "name": "Edit Incident Category"
+    },
+    {
+      "method": "POST",
+      "path": "incident/create",
+      "name": "Create Incident"
+    },
+    {
+      "method": "DELETE",
+      "path": "incident/delete/65",
+      "name": "Delete Incident"
+    },
+    {
+      "method": "GET",
+      "path": "incident/detail/65",
+      "name": "Incident Details"
+    },
+    {
+      "method": "GET",
+      "path": "incident/details/page/1",
+      "name": "All Incidents"
+    },
+    {
+      "method": "PATCH",
+      "path": "incident/edit/65",
+      "name": "Edit Incident"
+    },
+    {
+      "method": "POST",
+      "path": "party/create",
+      "name": "Create Party"
+    },
+    {
+      "method": "DELETE",
+      "path": "party/delete/30",
+      "name": "Delete Party"
+    },
+    {
+      "method": "GET",
+      "path": "party/detail/30",
+      "name": "Party Details"
+    },
+    {
+      "method": "GET",
+      "path": "party/details/page/1",
+      "name": "All Parties"
+    },
+    {
+      "method": "PATCH",
+      "path": "party/edit/29",
+      "name": "Edit a Party"
+    },
+    {
+      "method": "GET",
+      "path": "position/detail/1",
+      "name": "Position Details"
+    },
+    {
+      "method": "GET",
+      "path": "position/details/page/1",
+      "name": "All Positions"
+    },
+    {
+      "method": "GET",
+      "path": "tenant/9",
+      "name": "Tenant Details"
+    },
+    {
+      "method": "POST",
+      "path": "tenant/activation",
+      "name": "Tenant Activation"
+    },
+    {
+      "method": "GET",
+      "path": "tenant/get-party",
+      "name": "Get a Tenant Party"
+    },
+    {
+      "method": "POST",
+      "path": "tenant/onboarding",
+      "name": "Tenant Onboarding"
+    },
+    {
+      "method": "POST",
+      "path": "tenant/set-party",
+      "name": "Change a Tenant Party"
+    },
+    {
+      "method": "GET",
+      "path": "tenants/page/1",
+      "name": "All Tenants"
+    },
+    {
+      "method": "GET",
+      "path": "test",
+      "name": "Testing Endpoint"
+    }
+  ]
+}

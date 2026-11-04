@@ -27,7 +27,9 @@ export function resultStatusSubtle(status: string | undefined, scheme: Scheme): 
 
 const INCIDENT_STATUS_KEY: Record<string, 'verified' | 'pending' | 'disputed' | 'rejected'> = {
   RESOLVED: 'verified',
+  CLOSED: 'verified',
   SUBMITTED: 'pending',
+  OPEN: 'pending',
   UNDER_REVIEW: 'pending',
   ESCALATED: 'disputed',
   DISMISSED: 'rejected',

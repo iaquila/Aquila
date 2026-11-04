@@ -3,26 +3,26 @@ import { View, StyleSheet, Pressable, ScrollView, FlatList } from 'react-native'
 import { ScreenView } from '@/core/components/ScreenView';
 import { ThemedText, Card, EmptyState, SkeletonCard, Badge } from '@/core/components';
 import { Ionicons } from '@expo/vector-icons';
-import { usePartiesQuery, useCandidatesQuery } from '@/features/elections/hooks';
+import { useLivePartiesQuery, useLiveAllCandidatesQuery } from '@/features/api/hooks';
 import { spacing, radius, shadows, border, sizes } from '@/constants/tokens';
 import { listPerf } from '@/constants/lists';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useRefreshControl, useForegroundRefresh, useHaptics } from '@/core/hooks';
 import Colors from '@/constants/colors';
-import { PARTY_COLORS } from '@/constants/parties';
+import { partyColor } from '@/constants/parties';
 import * as Haptics from 'expo-haptics';
 
 export default function PartiesScreen() {
-  const { data: parties = [], isLoading: partiesLoading, refetch } = usePartiesQuery();
-  const { data: candidates = [], isLoading: candidatesLoading } = useCandidatesQuery('e1');
+  const { data: parties = [], isLoading: partiesLoading, refetch } = useLivePartiesQuery();
+  const { data: candidates = [], isLoading: candidatesLoading } = useLiveAllCandidatesQuery();
   const [activeTab, setActiveTab] = useState<'parties' | 'candidates'>('candidates');
 
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   const { refreshControl } = useRefreshControl(partiesLoading, refetch);
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
-  useForegroundRefresh([['parties', 'list'], ['elections', 'candidates', 'e1']], 10 * 60 * 1000);
+  useForegroundRefresh([['catalogue']], 10 * 60 * 1000);
   const { impact } = useHaptics();
 
 
@@ -92,7 +92,7 @@ export default function PartiesScreen() {
           ) : (
             <ScrollView contentContainerStyle={styles.scrollList}>
               {candidates.map((cand) => {
-              const pColor = PARTY_COLORS[cand.partyAcronym] ?? colors.primary;
+              const pColor = partyColor(cand.partyAcronym);
 
               return (
                 <Card key={cand.id} style={styles.itemCard}>
@@ -112,9 +112,11 @@ export default function PartiesScreen() {
                       <ThemedText variant="body" color="text" fontFamily="bold">
                         {cand.fullName}
                       </ThemedText>
-                      <ThemedText variant="caption" color="textSecondary">
-                        Running Mate: {cand.runningMate ?? 'N/A'}
-                      </ThemedText>
+                      {cand.runningMate ? (
+                        <ThemedText variant="caption" color="textSecondary">
+                          Running Mate: {cand.runningMate}
+                        </ThemedText>
+                      ) : null}
                     </View>
 
                     <Badge label={cand.partyAcronym} color={pColor} size="sm" />
@@ -160,7 +162,7 @@ export default function PartiesScreen() {
             contentContainerStyle={styles.listContent}
             ItemSeparatorComponent={() => <View style={{ height: spacing.xs }} />}
             renderItem={({ item: party }) => {
-              const pColor = PARTY_COLORS[party.acronym] ?? colors.primary;
+              const pColor = partyColor(party.acronym);
 
               return (
                 <Card style={styles.itemCard}>
@@ -180,12 +182,21 @@ export default function PartiesScreen() {
                         {party.name}
                       </ThemedText>
                       <ThemedText variant="caption" color="textSecondary">
-                        INEC Code: {party.code} · Operational
+                        INEC Code: {party.code}
                       </ThemedText>
                     </View>
-                    <View style={[styles.activePill, { backgroundColor: colors.successSubtle }]}>
-                      <ThemedText variant="label" color="success" fontFamily="bold">
-                        ACTIVE
+                    <View
+                      style={[
+                        styles.activePill,
+                        { backgroundColor: party.status === 'ACTIVE' ? colors.successSubtle : colors.surfaceElevated },
+                      ]}
+                    >
+                      <ThemedText
+                        variant="label"
+                        color={party.status === 'ACTIVE' ? 'success' : 'textMuted'}
+                        fontFamily="bold"
+                      >
+                        {party.status}
                       </ThemedText>
                     </View>
                   </View>

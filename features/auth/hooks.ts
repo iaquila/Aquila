@@ -1,13 +1,24 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { login as loginApi, logout as logoutApi } from '@/features/auth/service';
+import { login as loginApi, loginDemo, logout as logoutApi } from '@/features/auth/service';
 
-type LoginInput = { email: string; password: string; organizationId?: string; organizationName?: string };
+type LoginInput = { email: string; password: string };
+type DemoLoginInput = LoginInput & { organizationId?: string; organizationName?: string };
 
 export function useLoginMutation() {
   const queryClient = useQueryClient();
   return useMutation<unknown, Error, LoginInput>({
+    mutationFn: ({ email, password }) => loginApi(email, password),
+    onSettled: () => {
+      queryClient.invalidateQueries();
+    },
+  });
+}
+
+export function useDemoLoginMutation() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, Error, DemoLoginInput>({
     mutationFn: ({ email, password, organizationId = 'org-iaquila', organizationName = 'iAQUILA Situation Room' }) =>
-      loginApi(email, password, organizationId, organizationName),
+      loginDemo(email, password, organizationId, organizationName),
     onSettled: () => {
       queryClient.invalidateQueries();
     },

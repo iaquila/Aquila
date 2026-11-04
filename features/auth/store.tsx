@@ -86,7 +86,7 @@ export interface Candidate {
   shortName?: string;
   runningMate?: string;
   photoUrl?: string;
-  status: 'ACTIVE' | 'WITHDRAWN';
+  status: 'ACTIVE' | 'INACTIVE' | 'WITHDRAWN';
   partyHistory?: CandidatePartyHistory[];
 }
 

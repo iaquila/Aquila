@@ -10,6 +10,7 @@ export const ElectionStatusSchema = z.enum([
   'DRAFT',
   'SCHEDULED',
   'ACTIVE',
+  'INACTIVE',
   'COMPLETED',
   'ARCHIVED',
 ]);
@@ -24,6 +25,7 @@ export const ResultStatusSchema = z.enum([
 export const IncidentStatusSchema = z.enum([
   'DRAFT',
   'SUBMITTED',
+  'OPEN',
   'UNDER_REVIEW',
   'RESOLVED',
   'CLOSED',

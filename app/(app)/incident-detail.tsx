@@ -7,35 +7,43 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ScreenView } from '@/core/components/ScreenView';
-import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Input, Badge } from '@/core/components';
-import { useIncidentsQuery, usePollingUnitsQuery } from '@/features/elections/hooks';
-import { spacing, radius, shadows, border, typography, sizes } from '@/constants/tokens';
+import { ThemedText, Card, EmptyState, Button, Shimmer, SkeletonCard, Badge } from '@/core/components';
+import { useLiveIncidentsQuery, useUpdateIncidentMutation } from '@/features/api/hooks';
+import { usePollingUnitsQuery } from '@/features/elections/hooks';
+import { spacing, radius, shadows, border, typography, sizes, opacities } from '@/constants/tokens';
 import { useColorScheme } from '@/core/hooks/useColorScheme';
 import { useStatusBar } from '@/core/hooks/useStatusBar';
 import { useHaptics, useRefreshControl } from '@/core/hooks';
 import Colors from '@/constants/colors';
-import { useIncidentsStore, useAuthStore } from '@/features/auth/store';
-import { IncidentStatus, IncidentSeverity } from '@/types';
+import { useIncidentsStore, useAuthStore, type IncidentReport } from '@/features/auth/store';
+import { loadSession } from '@/core/services/session';
+import type { IncidentSeverity } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { getSeverityColor, CATEGORY_ICONS } from '@/constants/incidents';
 
+// The severity column stores only these three values; `critical` is rejected.
+const TRIAGE_SEVERITIES = [
+  { ui: 'LOW', db: 'low' },
+  { ui: 'MEDIUM', db: 'medium' },
+  { ui: 'HIGH', db: 'high' },
+] as const;
+
 export default function IncidentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
-  const { incidents: storeIncidents, updateIncident } = useIncidentsStore();
-  const { data: apiIncidents = [], isLoading, refetch } = useIncidentsQuery();
+  const { incidents: storeIncidents, updateIncident: updateLocalIncident } = useIncidentsStore();
+  const { data: apiIncidents = [], isLoading, refetch } = useLiveIncidentsQuery();
   const { refreshControl } = useRefreshControl(isLoading, refetch);
   const { data: pollingUnits = [] } = usePollingUnitsQuery();
   const { impact } = useHaptics();
+  const updateIncidentMutation = useUpdateIncidentMutation();
 
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
   useStatusBar({ barStyle: scheme === 'dark' ? 'light' : 'dark' });
 
-  // Officer Notes state
-  const [officerNotes, setOfficerNotes] = useState('');
   const [previewImageUri, setPreviewImageUri] = useState<string | null>(null);
 
   const incident = useMemo(() => {
@@ -47,35 +55,44 @@ export default function IncidentDetailScreen() {
     return pollingUnits.find((p) => p.id === incident.pollingUnitId);
   }, [incident, pollingUnits]);
 
-  const isOfficer = user?.role === 'ELECTION_OFFICER';
-  const isResolved = incident?.status === 'RESOLVED';
+  // PATCH /incident/edit admits field and polling-unit agents only and refuses a
+  // tenant admin outright, so the station follows the API's allowlist rather
+  // than the job title it was written for.
+  const canTriage = user?.role === 'FIELD_AGENT' || user?.role === 'POLLING_AGENT';
+  const isOpen = incident?.status === 'OPEN';
+  const isResolved = incident?.status === 'RESOLVED' || incident?.status === 'CLOSED';
   const isUnderReview = incident?.status === 'UNDER_REVIEW';
 
   const categoryIcon = incident ? (CATEGORY_ICONS[incident.category] ?? 'alert-circle-outline') : 'alert-circle-outline';
 
-  const handleUpdateStatus = (newStatus: IncidentStatus) => {
+  // Demo sign-ins have no server session, so their triage edits stay on device.
+  const applyTriage = async (
+    patch: { status?: 'open' | 'close'; severity?: 'low' | 'medium' | 'high' },
+    local: Partial<IncidentReport>
+  ) => {
     if (!incident) return;
-    impact(Haptics.ImpactFeedbackStyle.Medium);
-    updateIncident(incident.id, { status: newStatus });
-  };
-
-  const handleUpdateSeverity = (newSeverity: IncidentSeverity) => {
-    if (!incident) return;
-    impact(Haptics.ImpactFeedbackStyle.Light);
-    updateIncident(incident.id, { severity: newSeverity });
-  };
-
-  const handleSaveNotes = () => {
-    if (!officerNotes.trim()) {
-      Alert.alert('Assessment Required', 'Please enter officer notes or dispatch directives before saving.');
+    const incidentId = Number(incident.id);
+    if (!Number.isFinite(incidentId)) return;
+    if (!(await loadSession())) {
+      updateLocalIncident(incident.id, local);
       return;
     }
+    try {
+      await updateIncidentMutation.mutateAsync({ id: incidentId, ...patch });
+    } catch (error) {
+      if (__DEV__) console.warn('[incident] triage update failed', error);
+      Alert.alert('Change not saved', 'The incident could not be updated. Check your connection and try again.');
+    }
+  };
+
+  const handleUpdateStatus = (next: 'open' | 'close') => {
     impact(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Assessment Logged',
-      'Officer directives transmitted to Situation Room dispatch log.',
-      [{ text: 'OK' }]
-    );
+    applyTriage({ status: next }, { status: next === 'close' ? 'CLOSED' : 'OPEN' });
+  };
+
+  const handleUpdateSeverity = (next: 'low' | 'medium' | 'high', label: IncidentSeverity) => {
+    impact(Haptics.ImpactFeedbackStyle.Light);
+    applyTriage({ severity: next }, { severity: label });
   };
 
   const openMap = async () => {
@@ -156,7 +173,7 @@ export default function IncidentDetailScreen() {
           </View>
 
           <Badge
-            label={isResolved ? 'RESOLVED' : isUnderReview ? 'UNDER REVIEW' : 'LOGGED'}
+            label={isOpen ? 'OPEN' : isResolved ? 'CLOSED' : isUnderReview ? 'UNDER REVIEW' : 'LOGGED'}
             variant={isResolved ? 'success' : isUnderReview ? 'warning' : 'neutral'}
           />
         </View>
@@ -226,7 +243,7 @@ export default function IncidentDetailScreen() {
           <View style={styles.infoCol}>
             <ThemedText variant="label" color="textMuted">ELECTORAL AREA</ThemedText>
             <ThemedText variant="body" color="text" fontFamily="medium" style={{ marginTop: spacing['3xs'] }}>
-              {incident.electoralArea}
+              {incident.electoralArea || 'Not recorded'}
             </ThemedText>
           </View>
 
@@ -238,6 +255,16 @@ export default function IncidentDetailScreen() {
               </ThemedText>
               <ThemedText variant="caption" color="textSecondary" style={{ marginTop: border.thin }}>
                 {puInfo.name}
+              </ThemedText>
+            </View>
+          ) : incident.pollingUnitId ? (
+            <View style={styles.infoCol}>
+              <ThemedText variant="label" color="textMuted">POLLING UNIT</ThemedText>
+              <ThemedText variant="body" color="text" fontFamily="bold" style={{ marginTop: spacing['3xs'] }}>
+                PU {incident.pollingUnitId}
+              </ThemedText>
+              <ThemedText variant="caption" color="textSecondary" style={{ marginTop: border.thin }}>
+                Unit name not available yet
               </ThemedText>
             </View>
           ) : (
@@ -460,37 +487,42 @@ export default function IncidentDetailScreen() {
         </View>
       </Card>
 
-      {/* 6. Officer Triage Station (Election Officers Only) */}
-      {isOfficer ? (
+      {/* 6. Incident Triage (Field & Polling-Unit Agents) */}
+      {canTriage ? (
         <Card style={[styles.sectionCard, { borderColor: colors.primary, borderWidth: border.thick }]}>
           <View style={styles.sectionHeader}>
             <Ionicons name="shield-checkmark" size={18} color={colors.primary} />
             <ThemedText variant="body" color="primary" fontFamily="bold" style={{ marginLeft: spacing.xs }}>
-              Officer Incident Triage Station
+              Incident Triage
             </ThemedText>
           </View>
 
           <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.md }}>
-            As an Election Officer, you hold operational jurisdiction to adjust incident severity, assign case states, and issue field dispatch directives.
+            You can set the incident priority and close or reopen the case. Changes are saved to the control room.
           </ThemedText>
 
           {/* Severity Adjustment */}
           <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginBottom: spacing['2xs'] + spacing['3xs'] }}>
-            ADJUST SEVERITY LEVEL
+            ADJUST PRIORITY
           </ThemedText>
           <View style={styles.severityToggles}>
-            {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const).map((sev) => {
+            {TRIAGE_SEVERITIES.map(({ ui: sev, db }) => {
               const active = incident.severity === sev;
               const sColor = getSeverityColor(sev, scheme);
               return (
                 <Pressable
-                  key={sev}
-                  onPress={() => handleUpdateSeverity(sev)}
+                  key={db}
+                  onPress={() => handleUpdateSeverity(db, sev)}
+                  disabled={updateIncidentMutation.isPending}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Set priority to ${sev.toLowerCase()}`}
+                  accessibilityState={{ selected: active, disabled: updateIncidentMutation.isPending }}
                   style={[
                     styles.severityBtn,
                     {
                       borderColor: active ? sColor : colors.border,
                       backgroundColor: active ? sColor + '18' : colors.surface,
+                      opacity: updateIncidentMutation.isPending ? opacities.disabled : 1,
                     },
                   ]}
                 >
@@ -506,51 +538,18 @@ export default function IncidentDetailScreen() {
             })}
           </View>
 
-          {/* Officer Quick Actions */}
+          {/* Case Status */}
           <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: spacing['2xs'] + spacing['3xs'] }}>
-            CASE STATUS ACTION
+            CASE STATUS
           </ThemedText>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {!isResolved && (
-              <Button
-                label={isUnderReview ? 'Reviewing' : 'Start Review'}
-                variant={isUnderReview ? 'primary' : 'outline'}
-                size="sm"
-                leftIcon="search-outline"
-                onPress={() => handleUpdateStatus('UNDER_REVIEW')}
-                style={{ flex: 1 }}
-              />
-            )}
-            <Button
-              label={isResolved ? 'Reopen Case' : 'Resolve Incident'}
-              variant={isResolved ? 'outline' : 'primary'}
-              size="sm"
-              leftIcon={isResolved ? 'refresh-outline' : 'checkmark-circle-outline'}
-              onPress={() => handleUpdateStatus(isResolved ? 'UNDER_REVIEW' : 'RESOLVED')}
-              style={{ flex: 1 }}
-            />
-          </View>
-
-          {/* Directives Input */}
-          <ThemedText variant="label" color="textSecondary" fontFamily="bold" style={{ marginTop: spacing.md, marginBottom: spacing['2xs'] + spacing['3xs'] }}>
-            SITUATION ROOM DIRECTIVES & NOTES
-          </ThemedText>
-          <Input
-            value={officerNotes}
-            onChangeText={setOfficerNotes}
-            placeholder="Log dispatch orders, security team mobilization, or audit notes..."
-            multiline
-            numberOfLines={3}
-            containerStyle={{ marginTop: spacing.md, marginBottom: spacing.md }}
-          />
-
           <Button
-            label="Save Directive to Audit Trail"
-            variant="primary"
-            size="md"
-            leftIcon="save-outline"
-            onPress={handleSaveNotes}
-            style={{ marginTop: spacing.sm }}
+            label={isResolved ? 'Reopen Incident' : 'Close Incident'}
+            variant={isResolved ? 'outline' : 'primary'}
+            size="sm"
+            leftIcon={isResolved ? 'refresh-outline' : 'checkmark-circle-outline'}
+            loading={updateIncidentMutation.isPending}
+            onPress={() => handleUpdateStatus(isResolved ? 'open' : 'close')}
+            style={{ marginTop: spacing['3xs'] }}
           />
         </Card>
       ) : (
@@ -558,7 +557,7 @@ export default function IncidentDetailScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
             <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
             <ThemedText variant="caption" color="textSecondary" style={{ flex: 1 }}>
-              Official incident triage is governed by Situation Room Election Officers. Status updates and task force actions synchronize in real time across the control room.
+              Incident triage is handled by field and polling-unit agents. You can follow the case here as it is updated.
             </ThemedText>
           </View>
         </Card>
